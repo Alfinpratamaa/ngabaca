@@ -1,6 +1,6 @@
 # 📚 Ngabaca - Collaboration Guide
 
-## 🚀 Quick Start
+## 🚀 Quick Start <storong>WSL REQUIRED!!!</strong>
 
 ### 1. Clone Repository
 

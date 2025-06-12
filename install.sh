@@ -34,7 +34,7 @@ if [ $# -eq 0 ]; then
     exit 1
 fi
 
-ENCRYPTION_KEY=$1
+ENCRYPTION_KEY="$1" # Use quotes to handle keys with special characters or spaces
 
 echo "🚀 Setting up Ngabaca project..."
 echo "=================================="
@@ -64,7 +64,24 @@ fi
 
 print_success "All requirements met!"
 
+---
+
+# Install PHP dependencies
+print_status "Installing PHP dependencies..."
+if composer install --no-dev --optimize-autoloader; then
+    print_success "PHP dependencies installed!"
+else
+    print_error "Failed to install PHP dependencies. Please check your Composer setup."
+    exit 1 # Exit if Composer fails, as artisan won't work
+fi
+
+---
+
 # Decrypt environment file
+print_status "Cleaning up old .env file (if any)..."
+# Remove existing .env file to ensure a clean decryption
+rm -f .env 2>/dev/null # Use -f to force remove and suppress errors if file doesn't exist
+
 print_status "Decrypting environment file..."
 
 if [ ! -f ".env.encrypted" ]; then
@@ -72,21 +89,16 @@ if [ ! -f ".env.encrypted" ]; then
     exit 1
 fi
 
-if openssl enc -aes-256-cbc -d -in .env.encrypted -out .env -k "$ENCRYPTION_KEY" 2>/dev/null; then
+# Use Laravel's built-in decryption via environment variable
+# Make sure the ENCRYPTION_KEY is the base64 encoded key (e.g., base64:YOUR_KEY)
+if LARAVEL_ENV_ENCRYPTION_KEY="$ENCRYPTION_KEY" php artisan env:decrypt; then
     print_success "Environment file decrypted successfully!"
 else
-    print_error "Failed to decrypt environment file. Check your encryption key!"
+    print_error "Failed to decrypt environment file. Check your encryption key or if .env.encrypted is valid!"
     exit 1
 fi
 
-# Install PHP dependencies
-print_status "Installing PHP dependencies..."
-if composer install --no-dev --optimize-autoloader; then
-    print_success "PHP dependencies installed!"
-else
-    print_error "Failed to install PHP dependencies"
-    exit 1
-fi
+---
 
 # Install Node.js dependencies
 print_status "Installing Node.js dependencies..."

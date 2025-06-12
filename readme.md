@@ -28,11 +28,10 @@ Script ini akan:
 
 ### 3. Jalankan Aplikasi
 
-```bash
 # Development server Laravel
-composer run dev
-```
 
+```bash
+composer run dev
 ```
 
 ## How to Contributing
@@ -53,7 +52,7 @@ feature/nama-fitur
 bugfix/nama-bug
 hotfix/nama-hotfix
 
-````
+```
 
 ### Workflow Steps
 
@@ -132,7 +131,7 @@ php artisan test
 
 # Run JavaScript tests (jika ada)
 npm run test
-````
+```
 
 ### Database Migration
 

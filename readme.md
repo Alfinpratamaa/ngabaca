@@ -31,7 +31,9 @@ Script ini akan:
 ```bash
 # Development server Laravel
 composer run dev
+```
 
+```
 
 ## How to Contributing
 

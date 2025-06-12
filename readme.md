@@ -11,11 +11,14 @@ cd ngabaca
 
 ### 2. Setup Environment
 
-Jalankan script instalasi dengan encryption key:
+Jalankan script instalasi dengan encryption key (encryption key ada di deskripsi grup):
 
 ```bash
 chmod +x install.sh
-./install.sh YOUR_ENCRYPTION_KEY
+./install.sh <ENCRYPTION_KEY>
+
+#contoh
+./install.sh base64:aisdb1231gh20321ojb
 ```
 
 Script ini akan:

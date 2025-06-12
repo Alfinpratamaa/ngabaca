@@ -75,6 +75,15 @@ else
     exit 1 # Exit if Composer fails, as artisan won't work
 fi
 
+# Install Laravel Pail (for combined dev server)
+print_status "Installing Laravel Pail for combined development server..."
+if composer require laravel/pail --dev; then
+    print_success "Laravel Pail installed!"
+else
+    print_warning "Failed to install Laravel Pail. You may need to run 'php artisan serve' and 'npm run dev' separately."
+    # Do not exit here, as the project can still function without Pail
+fi
+
 ---
 
 # Decrypt environment file
@@ -144,8 +153,8 @@ echo "🎉 Setup completed successfully!"
 echo "=================================="
 echo ""
 echo "Next steps:"
-echo "1. Start development server: php artisan serve"
-echo "2. Start frontend development: npm run dev"
-echo "3. Visit: http://localhost:8000"
+# Updated next steps to suggest `composer run dev`
+echo "1. Start development server & frontend build: composer run dev"
+echo "2. Visit: http://localhost:8000 (or the address from 'php artisan serve')"
 echo ""
 print_success "Happy coding! 🚀"

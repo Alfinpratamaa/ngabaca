@@ -88,9 +88,9 @@ check_php_version() {
     
     print_status "Current PHP version: $PHP_VERSION"
     
-    # Check for PHP 8.4 or higher
-    if [ "$PHP_MAJOR" -lt 8 ] || ([ "$PHP_MAJOR" -eq 8 ] && [ "$PHP_MINOR" -lt 4 ]); then
-        print_error "PHP 8.4 or higher is required. Current version: $PHP_VERSION"
+    # Check for PHP 8.3 or higher (adjust this to your Laravel requirement if needed)
+    if [ "$PHP_MAJOR" -lt 8 ] || ([ "$PHP_MAJOR" -eq 8 ] && [ "$PHP_MINOR" -lt 3 ]); then
+        print_error "PHP 8.3 or higher is required. Current version: $PHP_VERSION"
         print_error "The script will attempt to install/upgrade PHP automatically."
         return 1
     fi
@@ -100,409 +100,92 @@ check_php_version() {
 }
 
 # PHP VERSION TARGET
-PHP_TARGET_VERSION="8.4.0" # Change this to your desired latest stable version, e.g., "8.3.8" if 8.4.0 is not stable
-PHP_DOWNLOAD_URL="https://www.php.net/distributions/php-${PHP_TARGET_VERSION}.tar.gz"
-PHP_INSTALL_DIR="/opt/php-${PHP_TARGET_VERSION}" # PHP installation location
+PHP_TARGET_VERSION="8.3" # Target PHP 8.3
 
-# Function to install system packages and compile PHP from source
+# Function to install system packages and PHP via apt
 install_system_requirements() {
     if [ "$SKIP_SYSTEM_INSTALL" = true ]; then
         print_warning "Skipping system requirements installation"
         return
     fi
 
-    print_install "Installing system requirements and compiling PHP ${PHP_TARGET_VERSION} from source..."
+    print_install "Installing system requirements and PHP ${PHP_TARGET_VERSION} using apt..."
     
     case $OS in
         "debian")
             sudo apt update
-            
-            # Install core build dependencies
-            print_install "Installing core build dependencies for Debian/Ubuntu..."
-            sudo apt install -y build-essential autoconf bison re2c pkg-config \
-                                curl wget git unzip apt-transport-https ca-certificates gnupg lsb-release
 
-            # Install PHP specific build dependencies (headers for common extensions)
-            print_install "Installing PHP build dependencies for Debian/Ubuntu (PHP extensions)..."
-            sudo apt install -y libxml2-dev libsqlite3-dev libcurl4-openssl-dev \
-                                libjpeg-dev libpng-dev libwebp-dev libonig-dev libzip-dev \
-                                libicu-dev libpq-dev libmysqlclient-dev libssl-dev \
-                                libgd-dev libxslt1-dev libsodium-dev libreadline-dev \
-                                libapache2-mod-php # Include if you are using Apache, otherwise it might not be needed for Nginx + FPM
-            
-            # Remove any previous PHP source to ensure clean build
-            print_status "Cleaning up old PHP source directory..."
-            sudo rm -rf /tmp/php-${PHP_TARGET_VERSION}
+            # Install core system tools
+            print_install "Installing core system tools..."
+            sudo apt install -y curl wget git unzip apt-transport-https ca-certificates gnupg lsb-release software-properties-common
 
-            # Download PHP source code
-            print_install "Downloading PHP ${PHP_TARGET_VERSION} source code..."
-            wget -q --show-progress ${PHP_DOWNLOAD_URL} -O /tmp/php-${PHP_TARGET_VERSION}.tar.gz
+            # Add Ondrej's PPA for latest PHP versions
+            print_install "Adding PHP repository (Ondrej's PPA)..."
+            # Ensure the key is added correctly for newer Ubuntu versions
+            sudo mkdir -p /etc/apt/keyrings
+            curl -sSL https://packages.sury.org/php/apt.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/php.gpg
+            echo "deb [signed-by=/etc/apt/keyrings/php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/php.list > /dev/null
+            sudo apt update
+            
+            # Remove any existing PHP versions and their configurations aggressively
+            print_install "Removing existing PHP installations and configurations..."
+            sudo apt purge '^php.*' '^apache2.*' -y 2>/dev/null || true # Purge all php packages and apache2 if installed
+            sudo apt autoremove -y # Remove orphaned packages
+            sudo apt clean # Clean apt cache
+
+            sudo apt update # Update again after purging to ensure package lists are fresh
+
+            # Install PHP 8.3 and all available extensions for 8.3
+            print_install "Installing PHP ${PHP_TARGET_VERSION} and ALL available extensions..."
+            # This uses a wildcard to install all php8.3-* packages.
+            # It will install php8.3-cli, php8.3-fpm, and all extensions like mysql, gd, mbstring, etc.
+            # This can install more than you strictly need but ensures nothing is missed.
+            sudo apt install -y php${PHP_TARGET_VERSION}* libapache2-mod-php${PHP_TARGET_VERSION}
+
             if [ $? -ne 0 ]; then
-                print_error "Failed to download PHP source from ${PHP_DOWNLOAD_URL}!"
+                print_error "Failed to install PHP ${PHP_TARGET_VERSION} and its extensions via apt!"
+                print_error "Please check the apt error messages above for details."
                 exit 1
             fi
             
-            tar -xzf /tmp/php-${PHP_TARGET_VERSION}.tar.gz -C /tmp/
-            if [ $? -ne 0 ]; then
-                print_error "Failed to extract PHP source!"
-                exit 1
-            fi
+            # Set PHP 8.3 as default
+            print_install "Setting PHP ${PHP_TARGET_VERSION} as default..."
+            sudo update-alternatives --set php /usr/bin/php${PHP_TARGET_VERSION}
+            sudo update-alternatives --set php-fpm /usr/sbin/php-fpm${PHP_TARGET_VERSION} 2>/dev/null || true # For php-fpm, if available
+            print_success "PHP ${PHP_TARGET_VERSION} set as default."
             
-            # Compile PHP
-            print_install "Compiling PHP ${PHP_TARGET_VERSION}..."
-            cd /tmp/php-${PHP_TARGET_VERSION}
-            
-            # Configure PHP with common extensions
-            ./configure \
-                --prefix=${PHP_INSTALL_DIR} \
-                --with-config-file-path=${PHP_INSTALL_DIR}/etc \
-                --with-config-file-scan-dir=${PHP_INSTALL_DIR}/etc/php.d \
-                --enable-mbstring \
-                --enable-fpm \
-                --with-fpm-user=www-data \
-                --with-fpm-group=www-data \
-                --with-pdo-mysql=mysqlnd \
-                --with-mysqli=mysqlnd \
-                --with-pdo-pgsql \
-                --with-curl \
-                --with-jpeg \
-                --with-webp \
-                --with-xsl \
-                --with-zip \
-                --with-pear \
-                --with-openssl \
-                --enable-soap \
-                --enable-opcache \
-                --enable-intl \
-                --enable-bcmath \
-                --enable-pcntl \
-                --enable-sockets \
-                --with-sodium \
-                --with-pdo-sqlite \
-                --without-pcre-jit \
-                --enable-exif \
-                --enable-calendar \
-                --with-readline \
-                --enable-cli # For CLI
-            
-            if [ $? -ne 0 ]; then
-                print_error "PHP configure failed! Check dependencies and configure options again."
-                exit 1
-            fi
-            
-            make -j$(nproc)
-            if [ $? -ne 0 ]; then
-                print_error "PHP make failed! Review compiler output for specific errors."
-                exit 1
-            fi
-            
-            sudo make install
-            if [ $? -ne 0 ]; then
-                print_error "PHP make install failed! Check permissions or previous errors."
-                exit 1
-            fi
-            
-            print_success "PHP ${PHP_TARGET_VERSION} compiled and installed successfully!"
-            
-            # Create php.ini
-            sudo mkdir -p ${PHP_INSTALL_DIR}/etc/php.d
-            sudo cp php.ini-production ${PHP_INSTALL_DIR}/etc/php.ini
-            
-            # Setup PHP-FPM service
-            print_install "Setting up PHP-FPM service..."
-            if [ -f "sapi/fpm/php-fpm.service" ]; then
-                sudo cp sapi/fpm/php-fpm.service /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
-                sudo sed -i "s/ExecStart=\/usr\/sbin\/php-fpm/ExecStart=${PHP_INSTALL_DIR}\/sbin\/php-fpm/g" /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
-                sudo sed -i "s/PIDFile=\/run\/php\/php-fpm.pid/PIDFile=\/run\/php${PHP_TARGET_VERSION}-fpm.pid/g" /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
-                
-                sudo systemctl daemon-reload
-                sudo systemctl enable php${PHP_TARGET_VERSION}-fpm.service
-                sudo systemctl start php${PHP_TARGET_VERSION}-fpm.service
-                print_success "PHP-FPM service configured and started."
-            else
-                print_warning "PHP-FPM service file not found in source. Manual configuration might be needed."
-            fi
-            
-            # Link PHP binaries to /usr/local/bin for global access
-            print_install "Linking PHP binaries to /usr/local/bin..."
-            sudo rm -f /usr/local/bin/php /usr/local/bin/php-config /usr/local/bin/phpize /usr/local/sbin/php-fpm # Remove old links
-            sudo ln -sf ${PHP_INSTALL_DIR}/bin/php /usr/local/bin/php
-            sudo ln -sf ${PHP_INSTALL_DIR}/bin/php-config /usr/local/bin/php-config
-            sudo ln -sf ${PHP_INSTALL_DIR}/bin/phpize /usr/local/bin/phpize
-            sudo ln -sf ${PHP_INSTALL_DIR}/sbin/php-fpm /usr/local/sbin/php-fpm
-            print_success "PHP binaries linked."
-            
-            # Install PostgreSQL (still using apt, as it's a separate service)
+            # Install PostgreSQL (still using apt)
             print_install "Installing PostgreSQL..."
             sudo apt install -y postgresql postgresql-contrib
             
-            # Install MySQL (still using apt, as it's a separate service)
+            # Install MySQL (still using apt)
             print_install "Installing MySQL..."
             sudo apt install -y mysql-server mysql-client
             ;;
             
         "redhat")
-            sudo yum update -y
-            
-            # Install core build dependencies
-            print_install "Installing core build dependencies for RedHat/CentOS..."
-            sudo yum groupinstall -y "Development Tools"
-            sudo yum install -y curl wget git unzip
-            
-            # Install PHP specific build dependencies
-            print_install "Installing PHP build dependencies for RedHat/CentOS (PHP extensions)..."
-            sudo yum install -y libxml2-devel sqlite-devel curl-devel libjpeg-turbo-devel libpng-devel libwebp-devel \
-                                 oniguruma-devel libzip-devel libicu-devel postgresql-devel mysql-devel openssl-devel \
-                                 pkgconfig autoconf bison re2c gd-devel libxslt-devel libsodium-devel readline-devel \
-                                 httpd-devel # Include if you are using Apache
-            
-            # Remove any previous PHP source to ensure clean build
-            print_status "Cleaning up old PHP source directory..."
-            sudo rm -rf /tmp/php-${PHP_TARGET_VERSION}
-
-            # Download PHP source code
-            print_install "Downloading PHP ${PHP_TARGET_VERSION} source code..."
-            wget -q --show-progress ${PHP_DOWNLOAD_URL} -O /tmp/php-${PHP_TARGET_VERSION}.tar.gz
-            if [ $? -ne 0 ]; then print_error "Failed to download PHP source!"; exit 1; fi
-            tar -xzf /tmp/php-${PHP_TARGET_VERSION}.tar.gz -C /tmp/
-            if [ $? -ne 0 ]; then print_error "Failed to extract PHP source!"; exit 1; fi
-            
-            # Compile PHP
-            print_install "Compiling PHP ${PHP_TARGET_VERSION}..."
-            cd /tmp/php-${PHP_TARGET_VERSION}
-            
-            # Configure PHP with common extensions
-            ./configure \
-                --prefix=${PHP_INSTALL_DIR} \
-                --with-config-file-path=${PHP_INSTALL_DIR}/etc \
-                --with-config-file-scan-dir=${PHP_INSTALL_DIR}/etc/php.d \
-                --enable-mbstring \
-                --enable-fpm \
-                --with-fpm-user=apache \
-                --with-fpm-group=apache \
-                --with-pdo-mysql=mysqlnd \
-                --with-mysqli=mysqlnd \
-                --with-pdo-pgsql \
-                --with-curl \
-                --with-gd \
-                --with-jpeg \
-                --with-webp \
-                --with-xsl \
-                --with-zip \
-                --with-pear \
-                --with-openssl \
-                --enable-soap \
-                --enable-xmlrpc \
-                --enable-opcache \
-                --enable-intl \
-                --enable-bcmath \
-                --enable-pcntl \
-                --enable-sockets \
-                --with-sodium \
-                --with-pdo-sqlite \
-                --without-pcre-jit \
-                --enable-exif \
-                --enable-calendar \
-                --with-readline \
-                --enable-cli
-            
-            if [ $? -ne 0 ]; then print_error "PHP configure failed! Check dependencies and configure options again."; exit 1; fi
-            make -j$(nproc)
-            if [ $? -ne 0 ]; then print_error "PHP make failed! Review compiler output for specific errors."; exit 1; fi
-            sudo make install
-            if [ $? -ne 0 ]; then print_error "PHP make install failed! Check permissions or previous errors."; exit 1; fi
-            
-            print_success "PHP ${PHP_TARGET_VERSION} compiled and installed successfully!"
-            
-            # Create php.ini
-            sudo mkdir -p ${PHP_INSTALL_DIR}/etc/php.d
-            sudo cp php.ini-production ${PHP_INSTALL_DIR}/etc/php.ini
-            
-            # Setup PHP-FPM service
-            print_install "Setting up PHP-FPM service..."
-            if [ -f "sapi/fpm/php-fpm.service" ]; then
-                sudo cp sapi/fpm/php-fpm.service /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
-                sudo sed -i "s/ExecStart=\/usr\/sbin\/php-fpm/ExecStart=${PHP_INSTALL_DIR}\/sbin\/php-fpm/g" /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
-                sudo sed -i "s/PIDFile=\/run\/php\/php-fpm.pid/PIDFile=\/run\/php${PHP_TARGET_VERSION}-fpm.pid/g" /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
-                
-                sudo systemctl daemon-reload
-                sudo systemctl enable php${PHP_TARGET_VERSION}-fpm.service
-                sudo systemctl start php${PHP_TARGET_VERSION}-fpm.service
-                print_success "PHP-FPM service configured and started."
-            else
-                print_warning "PHP-FPM service file not found in source. Manual configuration might be needed."
-            fi
-            
-            # Link PHP binaries to /usr/local/bin
-            print_install "Linking PHP binaries to /usr/local/bin..."
-            sudo rm -f /usr/local/bin/php /usr/local/bin/php-config /usr/local/bin/phpize /usr/local/sbin/php-fpm
-            sudo ln -sf ${PHP_INSTALL_DIR}/bin/php /usr/local/bin/php
-            sudo ln -sf ${PHP_INSTALL_DIR}/bin/php-config /usr/local/bin/php-config
-            sudo ln -sf ${PHP_INSTALL_DIR}/bin/phpize /usr/local/bin/phpize
-            sudo ln -sf ${PHP_INSTALL_DIR}/sbin/php-fpm /usr/local/sbin/php-fpm
-            print_success "PHP binaries linked."
-            
-            # Install PostgreSQL
-            print_install "Installing PostgreSQL..."
-            sudo yum install -y postgresql postgresql-server postgresql-contrib
-            sudo postgresql-setup initdb
-            
-            # Install MySQL
-            print_install "Installing MySQL..."
-            sudo yum install -y mysql-server mysql
+            print_warning "RedHat/CentOS detected. This script currently only automates PHP setup for Debian/Ubuntu."
+            print_warning "Please manually install PHP 8.3+, PostgreSQL, and MySQL using your system's package manager (yum/dnf)."
+            print_warning "Refer to official Remi's RPM repository for PHP: https://rpms.remirepo.net/"
+            exit 1 # Exit if not Debian/Ubuntu for simplified PHP installation
             ;;
             
         "arch")
-            sudo pacman -Syu --noconfirm
-            
-            # Install core build dependencies
-            print_install "Installing core build dependencies for Arch Linux..."
-            sudo pacman -S --noconfirm base-devel curl wget git unzip
-
-            # Install PHP specific build dependencies
-            print_install "Installing PHP build dependencies for Arch Linux (PHP extensions)..."
-            sudo pacman -S --noconfirm libxml2 sqlite libcurl openssl \
-                                      libjpeg-turbo libpng libwebp oniguruma libzip \
-                                      icu libpq mariadb-libs pkgconf autoconf bison re2c gd libxslt libsodium readline \
-                                      apache # Include if you are using Apache
-            
-            # Remove any previous PHP source to ensure clean build
-            print_status "Cleaning up old PHP source directory..."
-            sudo rm -rf /tmp/php-${PHP_TARGET_VERSION}
-
-            # Download PHP source code
-            print_install "Downloading PHP ${PHP_TARGET_VERSION} source code..."
-            wget -q --show-progress ${PHP_DOWNLOAD_URL} -O /tmp/php-${PHP_TARGET_VERSION}.tar.gz
-            if [ $? -ne 0 ]; then print_error "Failed to download PHP source!"; exit 1; fi
-            tar -xzf /tmp/php-${PHP_TARGET_VERSION}.tar.gz -C /tmp/
-            if [ $? -ne 0 ]; then print_error "Failed to extract PHP source!"; exit 1; fi
-            
-            # Compile PHP
-            print_install "Compiling PHP ${PHP_TARGET_VERSION}..."
-            cd /tmp/php-${PHP_TARGET_VERSION}
-            
-            # Configure PHP with common extensions
-            ./configure \
-                --prefix=${PHP_INSTALL_DIR} \
-                --with-config-file-path=${PHP_INSTALL_DIR}/etc \
-                --with-config-file-scan-dir=${PHP_INSTALL_DIR}/etc/php.d \
-                --enable-mbstring \
-                --enable-fpm \
-                --with-fpm-user=http \
-                --with-fpm-group=http \
-                --with-pdo-mysql=mysqlnd \
-                --with-mysqli=mysqlnd \
-                --with-pdo-pgsql \
-                --with-curl \
-                --with-gd \
-                --with-jpeg \
-                --with-webp \
-                --with-xsl \
-                --with-zip \
-                --with-pear \
-                --with-openssl \
-                --enable-soap \
-                --enable-xmlrpc \
-                --enable-opcache \
-                --enable-intl \
-                --enable-bcmath \
-                --enable-pcntl \
-                --enable-sockets \
-                --with-sodium \
-                --with-pdo-sqlite \
-                --without-pcre-jit \
-                --enable-exif \
-                --enable-calendar \
-                --with-readline \
-                --enable-cli
-            
-            if [ $? -ne 0 ]; then print_error "PHP configure failed! Check dependencies and configure options again."; exit 1; fi
-            make -j$(nproc)
-            if [ $? -ne 0 ]; then print_error "PHP make failed! Review compiler output for specific errors."; exit 1; fi
-            sudo make install
-            if [ $? -ne 0 ]; then print_error "PHP make install failed! Check permissions or previous errors."; exit 1; fi
-            
-            print_success "PHP ${PHP_TARGET_VERSION} compiled and installed successfully!"
-            
-            # Create php.ini
-            sudo mkdir -p ${PHP_INSTALL_DIR}/etc/php.d
-            sudo cp php.ini-production ${PHP_INSTALL_DIR}/etc/php.ini
-            
-            # Setup PHP-FPM service (Arch specific)
-            print_install "Setting up PHP-FPM service..."
-            if [ -f "/usr/lib/systemd/system/php-fpm.service" ]; then
-                sudo cp /usr/lib/systemd/system/php-fpm.service /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
-                sudo sed -i "s/ExecStart=\/usr\/bin\/php-fpm/ExecStart=${PHP_INSTALL_DIR}\/sbin\/php-fpm/g" /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
-                sudo sed -i "s/PIDFile=\/run\/php-fpm.pid/PIDFile=\/run\/php${PHP_TARGET_VERSION}-fpm.pid/g" /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
-            else
-                print_warning "php-fpm.service template not found in /usr/lib/systemd/system/. Manual setup might be needed."
-            fi
-            
-            sudo systemctl daemon-reload
-            sudo systemctl enable php${PHP_TARGET_VERSION}-fpm.service 2>/dev/null || true # Allow failure if service file not copied
-            sudo systemctl start php${PHP_TARGET_VERSION}-fpm.service 2>/dev/null || true # Allow failure if service file not copied
-            print_success "PHP-FPM service configured and started (if template found)."
-            
-            # Link PHP binaries to /usr/local/bin
-            print_install "Linking PHP binaries to /usr/local/bin..."
-            sudo rm -f /usr/local/bin/php /usr/local/bin/php-config /usr/local/bin/phpize /usr/local/sbin/php-fpm
-            sudo ln -sf ${PHP_INSTALL_DIR}/bin/php /usr/local/bin/php
-            sudo ln -sf ${PHP_INSTALL_DIR}/bin/php-config /usr/local/bin/php-config
-            sudo ln -sf ${PHP_INSTALL_DIR}/bin/phpize /usr/local/bin/phpize
-            sudo ln -sf ${PHP_INSTALL_DIR}/sbin/php-fpm /usr/local/sbin/php-fpm
-            print_success "PHP binaries linked."
-            
-            # Install PostgreSQL
-            print_install "Installing PostgreSQL..."
-            sudo pacman -S --noconfirm postgresql
-            sudo -u postgres initdb -D /var/lib/postgres/data
-            
-            # Install MySQL
-            print_install "Installing MySQL..."
-            sudo pacman -S --noconfirm mysql
-            sudo mysqld --initialize --user=mysql --basedir=/usr --datadir=/var/lib/mysql
+            print_warning "Arch Linux detected. This script currently only automates PHP setup for Debian/Ubuntu."
+            print_warning "Please manually install PHP 8.3+, PostgreSQL, and MySQL using pacman."
+            exit 1 # Exit if not Debian/Ubuntu
             ;;
             
         "macos")
-            # Check if Homebrew is installed
-            if ! command -v brew &> /dev/null; then
-                print_install "Installing Homebrew..."
-                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-                # Add Homebrew to PATH for current session
-                echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
-                eval "$(/opt/homebrew/bin/brew shellenv)"
-            fi
-            
-            # Update Homebrew
-            brew update
-            
-            # Install PHP 8.4 via Homebrew (Homebrew is the "official" way on macOS for most users)
-            # Note: For macOS, Homebrew is the recommended package manager, similar to how apt is for Debian.
-            # Compiling from source on macOS is also possible but even more complex if you want all features.
-            # This script uses Homebrew to get the latest PHP version on macOS.
-            print_install "Installing PHP 8.4 via Homebrew..."
-            brew install php@8.4 # Adjust to latest stable if 8.4 isn't available yet
-            brew link php@8.4 --force --overwrite
-            
-            # Add PHP to PATH
-            echo 'export PATH="/opt/homebrew/opt/php@8.4/bin:$PATH"' >> ~/.zprofile
-            echo 'export PATH="/opt/homebrew/opt/php@8.4/sbin:$PATH"' >> ~/.zprofile
-            export PATH="/opt/homebrew/opt/php@8.4/bin:$PATH"
-            export PATH="/opt/homebrew/opt/php@8.4/sbin:$PATH"
-            
-            # Install PostgreSQL
-            print_install "Installing PostgreSQL..."
-            brew install postgresql@14
-            brew link postgresql@14 --force
-            
-            # Install MySQL
-            print_install "Installing MySQL..."
-            brew install mysql
+            print_warning "macOS detected. This script currently only automates PHP setup for Debian/Ubuntu."
+            print_warning "Please manually install PHP 8.3+ via Homebrew, PostgreSQL, and MySQL."
+            exit 1 # Exit if not Debian/Ubuntu
             ;;
             
         *)
-            print_warning "Unknown OS or unsupported for direct compilation. Please install PHP 8.4+, PostgreSQL, and MySQL manually."
-            print_warning "Required PHP extensions for compilation: cli, fpm, json, common, mysql, zip, gd, mbstring, curl, xml, bcmath, pgsql, intl, soap, opcache, tokenizer, fileinfo, dom, simplexml, ctype, sodium, readline, exif, calendar"
+            print_warning "Unknown OS. This script currently only automates PHP setup for Debian/Ubuntu."
+            print_warning "Please manually install PHP 8.3+, PostgreSQL, and MySQL."
+            exit 1
             ;;
     esac
 }
@@ -556,85 +239,64 @@ setup_databases() {
     
     # Setup PostgreSQL
     case $OS in
-        "debian")
+        "debian") # Only proceed for Debian for automated parts
             if command -v systemctl &> /dev/null; then
                 sudo systemctl enable postgresql
                 sudo systemctl start postgresql
             fi
-            ;;
-        "redhat"|"arch")
-            sudo systemctl enable postgresql
-            sudo systemctl start postgresql
-            ;;
-        "macos")
-            if command -v brew &> /dev/null; then
-                brew services start postgresql@14
+            
+            print_success "Database services started!"
+            
+            # Create databases
+            print_status "Creating databases..."
+            
+            # PostgreSQL database
+            # Check if database exists before creating
+            sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -wq ngabaca
+            if [ $? -ne 0 ]; then
+                sudo -u postgres psql -c "CREATE DATABASE ngabaca;"
+                print_status "PostgreSQL database 'ngabaca' created."
+            else
+                print_status "PostgreSQL database 'ngabaca' already exists, skipping creation."
             fi
+            
+            # Check if user exists before creating
+            sudo -u postgres psql -tAc "SELECT 1 FROM pg_user WHERE usename = 'ngabaca'" | grep -q 1
+            if [ $? -ne 0 ]; then
+                sudo -u postgres psql -c "CREATE USER ngabaca WITH PASSWORD 'ngabaca123';"
+                sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ngabaca TO ngabaca;"
+                print_status "PostgreSQL user 'ngabaca' created and granted privileges."
+            else
+                print_status "PostgreSQL user 'ngabaca' already exists, skipping creation."
+            fi
+
+            # MySQL database (try with and without password)
+            # Check if database exists
+            mysql -u root -e "USE ngabaca;" 2>/dev/null
+            if [ $? -ne 0 ]; then
+                mysql -u root -e "CREATE DATABASE IF NOT EXISTS ngabaca;" || mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS ngabaca;"
+                print_status "MySQL database 'ngabaca' created."
+            else
+                print_status "MySQL database 'ngabaca' already exists, skipping creation."
+            fi
+
+            # Check if user exists
+            mysql -u root -e "SELECT User FROM mysql.user WHERE User='ngabaca';" 2>/dev/null | grep -q ngabaca
+            if [ $? -ne 0 ]; then
+                mysql -u root -e "CREATE USER IF NOT EXISTS 'ngabaca'@'localhost' IDENTIFIED BY 'ngabaca123';" || mysql -u root -p -e "CREATE USER IF NOT EXISTS 'ngabaca'@'localhost' IDENTIFIED BY 'ngabaca123';"
+                mysql -u root -e "GRANT ALL PRIVILEGES ON ngabaca.* TO 'ngabaca'@'localhost';" || mysql -u root -p -e "GRANT ALL PRIVILEGES ON ngabaca.* TO 'ngabaca'@'localhost';"
+                mysql -u root -e "FLUSH PRIVILEGES;" || mysql -u root -p -e "FLUSH PRIVILEGES;"
+                print_status "MySQL user 'ngabaca' created and granted privileges."
+            else
+                print_status "MySQL user 'ngabaca' already exists, skipping creation."
+            fi
+            
+            print_success "Databases creation/check completed!"
+            ;;
+        *)
+            print_warning "Database setup is not automated for your OS. Please configure PostgreSQL and MySQL manually."
             ;;
     esac
-    
-    # Setup MySQL
-    case $OS in
-        "debian")
-            sudo systemctl enable mysql
-            sudo systemctl start mysql
-            ;;
-        "redhat"|"arch")
-            sudo systemctl enable mysqld
-            sudo systemctl start mysqld
-            ;;
-        "macos")
-            brew services start mysql
-            ;;
-    esac
-    
-    print_success "Database services started!"
-    
-    # Create databases
-    print_status "Creating databases..."
-    
-    # PostgreSQL database
-    # Check if database exists before creating
-    sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -wq ngabaca
-    if [ $? -ne 0 ]; then
-        sudo -u postgres psql -c "CREATE DATABASE ngabaca;"
-        print_status "PostgreSQL database 'ngabaca' created."
-    else
-        print_status "PostgreSQL database 'ngabaca' already exists, skipping creation."
-    fi
-    
-    # Check if user exists before creating
-    sudo -u postgres psql -tAc "SELECT 1 FROM pg_user WHERE usename = 'ngabaca'" | grep -q 1
-    if [ $? -ne 0 ]; then
-        sudo -u postgres psql -c "CREATE USER ngabaca WITH PASSWORD 'ngabaca123';"
-        sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ngabaca TO ngabaca;"
-        print_status "PostgreSQL user 'ngabaca' created and granted privileges."
-    else
-        print_status "PostgreSQL user 'ngabaca' already exists, skipping creation."
-    fi
-
-    # MySQL database (try with and without password)
-    # Check if database exists
-    mysql -u root -e "USE ngabaca;" 2>/dev/null
-    if [ $? -ne 0 ]; then
-        mysql -u root -e "CREATE DATABASE IF NOT EXISTS ngabaca;" || mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS ngabaca;"
-        print_status "MySQL database 'ngabaca' created."
-    else
-        print_status "MySQL database 'ngabaca' already exists, skipping creation."
-    fi
-
-    # Check if user exists
-    mysql -u root -e "SELECT User FROM mysql.user WHERE User='ngabaca';" 2>/dev/null | grep -q ngabaca
-    if [ $? -ne 0 ]; then
-        mysql -u root -e "CREATE USER IF NOT EXISTS 'ngabaca'@'localhost' IDENTIFIED BY 'ngabaca123';" || mysql -u root -p -e "CREATE USER IF NOT EXISTS 'ngabaca'@'localhost' IDENTIFIED BY 'ngabaca123';"
-        mysql -u root -e "GRANT ALL PRIVILEGES ON ngabaca.* TO 'ngabaca'@'localhost';" || mysql -u root -p -e "GRANT ALL PRIVILEGES ON ngabaca.* TO 'ngabaca'@'localhost';"
-        mysql -u root -e "FLUSH PRIVILEGES;" || mysql -u root -p -e "FLUSH PRIVILEGES;"
-        print_status "MySQL user 'ngabaca' created and granted privileges."
-    else
-        print_status "MySQL user 'ngabaca' already exists, skipping creation."
-    fi
-    
-    print_success "Databases creation/check completed!"
 }
 
 # Install system requirements first
@@ -689,8 +351,8 @@ print_success "All requirements verified!"
 print_status "Installed versions:"
 echo "PHP: $(php --version 2>/dev/null | head -n 1 || echo 'Not installed')"
 echo "Composer: $(composer --version 2>/dev/null || echo 'Not installed')"
-echo "Node.js: $(node --version 2>/dev/null || echo 'Not installed')"
-echo "NPM: $(npm --version 2>/dev/null || echo 'Not installed')"
+echo "Node.js: $(node --version 2>/dev/null | head -n 1 || echo 'Not installed')"
+echo "NPM: $(npm --version 2>/dev/null | head -n 1 || echo 'Not installed')"
 
 # Final PHP version check
 final_php_check() {
@@ -699,7 +361,6 @@ final_php_check() {
     PHP_MINOR=$(php -r "echo PHP_MINOR_VERSION;")
     
     # Assuming Laravel 12+ requires PHP 8.2 or higher, adjust as needed.
-    # PHP 8.4.0 target means it should pass if installed.
     if [ "$PHP_MAJOR" -lt 8 ] || ([ "$PHP_MAJOR" -eq 8 ] && [ "$PHP_MINOR" -lt 2 ]); then
         print_error "Final PHP version check failed. Version: ${PHP_VERSION}"
         print_error "Your Laravel project requires PHP 8.2 or higher."
@@ -720,7 +381,7 @@ if composer install --no-interaction --prefer-dist --optimize-autoloader; then
 else
     print_error "Failed to install PHP dependencies with Composer."
     print_error "This usually means PHP version is still incompatible or missing extensions."
-    print_error "Please ensure all required PHP extensions were compiled correctly and try running 'composer install' manually."
+    print_error "Please ensure all required PHP extensions are installed and try running 'composer install' manually."
     exit 1
 fi
 
@@ -884,15 +545,20 @@ echo "🎉 Setup completed successfully!"
 echo "=================================="
 echo ""
 echo "Next steps:"
-echo "1. Start development server: composer run dev "
+echo "1. Start development server: php artisan serve"
+echo "   Or use: composer run dev (if defined in composer.json)"
 echo "2. Visit: http://localhost:8000"
 echo "3. Monitor logs: php artisan pail (if installed)"
+echo ""
+echo "For frontend development:"
+echo "4. Start Vite dev server: npm run dev"
+echo "5. Build for production: npm run build"
 echo ""
 print_success "Happy coding! 🚀"
 echo ""
 print_status "System Information:"
 echo "OS: $OS"
 echo "PHP: $(php --version 2>/dev/null | head -n 1 || echo 'Not installed')"
-echo "Composer: $(composer --version 2>/dev/null || echo 'Not installed')"
+echo "Composer: $(composer --version 2>/dev/null | head -n 1 || echo 'Not installed')"
 echo "Node.js: $(node --version 2>/dev/null | head -n 1 || echo 'Not installed')"
-echo "NPM: $(npm --version 2>/dev/null || echo 'Not installed')"
+echo "NPM: $(npm --version 2>/dev/null | head -n 1 || echo 'Not installed')"

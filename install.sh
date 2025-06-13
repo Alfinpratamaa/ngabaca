@@ -121,16 +121,17 @@ install_system_requirements() {
 
             # Add Ondrej's PPA for latest PHP versions
             print_install "Adding PHP repository (Ondrej's PPA)..."
-            # Ensure the key is added correctly for newer Ubuntu versions (like Jammy 22.04)
+            # Ensure the key is added correctly for newer Ubuntu versions (like Noble 24.04)
             sudo mkdir -p /etc/apt/keyrings
             curl -sSL https://packages.sury.org/php/apt.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/php.gpg
-            # Use fixed codename 'jammy' for stability, or lsb_release -sc for dynamic detection
-            echo "deb [signed-by=/etc/apt/keyrings/php.gpg] https://packages.sury.org/php jammy main" | sudo tee /etc/apt/sources.list.d/php.list > /dev/null
+            # Use lsb_release -sc for dynamic codename detection
+            echo "deb [signed-by=/etc/apt/keyrings/php.gpg] https://packages.sury.org/php $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/php.list > /dev/null
             
             # Also add Ondrej's Apache2 PPA if Apache is being used for consistency, prevents conflicts
             # sudo add-apt-repository ppa:ondrej/apache2 -y # Uncomment if you explicitly need Apache from Ondrej
 
-            sudo apt update --allow-unauthenticated # Allow update even if signature issues persist from previous runs
+            # Force update, even if there are unsigned packages (useful if repo is new/changing)
+            sudo apt update --allow-unauthenticated 
 
             # Remove any existing PHP versions and their configurations aggressively
             print_install "Removing existing PHP installations and configurations..."
@@ -318,7 +319,7 @@ setup_databases() {
                 print_status "MySQL database 'ngabaca' created."
             else
                 print_status "MySQL database 'ngabaca' already exists, skipping creation."
-            fi # Fixed: Removed extra 'F' here
+            fi 
             
             # Check if user exists
             mysql -u root -e "SELECT User FROM mysql.user WHERE User='ngabaca';" 2>/dev/null | grep -q ngabaca
@@ -506,31 +507,59 @@ else
 fi
 
 
-# Set proper permissions
-print_status "Setting file permissions..."
-# Ensure storage and bootstrap/cache are writable by the web server user
-# Assuming www-data for Debian/Ubuntu, apache for RedHat, http for Arch
-case $OS in
-    "debian")
-        sudo chown -R www-data:www-data storage bootstrap/cache
-        sudo chmod -R 775 storage bootstrap/cache
-        ;;
-    "redhat")
-        sudo chown -R apache:apache storage bootstrap/cache
-        sudo chmod -R 775 storage bootstrap/cache
-        ;;
-    "arch")
-        sudo chown -R http:http storage bootstrap/cache
-        sudo chmod -R 775 storage bootstrap/cache
-        ;;
-    "macos")
-        # On macOS, usually the current user is fine, or _www for web server
-        # brew services run as current user, so often no special chown needed
-        chmod -R 775 storage bootstrap/cache
-        ;;
-esac
-print_success "File permissions set!"
+# --- Fix Permissions for Laravel Storage ---
+print_status "Setting file permissions for Laravel storage and cache..."
+
+# Determine the web server user based on OS (most common is www-data for Debian/Ubuntu)
+WEB_SERVER_USER="www-data"
+if [ "$OS" = "redhat" ]; then
+    WEB_SERVER_USER="apache"
+elif [ "$OS" = "arch" ]; then
+    WEB_SERVER_USER="http"
+fi
+
+# Ensure ACL package is installed (required for setfacl)
+print_install "Installing ACL package..."
+sudo apt install -y acl
 sleep 1
+
+# Check if the web server user exists before trying to chown/setfacl to it
+if id -u "$WEB_SERVER_USER" >/dev/null 2>&1; then
+    # 1. Set the owner to the current user and group to the web server user
+    # This ensures both the current user and the web server group have appropriate access.
+    # The current user will be $(whoami)
+    CURRENT_USER=$(whoami)
+    sudo chown -R "$CURRENT_USER":"$WEB_SERVER_USER" ~/ngabaca/storage ~/ngabaca/bootstrap/cache
+    print_status "Ownership set to $CURRENT_USER:$WEB_SERVER_USER."
+    sleep 1
+
+    # 2. Set basic read/write/execute permissions for owner and group
+    sudo chmod -R 775 ~/ngabaca/storage ~/ngabaca/bootstrap/cache
+    print_status "Basic permissions set to 775."
+    sleep 1
+
+    # 3. Apply Access Control Lists (ACL) for finer-grained control and persistence
+    # -R: recursive
+    # -m: modify ACL
+    # u:WEB_SERVER_USER:rwX: gives web server user read, write, and execute (for directories)
+    # u:CURRENT_USER:rwX: gives current user read, write, and execute (for directories)
+    # -d: default ACL (for future created files/directories)
+    sudo setfacl -R -m u:"$WEB_SERVER_USER":rwX -m u:"$CURRENT_USER":rwX ~/ngabaca/storage ~/ngabaca/bootstrap/cache
+    sudo setfacl -dR -m u:"$WEB_SERVER_USER":rwX -m u:"$CURRENT_USER":rwX ~/ngabaca/storage ~/ngabaca/bootstrap/cache
+    print_success "ACL permissions set for persistent access."
+    sleep 1
+else
+    print_warning "Web server user '$WEB_SERVER_USER' not found. Skipping advanced permission setup."
+    print_warning "Please ensure permissions for ~/ngabaca/storage and ~/ngabaca/bootstrap/cache are correctly set manually."
+    # Fallback to basic chmod for current user if web server user is not found
+    sudo chmod -R 775 ~/ngabaca/storage ~/ngabaca/bootstrap/cache
+    print_success "Basic permissions set for current user."
+    sleep 1
+fi
+
+print_success "File permissions set successfully!"
+# --- End Fix Permissions ---
+
 
 # Clear cache
 print_status "Clearing application cache..."

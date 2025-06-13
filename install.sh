@@ -76,8 +76,9 @@ print_status "Detected OS: $OS"
 check_php_version() {
     print_status "Checking PHP version..."
     
+    # Check if 'php' command exists, if not, it means PHP is not installed or not in PATH yet
     if ! command -v php &> /dev/null; then
-        print_error "PHP is not installed!"
+        print_error "PHP is not installed or not found in PATH!"
         return 1
     fi
     
@@ -90,7 +91,7 @@ check_php_version() {
     # Check for PHP 8.4 or higher
     if [ "$PHP_MAJOR" -lt 8 ] || ([ "$PHP_MAJOR" -eq 8 ] && [ "$PHP_MINOR" -lt 4 ]); then
         print_error "PHP 8.4 or higher is required. Current version: $PHP_VERSION"
-        print_error "The script will attempt to upgrade PHP automatically."
+        print_error "The script will attempt to install/upgrade PHP automatically."
         return 1
     fi
     
@@ -99,7 +100,7 @@ check_php_version() {
 }
 
 # PHP VERSION TARGET
-PHP_TARGET_VERSION="8.4.0" # Change this to your desired latest version, e.g., 8.4.0
+PHP_TARGET_VERSION="8.4.0" # Change this to your desired latest stable version, e.g., "8.3.8" if 8.4.0 is not stable
 PHP_DOWNLOAD_URL="https://www.php.net/distributions/php-${PHP_TARGET_VERSION}.tar.gz"
 PHP_INSTALL_DIR="/opt/php-${PHP_TARGET_VERSION}" # PHP installation location
 
@@ -116,18 +117,36 @@ install_system_requirements() {
         "debian")
             sudo apt update
             
-            # Install build dependencies for PHP compilation
-            print_install "Installing PHP build dependencies..."
-            sudo apt install -y build-essential libxml2-dev libsqlite3-dev libcurl4-openssl-dev \
+            # Install core build dependencies
+            print_install "Installing core build dependencies for Debian/Ubuntu..."
+            sudo apt install -y build-essential autoconf bison re2c pkg-config \
+                                curl wget git unzip apt-transport-https ca-certificates gnupg lsb-release
+
+            # Install PHP specific build dependencies (headers for common extensions)
+            print_install "Installing PHP build dependencies for Debian/Ubuntu (PHP extensions)..."
+            sudo apt install -y libxml2-dev libsqlite3-dev libcurl4-openssl-dev \
                                 libjpeg-dev libpng-dev libwebp-dev libonig-dev libzip-dev \
-                                libicu-dev libpq-dev libmysqlclient-dev libssl-dev pkg-config \
-                                autoconf bison re2c libgd-dev libxslt1-dev libsodium-dev \
-                                libapache2-mod-php # Include libapache2-mod-php if you are using Apache
+                                libicu-dev libpq-dev libmysqlclient-dev libssl-dev \
+                                libgd-dev libxslt1-dev libsodium-dev libreadline-dev \
+                                libapache2-mod-php # Include if you are using Apache, otherwise it might not be needed for Nginx + FPM
             
+            # Remove any previous PHP source to ensure clean build
+            print_status "Cleaning up old PHP source directory..."
+            sudo rm -rf /tmp/php-${PHP_TARGET_VERSION}
+
             # Download PHP source code
             print_install "Downloading PHP ${PHP_TARGET_VERSION} source code..."
             wget -q --show-progress ${PHP_DOWNLOAD_URL} -O /tmp/php-${PHP_TARGET_VERSION}.tar.gz
+            if [ $? -ne 0 ]; then
+                print_error "Failed to download PHP source from ${PHP_DOWNLOAD_URL}!"
+                exit 1
+            fi
+            
             tar -xzf /tmp/php-${PHP_TARGET_VERSION}.tar.gz -C /tmp/
+            if [ $? -ne 0 ]; then
+                print_error "Failed to extract PHP source!"
+                exit 1
+            fi
             
             # Compile PHP
             print_install "Compiling PHP ${PHP_TARGET_VERSION}..."
@@ -169,46 +188,51 @@ install_system_requirements() {
                 --enable-cli # For CLI
             
             if [ $? -ne 0 ]; then
-                print_error "PHP configure failed! Check dependencies and configure options."
+                print_error "PHP configure failed! Check dependencies and configure options again."
                 exit 1
             fi
             
             make -j$(nproc)
             if [ $? -ne 0 ]; then
-                print_error "PHP make failed!"
+                print_error "PHP make failed! Review compiler output for specific errors."
                 exit 1
             fi
             
             sudo make install
             if [ $? -ne 0 ]; then
-                print_error "PHP make install failed!"
+                print_error "PHP make install failed! Check permissions or previous errors."
                 exit 1
             fi
             
             print_success "PHP ${PHP_TARGET_VERSION} compiled and installed successfully!"
             
             # Create php.ini
-            sudo cp php.ini-production ${PHP_INSTALL_DIR}/etc/php.ini
             sudo mkdir -p ${PHP_INSTALL_DIR}/etc/php.d
+            sudo cp php.ini-production ${PHP_INSTALL_DIR}/etc/php.ini
             
             # Setup PHP-FPM service
-            sudo cp sapi/fpm/php-fpm.service /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
-            sudo sed -i "s/ExecStart=\/usr\/sbin\/php-fpm/ExecStart=${PHP_INSTALL_DIR}\/sbin\/php-fpm/g" /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
-            sudo sed -i "s/PIDFile=\/run\/php\/php-fpm.pid/PIDFile=\/run\/php${PHP_TARGET_VERSION}-fpm.pid/g" /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
+            print_install "Setting up PHP-FPM service..."
+            if [ -f "sapi/fpm/php-fpm.service" ]; then
+                sudo cp sapi/fpm/php-fpm.service /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
+                sudo sed -i "s/ExecStart=\/usr\/sbin\/php-fpm/ExecStart=${PHP_INSTALL_DIR}\/sbin\/php-fpm/g" /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
+                sudo sed -i "s/PIDFile=\/run\/php\/php-fpm.pid/PIDFile=\/run\/php${PHP_TARGET_VERSION}-fpm.pid/g" /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
+                
+                sudo systemctl daemon-reload
+                sudo systemctl enable php${PHP_TARGET_VERSION}-fpm.service
+                sudo systemctl start php${PHP_TARGET_VERSION}-fpm.service
+                print_success "PHP-FPM service configured and started."
+            else
+                print_warning "PHP-FPM service file not found in source. Manual configuration might be needed."
+            fi
             
-            sudo systemctl daemon-reload
-            sudo systemctl enable php${PHP_TARGET_VERSION}-fpm.service
-            sudo systemctl start php${PHP_TARGET_VERSION}-fpm.service
-            
-            # Link PHP binaries to /usr/local/bin
+            # Link PHP binaries to /usr/local/bin for global access
             print_install "Linking PHP binaries to /usr/local/bin..."
+            sudo rm -f /usr/local/bin/php /usr/local/bin/php-config /usr/local/bin/phpize /usr/local/sbin/php-fpm # Remove old links
             sudo ln -sf ${PHP_INSTALL_DIR}/bin/php /usr/local/bin/php
             sudo ln -sf ${PHP_INSTALL_DIR}/bin/php-config /usr/local/bin/php-config
             sudo ln -sf ${PHP_INSTALL_DIR}/bin/phpize /usr/local/bin/phpize
             sudo ln -sf ${PHP_INSTALL_DIR}/sbin/php-fpm /usr/local/sbin/php-fpm
-            
-            # Install other requirements (minimal, as PHP is from source)
-            sudo apt install -y curl wget git unzip apt-transport-https ca-certificates gnupg lsb-release
+            print_success "PHP binaries linked."
             
             # Install PostgreSQL (still using apt, as it's a separate service)
             print_install "Installing PostgreSQL..."
@@ -222,18 +246,28 @@ install_system_requirements() {
         "redhat")
             sudo yum update -y
             
-            # Install build dependencies for PHP compilation (RedHat/CentOS equivalent)
-            print_install "Installing PHP build dependencies for RedHat/CentOS..."
+            # Install core build dependencies
+            print_install "Installing core build dependencies for RedHat/CentOS..."
             sudo yum groupinstall -y "Development Tools"
+            sudo yum install -y curl wget git unzip
+            
+            # Install PHP specific build dependencies
+            print_install "Installing PHP build dependencies for RedHat/CentOS (PHP extensions)..."
             sudo yum install -y libxml2-devel sqlite-devel curl-devel libjpeg-turbo-devel libpng-devel libwebp-devel \
                                  oniguruma-devel libzip-devel libicu-devel postgresql-devel mysql-devel openssl-devel \
-                                 pkgconfig autoconf bison re2c gd-devel libxslt-devel libsodium-devel \
-                                 httpd-devel # If you are using Apache
+                                 pkgconfig autoconf bison re2c gd-devel libxslt-devel libsodium-devel readline-devel \
+                                 httpd-devel # Include if you are using Apache
             
+            # Remove any previous PHP source to ensure clean build
+            print_status "Cleaning up old PHP source directory..."
+            sudo rm -rf /tmp/php-${PHP_TARGET_VERSION}
+
             # Download PHP source code
             print_install "Downloading PHP ${PHP_TARGET_VERSION} source code..."
             wget -q --show-progress ${PHP_DOWNLOAD_URL} -O /tmp/php-${PHP_TARGET_VERSION}.tar.gz
+            if [ $? -ne 0 ]; then print_error "Failed to download PHP source!"; exit 1; fi
             tar -xzf /tmp/php-${PHP_TARGET_VERSION}.tar.gz -C /tmp/
+            if [ $? -ne 0 ]; then print_error "Failed to extract PHP source!"; exit 1; fi
             
             # Compile PHP
             print_install "Compiling PHP ${PHP_TARGET_VERSION}..."
@@ -272,49 +306,43 @@ install_system_requirements() {
                 --enable-exif \
                 --enable-calendar \
                 --with-readline \
-                --enable-cli # For CLI
+                --enable-cli
             
-            if [ $? -ne 0 ]; then
-                print_error "PHP configure failed! Check dependencies and configure options."
-                exit 1
-            fi
-            
+            if [ $? -ne 0 ]; then print_error "PHP configure failed! Check dependencies and configure options again."; exit 1; fi
             make -j$(nproc)
-            if [ $? -ne 0 ]; then
-                print_error "PHP make failed!"
-                exit 1
-            fi
-            
+            if [ $? -ne 0 ]; then print_error "PHP make failed! Review compiler output for specific errors."; exit 1; fi
             sudo make install
-            if [ $? -ne 0 ]; then
-                print_error "PHP make install failed!"
-                exit 1
-            fi
+            if [ $? -ne 0 ]; then print_error "PHP make install failed! Check permissions or previous errors."; exit 1; fi
             
             print_success "PHP ${PHP_TARGET_VERSION} compiled and installed successfully!"
             
             # Create php.ini
-            sudo cp php.ini-production ${PHP_INSTALL_DIR}/etc/php.ini
             sudo mkdir -p ${PHP_INSTALL_DIR}/etc/php.d
+            sudo cp php.ini-production ${PHP_INSTALL_DIR}/etc/php.ini
             
             # Setup PHP-FPM service
-            sudo cp sapi/fpm/php-fpm.service /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
-            sudo sed -i "s/ExecStart=\/usr\/sbin\/php-fpm/ExecStart=${PHP_INSTALL_DIR}\/sbin\/php-fpm/g" /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
-            sudo sed -i "s/PIDFile=\/run\/php\/php-fpm.pid/PIDFile=\/run\/php${PHP_TARGET_VERSION}-fpm.pid/g" /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
-            
-            sudo systemctl daemon-reload
-            sudo systemctl enable php${PHP_TARGET_VERSION}-fpm.service
-            sudo systemctl start php${PHP_TARGET_VERSION}-fpm.service
+            print_install "Setting up PHP-FPM service..."
+            if [ -f "sapi/fpm/php-fpm.service" ]; then
+                sudo cp sapi/fpm/php-fpm.service /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
+                sudo sed -i "s/ExecStart=\/usr\/sbin\/php-fpm/ExecStart=${PHP_INSTALL_DIR}\/sbin\/php-fpm/g" /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
+                sudo sed -i "s/PIDFile=\/run\/php\/php-fpm.pid/PIDFile=\/run\/php${PHP_TARGET_VERSION}-fpm.pid/g" /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
+                
+                sudo systemctl daemon-reload
+                sudo systemctl enable php${PHP_TARGET_VERSION}-fpm.service
+                sudo systemctl start php${PHP_TARGET_VERSION}-fpm.service
+                print_success "PHP-FPM service configured and started."
+            else
+                print_warning "PHP-FPM service file not found in source. Manual configuration might be needed."
+            fi
             
             # Link PHP binaries to /usr/local/bin
             print_install "Linking PHP binaries to /usr/local/bin..."
+            sudo rm -f /usr/local/bin/php /usr/local/bin/php-config /usr/local/bin/phpize /usr/local/sbin/php-fpm
             sudo ln -sf ${PHP_INSTALL_DIR}/bin/php /usr/local/bin/php
             sudo ln -sf ${PHP_INSTALL_DIR}/bin/php-config /usr/local/bin/php-config
             sudo ln -sf ${PHP_INSTALL_DIR}/bin/phpize /usr/local/bin/phpize
             sudo ln -sf ${PHP_INSTALL_DIR}/sbin/php-fpm /usr/local/sbin/php-fpm
-            
-            # Install other requirements
-            sudo yum install -y curl wget git unzip
+            print_success "PHP binaries linked."
             
             # Install PostgreSQL
             print_install "Installing PostgreSQL..."
@@ -329,17 +357,27 @@ install_system_requirements() {
         "arch")
             sudo pacman -Syu --noconfirm
             
-            # Install build dependencies for PHP compilation (Arch equivalent)
-            print_install "Installing PHP build dependencies for Arch Linux..."
-            sudo pacman -S --noconfirm base-devel libxml2 sqlite libcurl openssl \
+            # Install core build dependencies
+            print_install "Installing core build dependencies for Arch Linux..."
+            sudo pacman -S --noconfirm base-devel curl wget git unzip
+
+            # Install PHP specific build dependencies
+            print_install "Installing PHP build dependencies for Arch Linux (PHP extensions)..."
+            sudo pacman -S --noconfirm libxml2 sqlite libcurl openssl \
                                       libjpeg-turbo libpng libwebp oniguruma libzip \
-                                      icu libpq mariadb-libs pkgconf autoconf bison re2c gd libxslt libsodium \
-                                      apache # If you are using Apache
+                                      icu libpq mariadb-libs pkgconf autoconf bison re2c gd libxslt libsodium readline \
+                                      apache # Include if you are using Apache
             
+            # Remove any previous PHP source to ensure clean build
+            print_status "Cleaning up old PHP source directory..."
+            sudo rm -rf /tmp/php-${PHP_TARGET_VERSION}
+
             # Download PHP source code
             print_install "Downloading PHP ${PHP_TARGET_VERSION} source code..."
             wget -q --show-progress ${PHP_DOWNLOAD_URL} -O /tmp/php-${PHP_TARGET_VERSION}.tar.gz
+            if [ $? -ne 0 ]; then print_error "Failed to download PHP source!"; exit 1; fi
             tar -xzf /tmp/php-${PHP_TARGET_VERSION}.tar.gz -C /tmp/
+            if [ $? -ne 0 ]; then print_error "Failed to extract PHP source!"; exit 1; fi
             
             # Compile PHP
             print_install "Compiling PHP ${PHP_TARGET_VERSION}..."
@@ -378,33 +416,22 @@ install_system_requirements() {
                 --enable-exif \
                 --enable-calendar \
                 --with-readline \
-                --enable-cli # For CLI
+                --enable-cli
             
-            if [ $? -ne 0 ]; then
-                print_error "PHP configure failed! Check dependencies and configure options."
-                exit 1
-            fi
-            
+            if [ $? -ne 0 ]; then print_error "PHP configure failed! Check dependencies and configure options again."; exit 1; fi
             make -j$(nproc)
-            if [ $? -ne 0 ]; then
-                print_error "PHP make failed!"
-                exit 1
-            fi
-            
+            if [ $? -ne 0 ]; then print_error "PHP make failed! Review compiler output for specific errors."; exit 1; fi
             sudo make install
-            if [ $? -ne 0 ]; then
-                print_error "PHP make install failed!"
-                exit 1
-            fi
+            if [ $? -ne 0 ]; then print_error "PHP make install failed! Check permissions or previous errors."; exit 1; fi
             
             print_success "PHP ${PHP_TARGET_VERSION} compiled and installed successfully!"
             
             # Create php.ini
-            sudo cp php.ini-production ${PHP_INSTALL_DIR}/etc/php.ini
             sudo mkdir -p ${PHP_INSTALL_DIR}/etc/php.d
+            sudo cp php.ini-production ${PHP_INSTALL_DIR}/etc/php.ini
             
             # Setup PHP-FPM service (Arch specific)
-            # Arch uses a different location for php-fpm.service template
+            print_install "Setting up PHP-FPM service..."
             if [ -f "/usr/lib/systemd/system/php-fpm.service" ]; then
                 sudo cp /usr/lib/systemd/system/php-fpm.service /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
                 sudo sed -i "s/ExecStart=\/usr\/bin\/php-fpm/ExecStart=${PHP_INSTALL_DIR}\/sbin\/php-fpm/g" /etc/systemd/system/php${PHP_TARGET_VERSION}-fpm.service
@@ -416,16 +443,16 @@ install_system_requirements() {
             sudo systemctl daemon-reload
             sudo systemctl enable php${PHP_TARGET_VERSION}-fpm.service 2>/dev/null || true # Allow failure if service file not copied
             sudo systemctl start php${PHP_TARGET_VERSION}-fpm.service 2>/dev/null || true # Allow failure if service file not copied
+            print_success "PHP-FPM service configured and started (if template found)."
             
             # Link PHP binaries to /usr/local/bin
             print_install "Linking PHP binaries to /usr/local/bin..."
+            sudo rm -f /usr/local/bin/php /usr/local/bin/php-config /usr/local/bin/phpize /usr/local/sbin/php-fpm
             sudo ln -sf ${PHP_INSTALL_DIR}/bin/php /usr/local/bin/php
             sudo ln -sf ${PHP_INSTALL_DIR}/bin/php-config /usr/local/bin/php-config
             sudo ln -sf ${PHP_INSTALL_DIR}/bin/phpize /usr/local/bin/phpize
             sudo ln -sf ${PHP_INSTALL_DIR}/sbin/php-fpm /usr/local/sbin/php-fpm
-            
-            # Install other requirements
-            sudo pacman -S --noconfirm curl wget git unzip
+            print_success "PHP binaries linked."
             
             # Install PostgreSQL
             print_install "Installing PostgreSQL..."
@@ -507,7 +534,7 @@ install_nodejs() {
     # Install NVM
     if [ ! -d "$HOME/.nvm" ]; then
         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-        sleep 3
+        sleep 3 # Give NVM install time to complete and set up env
         export NVM_DIR="$HOME/.nvm"
         [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
         [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
@@ -569,17 +596,47 @@ setup_databases() {
     print_status "Creating databases..."
     
     # PostgreSQL database
-    sudo -u postgres psql -c "CREATE DATABASE ngabaca;" 2>/dev/null || true
-    sudo -u postgres psql -c "CREATE USER ngabaca WITH PASSWORD 'ngabaca123';" 2>/dev/null || true
-    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ngabaca TO ngabaca;" 2>/dev/null || true
+    # Check if database exists before creating
+    sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -wq ngabaca
+    if [ $? -ne 0 ]; then
+        sudo -u postgres psql -c "CREATE DATABASE ngabaca;"
+        print_status "PostgreSQL database 'ngabaca' created."
+    else
+        print_status "PostgreSQL database 'ngabaca' already exists, skipping creation."
+    fi
     
+    # Check if user exists before creating
+    sudo -u postgres psql -tAc "SELECT 1 FROM pg_user WHERE usename = 'ngabaca'" | grep -q 1
+    if [ $? -ne 0 ]; then
+        sudo -u postgres psql -c "CREATE USER ngabaca WITH PASSWORD 'ngabaca123';"
+        sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ngabaca TO ngabaca;"
+        print_status "PostgreSQL user 'ngabaca' created and granted privileges."
+    else
+        print_status "PostgreSQL user 'ngabaca' already exists, skipping creation."
+    fi
+
     # MySQL database (try with and without password)
-    mysql -u root -e "CREATE DATABASE IF NOT EXISTS ngabaca;" 2>/dev/null || mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS ngabaca;" 2>/dev/null || true
-    mysql -u root -e "CREATE USER IF NOT EXISTS 'ngabaca'@'localhost' IDENTIFIED BY 'ngabaca123';" 2>/dev/null || mysql -u root -p -e "CREATE USER IF NOT EXISTS 'ngabaca'@'localhost' IDENTIFIED BY 'ngabaca123';" 2>/dev/null || true
-    mysql -u root -e "GRANT ALL PRIVILEGES ON ngabaca.* TO 'ngabaca'@'localhost';" 2>/dev/null || mysql -u root -p -e "GRANT ALL PRIVILEGES ON ngabaca.* TO 'ngabaca'@'localhost';" 2>/dev/null || true
-    mysql -u root -e "FLUSH PRIVILEGES;" 2>/dev/null || mysql -u root -p -e "FLUSH PRIVILEGES;" 2>/dev/null || true
+    # Check if database exists
+    mysql -u root -e "USE ngabaca;" 2>/dev/null
+    if [ $? -ne 0 ]; then
+        mysql -u root -e "CREATE DATABASE IF NOT EXISTS ngabaca;" || mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS ngabaca;"
+        print_status "MySQL database 'ngabaca' created."
+    else
+        print_status "MySQL database 'ngabaca' already exists, skipping creation."
+    fi
+
+    # Check if user exists
+    mysql -u root -e "SELECT User FROM mysql.user WHERE User='ngabaca';" 2>/dev/null | grep -q ngabaca
+    if [ $? -ne 0 ]; then
+        mysql -u root -e "CREATE USER IF NOT EXISTS 'ngabaca'@'localhost' IDENTIFIED BY 'ngabaca123';" || mysql -u root -p -e "CREATE USER IF NOT EXISTS 'ngabaca'@'localhost' IDENTIFIED BY 'ngabaca123';"
+        mysql -u root -e "GRANT ALL PRIVILEGES ON ngabaca.* TO 'ngabaca'@'localhost';" || mysql -u root -p -e "GRANT ALL PRIVILEGES ON ngabaca.* TO 'ngabaca'@'localhost';"
+        mysql -u root -e "FLUSH PRIVILEGES;" || mysql -u root -p -e "FLUSH PRIVILEGES;"
+        print_status "MySQL user 'ngabaca' created and granted privileges."
+    else
+        print_status "MySQL user 'ngabaca' already exists, skipping creation."
+    fi
     
-    print_success "Databases created!"
+    print_success "Databases creation/check completed!"
 }
 
 # Install system requirements first
@@ -588,7 +645,7 @@ install_system_requirements
 # Check PHP version after installation
 if ! check_php_version; then
     print_error "PHP version check failed after installation attempt."
-    print_error "Please manually install PHP 8.4 or higher and run this script again."
+    print_error "Please manually troubleshoot PHP installation and run this script again."
     exit 1
 fi
 
@@ -643,27 +700,29 @@ final_php_check() {
     PHP_MAJOR=$(php -r "echo PHP_MAJOR_VERSION;")
     PHP_MINOR=$(php -r "echo PHP_MINOR_VERSION;")
     
-    if [ "$PHP_MAJOR" -lt 8 ] || ([ "$PHP_MAJOR" -eq 8 ] && [ "$PHP_MINOR" -lt 4 ]); then
-        print_error "Final PHP version check failed. Version: $PHP_VERSION"
-        print_error "Laravel 12 requires PHP 8.4 or higher." # Update this requirement based on your Laravel version
+    # Assuming Laravel 12+ requires PHP 8.2 or higher, adjust as needed.
+    # PHP 8.4.0 target means it should pass if installed.
+    if [ "$PHP_MAJOR" -lt 8 ] || ([ "$PHP_MAJOR" -eq 8 ] && [ "$PHP_MINOR" -lt 2 ]); then
+        print_error "Final PHP version check failed. Version: ${PHP_VERSION}"
+        print_error "Your Laravel project requires PHP 8.2 or higher."
         print_error "Please upgrade PHP manually and run the script again."
         exit 1
     fi
     
-    print_success "Final PHP version check passed: $PHP_VERSION"
+    print_success "Final PHP version check passed: ${PHP_VERSION}"
 }
 
 final_php_check
 
 # Install PHP dependencies first
-print_status "Installing PHP dependencies..."
+print_status "Installing PHP dependencies (Composer)..."
 if composer install --no-interaction --prefer-dist --optimize-autoloader; then
     print_success "PHP dependencies installed!"
     sleep 2
 else
-    print_error "Failed to install PHP dependencies"
+    print_error "Failed to install PHP dependencies with Composer."
     print_error "This usually means PHP version is still incompatible or missing extensions."
-    print_error "Please ensure all required PHP extensions were compiled correctly."
+    print_error "Please ensure all required PHP extensions were compiled correctly and try running 'composer install' manually."
     exit 1
 fi
 
@@ -683,7 +742,7 @@ if [ ! -f ".env.encrypted" ]; then
         cp .env.example .env
         print_success "Basic .env file created from .env.example"
     else
-        print_error "No .env.example file found either!"
+        print_error "No .env.example file found either! Cannot proceed without .env file."
         exit 1
     fi
 else
@@ -700,14 +759,14 @@ else
             cp .env.example .env
             print_success "Basic .env file created from .env.example"
         else
-            print_error "No .env.example file found either!"
+            print_error "No .env.example file found either! Cannot proceed without .env file."
             exit 1
         fi
     fi
 fi
 
 # Install Node.js dependencies
-print_status "Installing Node.js dependencies..."
+print_status "Installing Node.js dependencies (npm)..."
 if npm install; then
     print_success "Node.js dependencies installed!"
     sleep 2
@@ -723,33 +782,54 @@ if npm install; then
     
     # Fix permissions for other common binaries
     if [ -d "node_modules/.bin" ]; then
-        chmod +x node_modules/.bin/* 2>/dev/null || true
+        chmod +x node_modules/.bin/* 2>/dev/null || true # Suppress errors for non-executable files
         print_success "Node.js binary permissions updated!"
         sleep 1
     fi
 else
-    print_error "Failed to install Node.js dependencies"
+    print_error "Failed to install Node.js dependencies."
+    print_error "Please check NPM error output and try running 'npm install' manually."
     exit 1
 fi
 
 # Generate application key
 print_status "Generating application key..."
-if php artisan key:generate --force; then
-    print_success "Application key generated!"
-    sleep 1
+# Check if APP_KEY already exists and is not empty before generating
+if ! grep -q "^APP_KEY=.\+$" .env; then
+    if php artisan key:generate --force; then
+        print_success "Application key generated!"
+        sleep 1
+    else
+        print_warning "Failed to generate application key. Manual generation might be needed (php artisan key:generate)."
+    fi
 else
-    print_warning "Failed to generate application key"
+    print_status "Application key already exists, skipping generation."
 fi
+
 
 # Set proper permissions
 print_status "Setting file permissions..."
-chmod -R 775 storage bootstrap/cache 2>/dev/null
-if [ -d "storage" ]; then
-    chmod -R 775 storage
-fi
-if [ -d "bootstrap/cache" ]; then
-    chmod -R 775 bootstrap/cache
-fi
+# Ensure storage and bootstrap/cache are writable by the web server user
+# Assuming www-data for Debian/Ubuntu, apache for RedHat, http for Arch
+case $OS in
+    "debian")
+        sudo chown -R www-data:www-data storage bootstrap/cache
+        sudo chmod -R 775 storage bootstrap/cache
+        ;;
+    "redhat")
+        sudo chown -R apache:apache storage bootstrap/cache
+        sudo chmod -R 775 storage bootstrap/cache
+        ;;
+    "arch")
+        sudo chown -R http:http storage bootstrap/cache
+        sudo chmod -R 775 storage bootstrap/cache
+        ;;
+    "macos")
+        # On macOS, usually the current user is fine, or _www for web server
+        # brew services run as current user, so often no special chown needed
+        chmod -R 775 storage bootstrap/cache
+        ;;
+esac
 print_success "File permissions set!"
 sleep 1
 
@@ -763,7 +843,7 @@ print_success "Cache cleared!"
 sleep 1
 
 # Database setup
-print_status "Setting up database..."
+print_status "Setting up database migrations..."
 if php artisan migrate --force; then
     print_success "Database migrated!"
     sleep 1
@@ -776,12 +856,11 @@ if php artisan migrate --force; then
             print_success "Database seeded!"
             sleep 1
         else
-            print_warning "Database seeding failed"
+            print_warning "Database seeding failed. Check your seeder files or database connection."
         fi
     fi
 else
-    print_warning "Database migration failed. Please check your database configuration."
-    print_warning "Make sure your database is running and credentials in .env are correct."
+    print_warning "Database migration failed. Please check your database configuration in .env and ensure database services are running."
 fi
 
 # Storage link
@@ -790,7 +869,7 @@ if php artisan storage:link; then
     print_success "Storage link created!"
     sleep 1
 else
-    print_warning "Failed to create storage link (might already exist)"
+    print_warning "Failed to create storage link (might already exist, or storage directory permissions are incorrect)."
 fi
 
 # Install Laravel Pail for log monitoring (optional)
@@ -799,7 +878,7 @@ if composer require laravel/pail --dev --no-interaction; then
     print_success "Laravel Pail installed!"
     sleep 1
 else
-    print_warning "Failed to install Laravel Pail (might already be installed)"
+    print_warning "Failed to install Laravel Pail (might already be installed or Composer issue)."
 fi
 
 echo ""
@@ -807,14 +886,9 @@ echo "🎉 Setup completed successfully!"
 echo "=================================="
 echo ""
 echo "Next steps:"
-echo "1. Start development server: php artisan serve"
-echo "   Or use: composer run dev (if defined in composer.json)"
+echo "1. Start development server: composer run dev "
 echo "2. Visit: http://localhost:8000"
 echo "3. Monitor logs: php artisan pail (if installed)"
-echo ""
-echo "For frontend development:"
-echo "4. Start Vite dev server: npm run dev"
-echo "5. Build for production: npm run build"
 echo ""
 print_success "Happy coding! 🚀"
 echo ""
@@ -822,5 +896,5 @@ print_status "System Information:"
 echo "OS: $OS"
 echo "PHP: $(php --version 2>/dev/null | head -n 1 || echo 'Not installed')"
 echo "Composer: $(composer --version 2>/dev/null || echo 'Not installed')"
-echo "Node.js: $(node --version 2>/dev/null || echo 'Not installed')"
+echo "Node.js: $(node --version 2>/dev/null | head -n 1 || echo 'Not installed')"
 echo "NPM: $(npm --version 2>/dev/null || echo 'Not installed')"

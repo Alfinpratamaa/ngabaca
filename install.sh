@@ -165,7 +165,6 @@ install_system_requirements() {
                 --with-mysqli=mysqlnd \
                 --with-pdo-pgsql \
                 --with-curl \
-                --with-gd \
                 --with-jpeg \
                 --with-webp \
                 --with-xsl \
@@ -173,7 +172,6 @@ install_system_requirements() {
                 --with-pear \
                 --with-openssl \
                 --enable-soap \
-                --enable-xmlrpc \
                 --enable-opcache \
                 --enable-intl \
                 --enable-bcmath \

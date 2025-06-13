@@ -72,6 +72,31 @@ detect_os() {
 OS=$(detect_os)
 print_status "Detected OS: $OS"
 
+# Add PHP version check function
+check_php_version() {
+    print_status "Checking PHP version..."
+    
+    if ! command -v php &> /dev/null; then
+        print_error "PHP is not installed!"
+        return 1
+    fi
+    
+    PHP_VERSION=$(php -r "echo PHP_VERSION;")
+    PHP_MAJOR=$(php -r "echo PHP_MAJOR_VERSION;")
+    PHP_MINOR=$(php -r "echo PHP_MINOR_VERSION;")
+    
+    print_status "Current PHP version: $PHP_VERSION"
+    
+    if [ "$PHP_MAJOR" -lt 8 ] || ([ "$PHP_MAJOR" -eq 8 ] && [ "$PHP_MINOR" -lt 2 ]); then
+        print_error "PHP 8.2 or higher is required. Current version: $PHP_VERSION"
+        print_error "The script will attempt to upgrade PHP automatically."
+        return 1
+    fi
+    
+    print_success "PHP version check passed!"
+    return 0
+}
+
 # Function to install system packages
 install_system_requirements() {
     if [ "$SKIP_SYSTEM_INSTALL" = true ]; then
@@ -85,12 +110,23 @@ install_system_requirements() {
         "debian")
             sudo apt update
             
-            # Install PHP and extensions
-            print_install "Installing PHP and extensions..."
-            sudo apt install -y php php-cli php-fpm php-json php-common php-mysql php-zip php-gd php-mbstring php-curl php-xml php-pear php-bcmath php-pgsql php-intl php-soap php-xmlrpc php-opcache
+            # Add Ondrej's PPA for latest PHP versions
+            print_install "Adding PHP repository..."
+            sudo apt install -y software-properties-common
+            sudo add-apt-repository ppa:ondrej/php -y
+            sudo apt update
+            
+            # Install PHP 8.2 and extensions
+            print_install "Installing PHP 8.2 and extensions..."
+            sudo apt install -y php8.2 php8.2-cli php8.2-fpm php8.2-json php8.2-common php8.2-mysql php8.2-zip php8.2-gd php8.2-mbstring php8.2-curl php8.2-xml php8.2-pear php8.2-bcmath php8.2-pgsql php8.2-intl php8.2-soap php8.2-xmlrpc php8.2-opcache php8.2-tokenizer php8.2-fileinfo php8.2-dom php8.2-simplexml php8.2-ctype
+            
+            # Set PHP 8.2 as default
+            print_install "Setting PHP 8.2 as default..."
+            sudo update-alternatives --install /usr/bin/php php /usr/bin/php8.2 100
+            sudo update-alternatives --set php /usr/bin/php8.2
             
             # Install other requirements
-            sudo apt install -y curl wget git unzip software-properties-common apt-transport-https ca-certificates gnupg lsb-release
+            sudo apt install -y curl wget git unzip apt-transport-https ca-certificates gnupg lsb-release
             
             # Install PostgreSQL
             print_install "Installing PostgreSQL..."
@@ -104,12 +140,18 @@ install_system_requirements() {
         "redhat")
             sudo yum update -y
             
-            # Install EPEL repository
+            # Install EPEL and Remi repositories
+            print_install "Adding repositories..."
             sudo yum install -y epel-release
+            if [ ! -f /etc/yum.repos.d/remi.repo ]; then
+                sudo yum install -y https://rpms.remirepo.net/enterprise/remi-release-8.rpm
+            fi
             
-            # Install PHP and extensions
-            print_install "Installing PHP and extensions..."
-            sudo yum install -y php php-cli php-fpm php-json php-common php-mysql php-zip php-gd php-mbstring php-curl php-xml php-pear php-bcmath php-pgsql php-intl php-soap php-xmlrpc php-opcache
+            # Install PHP 8.2 and extensions
+            print_install "Installing PHP 8.2 and extensions..."
+            sudo yum module reset php -y
+            sudo yum module enable php:remi-8.2 -y
+            sudo yum install -y php php-cli php-fpm php-json php-common php-mysqlnd php-zip php-gd php-mbstring php-curl php-xml php-pear php-bcmath php-pgsql php-intl php-soap php-xmlrpc php-opcache php-tokenizer php-fileinfo php-dom php-simplexml php-ctype
             
             # Install other requirements
             sudo yum install -y curl wget git unzip
@@ -127,9 +169,9 @@ install_system_requirements() {
         "arch")
             sudo pacman -Syu --noconfirm
             
-            # Install PHP and extensions
+            # Install PHP and extensions (Arch usually has latest PHP)
             print_install "Installing PHP and extensions..."
-            sudo pacman -S --noconfirm php php-fpm php-gd php-intl php-pgsql php-sqlite
+            sudo pacman -S --noconfirm php php-fpm php-gd php-intl php-pgsql php-sqlite php-apache php-cgi php-embed php-phpdbg
             
             # Install other requirements
             sudo pacman -S --noconfirm curl wget git unzip
@@ -150,15 +192,29 @@ install_system_requirements() {
             if ! command -v brew &> /dev/null; then
                 print_install "Installing Homebrew..."
                 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+                # Add Homebrew to PATH for current session
+                echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+                eval "$(/opt/homebrew/bin/brew shellenv)"
             fi
             
-            # Install PHP and extensions
-            print_install "Installing PHP..."
-            brew install php
+            # Update Homebrew
+            brew update
+            
+            # Install PHP 8.2 and extensions
+            print_install "Installing PHP 8.2..."
+            brew install php@8.2
+            brew link php@8.2 --force --overwrite
+            
+            # Add PHP to PATH
+            echo 'export PATH="/opt/homebrew/opt/php@8.2/bin:$PATH"' >> ~/.zprofile
+            echo 'export PATH="/opt/homebrew/opt/php@8.2/sbin:$PATH"' >> ~/.zprofile
+            export PATH="/opt/homebrew/opt/php@8.2/bin:$PATH"
+            export PATH="/opt/homebrew/opt/php@8.2/sbin:$PATH"
             
             # Install PostgreSQL
             print_install "Installing PostgreSQL..."
-            brew install postgresql
+            brew install postgresql@14
+            brew link postgresql@14 --force
             
             # Install MySQL
             print_install "Installing MySQL..."
@@ -166,7 +222,8 @@ install_system_requirements() {
             ;;
             
         *)
-            print_warning "Unknown OS. Please install PHP, PostgreSQL, and MySQL manually."
+            print_warning "Unknown OS. Please install PHP 8.2+, PostgreSQL, and MySQL manually."
+            print_warning "Required PHP extensions: cli, fpm, json, common, mysql, zip, gd, mbstring, curl, xml, bcmath, pgsql, intl, soap, opcache, tokenizer, fileinfo, dom, simplexml, ctype"
             ;;
     esac
 }
@@ -183,6 +240,9 @@ install_composer() {
         print_success "Composer installed!"
     else
         print_status "Composer already installed"
+        # Update composer to latest version
+        print_install "Updating Composer..."
+        composer self-update
     fi
 }
 
@@ -217,12 +277,10 @@ setup_databases() {
     
     # Setup PostgreSQL
     case $OS in
-        "debian"|"macos")
+        "debian")
             if command -v systemctl &> /dev/null; then
                 sudo systemctl enable postgresql
                 sudo systemctl start postgresql
-            elif command -v brew &> /dev/null; then
-                brew services start postgresql
             fi
             ;;
         "redhat")
@@ -232,6 +290,11 @@ setup_databases() {
         "arch")
             sudo systemctl enable postgresql
             sudo systemctl start postgresql
+            ;;
+        "macos")
+            if command -v brew &> /dev/null; then
+                brew services start postgresql@14
+            fi
             ;;
     esac
     
@@ -260,17 +323,24 @@ setup_databases() {
     sudo -u postgres psql -c "CREATE USER ngabaca WITH PASSWORD 'ngabaca123';" 2>/dev/null || true
     sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ngabaca TO ngabaca;" 2>/dev/null || true
     
-    # MySQL database
-    mysql -u root -e "CREATE DATABASE IF NOT EXISTS ngabaca;" 2>/dev/null || true
-    mysql -u root -e "CREATE USER IF NOT EXISTS 'ngabaca'@'localhost' IDENTIFIED BY 'ngabaca123';" 2>/dev/null || true
-    mysql -u root -e "GRANT ALL PRIVILEGES ON ngabaca.* TO 'ngabaca'@'localhost';" 2>/dev/null || true
-    mysql -u root -e "FLUSH PRIVILEGES;" 2>/dev/null || true
+    # MySQL database (try with and without password)
+    mysql -u root -e "CREATE DATABASE IF NOT EXISTS ngabaca;" 2>/dev/null || mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS ngabaca;" 2>/dev/null || true
+    mysql -u root -e "CREATE USER IF NOT EXISTS 'ngabaca'@'localhost' IDENTIFIED BY 'ngabaca123';" 2>/dev/null || mysql -u root -p -e "CREATE USER IF NOT EXISTS 'ngabaca'@'localhost' IDENTIFIED BY 'ngabaca123';" 2>/dev/null || true
+    mysql -u root -e "GRANT ALL PRIVILEGES ON ngabaca.* TO 'ngabaca'@'localhost';" 2>/dev/null || mysql -u root -p -e "GRANT ALL PRIVILEGES ON ngabaca.* TO 'ngabaca'@'localhost';" 2>/dev/null || true
+    mysql -u root -e "FLUSH PRIVILEGES;" 2>/dev/null || mysql -u root -p -e "FLUSH PRIVILEGES;" 2>/dev/null || true
     
     print_success "Databases created!"
 }
 
-# Install system requirements
+# Install system requirements first
 install_system_requirements
+
+# Check PHP version after installation
+if ! check_php_version; then
+    print_error "PHP version check failed after installation attempt."
+    print_error "Please manually install PHP 8.2 or higher and run this script again."
+    exit 1
+fi
 
 # Install Composer
 install_composer
@@ -317,23 +387,53 @@ echo "Composer: $(composer --version)"
 echo "Node.js: $(node --version)"
 echo "NPM: $(npm --version)"
 
+# Final PHP version check
+final_php_check() {
+    PHP_VERSION=$(php -r "echo PHP_VERSION;")
+    PHP_MAJOR=$(php -r "echo PHP_MAJOR_VERSION;")
+    PHP_MINOR=$(php -r "echo PHP_MINOR_VERSION;")
+    
+    if [ "$PHP_MAJOR" -lt 8 ] || ([ "$PHP_MAJOR" -eq 8 ] && [ "$PHP_MINOR" -lt 2 ]); then
+        print_error "Final PHP version check failed. Version: $PHP_VERSION"
+        print_error "Laravel 12 requires PHP 8.2 or higher."
+        print_error "Please upgrade PHP manually and run the script again."
+        exit 1
+    fi
+    
+    print_success "Final PHP version check passed: $PHP_VERSION"
+}
+
+final_php_check
+
 # Install PHP dependencies first
 print_status "Installing PHP dependencies..."
-if composer install; then
+if composer install --no-interaction --prefer-dist --optimize-autoloader; then
     print_success "PHP dependencies installed!"
     sleep 2
 else
     print_error "Failed to install PHP dependencies"
-    exit 1
-fi
-
-# Install Laravel Pail for log monitoring
-print_status "Installing Laravel Pail..."
-if composer require laravel/pail --dev; then
-    print_success "Laravel Pail installed!"
-    sleep 1
-else
-    print_warning "Failed to install Laravel Pail (might already be installed)"
+    print_error "This usually means PHP version is still incompatible or missing extensions."
+    print_status "Trying to install missing PHP extensions..."
+    
+    # Try to install common missing extensions based on OS
+    case $OS in
+        "debian")
+            sudo apt install -y php8.2-tokenizer php8.2-fileinfo php8.2-dom php8.2-simplexml php8.2-ctype 2>/dev/null || true
+            ;;
+        "redhat")
+            sudo yum install -y php-tokenizer php-fileinfo php-dom php-simplexml php-ctype 2>/dev/null || true
+            ;;
+    esac
+    
+    # Try composer install again
+    print_status "Retrying PHP dependencies installation..."
+    if composer install --no-interaction --prefer-dist --optimize-autoloader; then
+        print_success "PHP dependencies installed on retry!"
+    else
+        print_error "Failed to install PHP dependencies on retry"
+        print_error "Please check the error messages above and install missing PHP extensions manually."
+        exit 1
+    fi
 fi
 
 # Clean up any existing .env file
@@ -347,18 +447,32 @@ print_status "Decrypting environment file..."
 
 if [ ! -f ".env.encrypted" ]; then
     print_error ".env.encrypted file not found!"
-    exit 1
-fi
-
-# Use Laravel's built-in decryption via environment variable
-# Make sure the ENCRYPTION_KEY is the base64 encoded key (e.g., base64:YOUR_KEY)
-if LARAVEL_ENV_ENCRYPTION_KEY="$ENCRYPTION_KEY" php artisan env:decrypt; then
-    print_success "Environment file decrypted successfully!"
-    sleep 1
+    print_warning "Creating a basic .env file from .env.example..."
+    if [ -f ".env.example" ]; then
+        cp .env.example .env
+        print_success "Basic .env file created from .env.example"
+    else
+        print_error "No .env.example file found either!"
+        exit 1
+    fi
 else
-    print_error "Failed to decrypt environment file. Check your encryption key or if .env.encrypted is valid!"
-    print_warning "Make sure your encryption key is in format: base64:YOUR_KEY"
-    exit 1
+    # Use Laravel's built-in decryption via environment variable
+    # Make sure the ENCRYPTION_KEY is the base64 encoded key (e.g., base64:YOUR_KEY)
+    if LARAVEL_ENV_ENCRYPTION_KEY="$ENCRYPTION_KEY" php artisan env:decrypt; then
+        print_success "Environment file decrypted successfully!"
+        sleep 1
+    else
+        print_error "Failed to decrypt environment file. Check your encryption key or if .env.encrypted is valid!"
+        print_warning "Make sure your encryption key is in format: base64:YOUR_KEY"
+        print_warning "Falling back to .env.example..."
+        if [ -f ".env.example" ]; then
+            cp .env.example .env
+            print_success "Basic .env file created from .env.example"
+        else
+            print_error "No .env.example file found either!"
+            exit 1
+        fi
+    fi
 fi
 
 # Install Node.js dependencies
@@ -399,15 +513,21 @@ fi
 # Set proper permissions
 print_status "Setting file permissions..."
 chmod -R 775 storage bootstrap/cache 2>/dev/null
+if [ -d "storage" ]; then
+    chmod -R 775 storage
+fi
+if [ -d "bootstrap/cache" ]; then
+    chmod -R 775 bootstrap/cache
+fi
 print_success "File permissions set!"
 sleep 1
 
 # Clear cache
 print_status "Clearing application cache..."
-php artisan cache:clear &>/dev/null
-php artisan config:clear &>/dev/null
-php artisan view:clear &>/dev/null
-php artisan route:clear &>/dev/null
+php artisan cache:clear &>/dev/null || true
+php artisan config:clear &>/dev/null || true
+php artisan view:clear &>/dev/null || true
+php artisan route:clear &>/dev/null || true
 print_success "Cache cleared!"
 sleep 1
 
@@ -430,6 +550,7 @@ if php artisan migrate --force; then
     fi
 else
     print_warning "Database migration failed. Please check your database configuration."
+    print_warning "Make sure your database is running and credentials in .env are correct."
 fi
 
 # Storage link
@@ -438,7 +559,16 @@ if php artisan storage:link; then
     print_success "Storage link created!"
     sleep 1
 else
-    print_warning "Failed to create storage link"
+    print_warning "Failed to create storage link (might already exist)"
+fi
+
+# Install Laravel Pail for log monitoring (optional)
+print_status "Installing Laravel Pail..."
+if composer require laravel/pail --dev --no-interaction; then
+    print_success "Laravel Pail installed!"
+    sleep 1
+else
+    print_warning "Failed to install Laravel Pail (might already be installed)"
 fi
 
 echo ""
@@ -446,8 +576,20 @@ echo "🎉 Setup completed successfully!"
 echo "=================================="
 echo ""
 echo "Next steps:"
-echo "1. Start development server: composer run dev"
+echo "1. Start development server: php artisan serve"
+echo "   Or use: composer run dev (if defined in composer.json)"
 echo "2. Visit: http://localhost:8000"
-echo "3. Monitor logs: php artisan pail"
+echo "3. Monitor logs: php artisan pail (if installed)"
+echo ""
+echo "For frontend development:"
+echo "4. Start Vite dev server: npm run dev"
+echo "5. Build for production: npm run build"
 echo ""
 print_success "Happy coding! 🚀"
+echo ""
+print_status "System Information:"
+echo "OS: $OS"
+echo "PHP: $(php --version | head -n 1)"
+echo "Composer: $(composer --version)"
+echo "Node.js: $(node --version)"
+echo "NPM: $(npm --version)"

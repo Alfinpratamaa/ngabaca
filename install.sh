@@ -331,10 +331,10 @@ setup_databases() {
             fi
             
             print_success "Databases creation/check completed!"
-            ;;
+            
         *)
             print_warning "Database setup is not automated for your OS. Please configure PostgreSQL and MySQL manually."
-            ;;
+            
     esac
 }
 

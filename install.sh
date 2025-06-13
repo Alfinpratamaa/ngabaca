@@ -88,7 +88,7 @@ check_php_version() {
     
     print_status "Current PHP version: $PHP_VERSION"
     
-    # Check for PHP 8.3 or higher (adjust this to your Laravel requirement if needed)
+    # Check for PHP 8.3 or higher (Laravel 12 requirement)
     if [ "$PHP_MAJOR" -lt 8 ] || ([ "$PHP_MAJOR" -eq 8 ] && [ "$PHP_MINOR" -lt 3 ]); then
         print_error "PHP 8.3 or higher is required. Current version: $PHP_VERSION"
         print_error "The script will attempt to install/upgrade PHP automatically."
@@ -100,7 +100,7 @@ check_php_version() {
 }
 
 # PHP VERSION TARGET
-PHP_TARGET_VERSION="8.3" # Target PHP 8.3
+PHP_TARGET_VERSION="8.3" # Target PHP 8.3 for Laravel 12
 
 # Function to install system packages and PHP via apt
 install_system_requirements() {
@@ -121,30 +121,70 @@ install_system_requirements() {
 
             # Add Ondrej's PPA for latest PHP versions
             print_install "Adding PHP repository (Ondrej's PPA)..."
-            # Ensure the key is added correctly for newer Ubuntu versions
+            # Ensure the key is added correctly for newer Ubuntu versions (like Jammy 22.04)
             sudo mkdir -p /etc/apt/keyrings
             curl -sSL https://packages.sury.org/php/apt.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/php.gpg
-            echo "deb [signed-by=/etc/apt/keyrings/php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/php.list > /dev/null
-            sudo apt update
+            # Use fixed codename 'jammy' for stability, or lsb_release -sc for dynamic detection
+            echo "deb [signed-by=/etc/apt/keyrings/php.gpg] https://packages.sury.org/php jammy main" | sudo tee /etc/apt/sources.list.d/php.list > /dev/null
             
+            # Also add Ondrej's Apache2 PPA if Apache is being used for consistency, prevents conflicts
+            # sudo add-apt-repository ppa:ondrej/apache2 -y # Uncomment if you explicitly need Apache from Ondrej
+
+            sudo apt update --allow-unauthenticated # Allow update even if signature issues persist from previous runs
+
             # Remove any existing PHP versions and their configurations aggressively
             print_install "Removing existing PHP installations and configurations..."
-            sudo apt purge '^php.*' '^apache2.*' -y 2>/dev/null || true # Purge all php packages and apache2 if installed
+            # Using a broader purge to remove conflicting older versions of php, imagick, apcu, yac
+            sudo apt purge '^php[0-9]\.[0-9].*|^apache2.*' '^php-imagick$' '^php-apcu$' '^php-yac$' -y 2>/dev/null || true
             sudo apt autoremove -y # Remove orphaned packages
             sudo apt clean # Clean apt cache
 
             sudo apt update # Update again after purging to ensure package lists are fresh
 
-            # Install PHP 8.3 and all available extensions for 8.3
-            print_install "Installing PHP ${PHP_TARGET_VERSION} and ALL available extensions..."
-            # This uses a wildcard to install all php8.3-* packages.
-            # It will install php8.3-cli, php8.3-fpm, and all extensions like mysql, gd, mbstring, etc.
-            # This can install more than you strictly need but ensures nothing is missed.
-            sudo apt install -y php${PHP_TARGET_VERSION}* libapache2-mod-php${PHP_TARGET_VERSION}
-
+            # Install PHP 8.3 and essential extensions for Laravel
+            print_install "Installing PHP ${PHP_TARGET_VERSION} and essential extensions for Laravel..."
+            # Core Laravel extensions:
+            # php8.3-cli: Command Line Interface for Artisan
+            # php8.3-fpm: FastCGI Process Manager for web servers (Nginx, Apache+mod_fcgid)
+            # php8.3-common: Fundamental modules
+            # php8.3-mysql: MySQL driver (for PDO MySQL)
+            # php8.3-pgsql: PostgreSQL driver (for PDO PostgreSQL)
+            # php8.3-sqlite3: SQLite driver (useful for local development/testing)
+            # php8.3-zip: For Composer and archive handling
+            # php8.3-gd: Image manipulation
+            # php8.3-mbstring: Multibyte string support
+            # php8.3-curl: HTTP client requests
+            # php8.3-xml: XML parsing
+            # php8.3-bcmath: Arbitrary-precision mathematics
+            # php8.3-intl: Internationalization support
+            # php8.3-soap: For SOAP web services (if needed)
+            # php8.3-opcache: Performance enhancer (highly recommended)
+            # php8.3-readline: Better CLI experience
+            # libapache2-mod-php8.3: If using Apache as web server, otherwise can be skipped
+            
+            # Using a single line for installation for clarity
+            sudo apt install -y php${PHP_TARGET_VERSION} \
+                                php${PHP_TARGET_VERSION}-cli \
+                                php${PHP_TARGET_VERSION}-fpm \
+                                php${PHP_TARGET_VERSION}-common \
+                                php${PHP_TARGET_VERSION}-mysql \
+                                php${PHP_TARGET_VERSION}-pgsql \
+                                php${PHP_TARGET_VERSION}-sqlite3 \
+                                php${PHP_TARGET_VERSION}-zip \
+                                php${PHP_TARGET_VERSION}-gd \
+                                php${PHP_TARGET_VERSION}-mbstring \
+                                php${PHP_TARGET_VERSION}-curl \
+                                php${PHP_TARGET_VERSION}-xml \
+                                php${PHP_TARGET_VERSION}-bcmath \
+                                php${PHP_TARGET_VERSION}-intl \
+                                php${PHP_TARGET_VERSION}-soap \
+                                php${PHP_TARGET_VERSION}-opcache \
+                                php${PHP_TARGET_VERSION}-readline \
+                                libapache2-mod-php${PHP_TARGET_VERSION} # If using Apache
+            
             if [ $? -ne 0 ]; then
-                print_error "Failed to install PHP ${PHP_TARGET_VERSION} and its extensions via apt!"
-                print_error "Please check the apt error messages above for details."
+                print_error "Failed to install PHP ${PHP_TARGET_VERSION} and its essential extensions via apt!"
+                print_error "Please check the apt error messages above for details. You may need to manually install missing packages."
                 exit 1
             fi
             
@@ -238,8 +278,8 @@ setup_databases() {
     print_install "Setting up databases..."
     
     # Setup PostgreSQL
-    case $OS in
-        "debian") # Only proceed for Debian for automated parts
+    case $OS_CODENAME in # Using OS_CODENAME from lsb_release if set
+        "jammy"|"noble") # Only proceed for Debian/Ubuntu for automated parts
             if command -v systemctl &> /dev/null; then
                 sudo systemctl enable postgresql
                 sudo systemctl start postgresql
@@ -278,14 +318,13 @@ setup_databases() {
                 print_status "MySQL database 'ngabaca' created."
             else
                 print_status "MySQL database 'ngabaca' already exists, skipping creation."
-            fi
-
+            F
             # Check if user exists
             mysql -u root -e "SELECT User FROM mysql.user WHERE User='ngabaca';" 2>/dev/null | grep -q ngabaca
             if [ $? -ne 0 ]; then
                 mysql -u root -e "CREATE USER IF NOT EXISTS 'ngabaca'@'localhost' IDENTIFIED BY 'ngabaca123';" || mysql -u root -p -e "CREATE USER IF NOT EXISTS 'ngabaca'@'localhost' IDENTIFIED BY 'ngabaca123';"
                 mysql -u root -e "GRANT ALL PRIVILEGES ON ngabaca.* TO 'ngabaca'@'localhost';" || mysql -u root -p -e "GRANT ALL PRIVILEGES ON ngabaca.* TO 'ngabaca'@'localhost';"
-                mysql -u root -e "FLUSH PRIVILEGES;" || mysql -u root -p -e "FLUSH PRIVILEGES;"
+                mysql -u root -e "FLUSH PRIVILEGES;" || mysql -u root -p -p "FLUSH PRIVILEGES;"
                 print_status "MySQL user 'ngabaca' created and granted privileges."
             else
                 print_status "MySQL user 'ngabaca' already exists, skipping creation."
@@ -298,6 +337,9 @@ setup_databases() {
             ;;
     esac
 }
+
+# Get OS_CODENAME early for use in setup_databases function
+OS_CODENAME=$(lsb_release -sc 2>/dev/null)
 
 # Install system requirements first
 install_system_requirements
@@ -350,7 +392,7 @@ print_success "All requirements verified!"
 # Display versions
 print_status "Installed versions:"
 echo "PHP: $(php --version 2>/dev/null | head -n 1 || echo 'Not installed')"
-echo "Composer: $(composer --version 2>/dev/null || echo 'Not installed')"
+echo "Composer: $(composer --version 2>/dev/null | head -n 1 || echo 'Not installed')"
 echo "Node.js: $(node --version 2>/dev/null | head -n 1 || echo 'Not installed')"
 echo "NPM: $(npm --version 2>/dev/null | head -n 1 || echo 'Not installed')"
 
@@ -360,7 +402,7 @@ final_php_check() {
     PHP_MAJOR=$(php -r "echo PHP_MAJOR_VERSION;")
     PHP_MINOR=$(php -r "echo PHP_MINOR_VERSION;")
     
-    # Assuming Laravel 12+ requires PHP 8.2 or higher, adjust as needed.
+    # Laravel 12 requires PHP 8.2 or higher
     if [ "$PHP_MAJOR" -lt 8 ] || ([ "$PHP_MAJOR" -eq 8 ] && [ "$PHP_MINOR" -lt 2 ]); then
         print_error "Final PHP version check failed. Version: ${PHP_VERSION}"
         print_error "Your Laravel project requires PHP 8.2 or higher."

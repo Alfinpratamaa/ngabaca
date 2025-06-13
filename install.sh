@@ -278,8 +278,8 @@ setup_databases() {
     print_install "Setting up databases..."
     
     # Setup PostgreSQL
-    case $OS_CODENAME in # Using OS_CODENAME from lsb_release if set
-        "jammy"|"noble") # Only proceed for Debian/Ubuntu for automated parts
+    case $OS in # Using OS from detect_os function
+        "debian") # Only proceed for Debian for automated parts
             if command -v systemctl &> /dev/null; then
                 sudo systemctl enable postgresql
                 sudo systemctl start postgresql
@@ -318,28 +318,26 @@ setup_databases() {
                 print_status "MySQL database 'ngabaca' created."
             else
                 print_status "MySQL database 'ngabaca' already exists, skipping creation."
-            F
+            fi # Fixed: Removed extra 'F' here
+            
             # Check if user exists
             mysql -u root -e "SELECT User FROM mysql.user WHERE User='ngabaca';" 2>/dev/null | grep -q ngabaca
             if [ $? -ne 0 ]; then
                 mysql -u root -e "CREATE USER IF NOT EXISTS 'ngabaca'@'localhost' IDENTIFIED BY 'ngabaca123';" || mysql -u root -p -e "CREATE USER IF NOT EXISTS 'ngabaca'@'localhost' IDENTIFIED BY 'ngabaca123';"
                 mysql -u root -e "GRANT ALL PRIVILEGES ON ngabaca.* TO 'ngabaca'@'localhost';" || mysql -u root -p -e "GRANT ALL PRIVILEGES ON ngabaca.* TO 'ngabaca'@'localhost';"
-                mysql -u root -e "FLUSH PRIVILEGES;" || mysql -u root -p -p "FLUSH PRIVILEGES;"
+                mysql -u root -e "FLUSH PRIVILEGES;" || mysql -u root -p -e "FLUSH PRIVILEGES;"
                 print_status "MySQL user 'ngabaca' created and granted privileges."
             else
                 print_status "MySQL user 'ngabaca' already exists, skipping creation."
             fi
             
             print_success "Databases creation/check completed!"
-            
+            ;;
         *)
             print_warning "Database setup is not automated for your OS. Please configure PostgreSQL and MySQL manually."
-            
+            ;;
     esac
 }
-
-# Get OS_CODENAME early for use in setup_databases function
-OS_CODENAME=$(lsb_release -sc 2>/dev/null)
 
 # Install system requirements first
 install_system_requirements

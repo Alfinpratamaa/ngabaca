@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Ngabaca Project Setup Script (Manual Installation Guide)
+# Ngabaca Project Setup Script
 # Usage: ./install.sh YOUR_ENCRYPTION_KEY
 
 # Colors for output
@@ -28,10 +28,6 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-print_requirement() {
-    echo -e "${PURPLE}[REQUIRED]${NC} $1"
-}
-
 # Check if encryption key is provided
 if [ $# -eq 0 ]; then
     print_error "Encryption key required!"
@@ -41,298 +37,32 @@ fi
 
 ENCRYPTION_KEY=$1
 
-echo "🚀 Ngabaca Project Setup (Manual Installation Guide)"
-echo "===================================================="
+echo "🚀 Ngabaca Project Setup"
+echo "========================"
 
-# Function to detect OS
-detect_os() {
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        if [ -f /etc/debian_version ]; then
-            echo "debian"
-        elif [ -f /etc/redhat-release ]; then
-            echo "redhat"
-        elif [ -f /etc/arch-release ]; then
-            echo "arch"
-        else
-            echo "linux"
-        fi
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-        echo "macos"
-    else
-        echo "unknown"
-    fi
-}
-
-OS=$(detect_os)
-
-# Function to check requirements silently
-check_php() {
-    command -v php &> /dev/null && php -r "exit(PHP_MAJOR_VERSION >= 8 && PHP_MINOR_VERSION >= 3 ? 0 : 1);" 2>/dev/null
-}
-
-check_composer() {
-    command -v composer &> /dev/null
-}
-
-check_node() {
-    command -v node &> /dev/null
-}
-
-check_npm() {
-    command -v npm &> /dev/null
-}
-
-check_postgresql() {
-    command -v psql &> /dev/null || systemctl is-active postgresql &> /dev/null
-}
-
-check_mysql() {
-    command -v mysql &> /dev/null || systemctl is-active mysql &> /dev/null
-}
-
-# Function to show installation instructions
-show_installation_instructions() {
-    echo ""
-    echo "📋 MANUAL INSTALLATION REQUIRED"
-    echo "================================"
-    echo ""
-    
-    case $OS in
-        "debian")
-            echo "🐧 Debian/Ubuntu Installation Commands:"
-            echo "--------------------------------------"
-            
-            if ! check_php; then
-                print_requirement "PHP 8.3+ installation:"
-                echo "sudo apt update"
-                echo "sudo apt install -y software-properties-common"
-                echo "sudo add-apt-repository ppa:ondrej/php -y"
-                echo "sudo apt update"
-                echo "sudo apt install -y php8.3 php8.3-cli php8.3-fpm php8.3-mysql php8.3-pgsql php8.3-sqlite3 php8.3-zip php8.3-gd php8.3-mbstring php8.3-curl php8.3-xml php8.3-bcmath php8.3-intl php8.3-opcache"
-                echo ""
-            fi
-            
-            if ! check_composer; then
-                print_requirement "Composer installation:"
-                echo "curl -sS https://getcomposer.org/installer | php"
-                echo "sudo mv composer.phar /usr/local/bin/composer"
-                echo "sudo chmod +x /usr/local/bin/composer"
-                echo ""
-            fi
-            
-            if ! check_node; then
-                print_requirement "Node.js installation (via NVM):"
-                echo "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash"
-                echo "source ~/.bashrc"
-                echo "nvm install --lts"
-                echo "nvm use --lts"
-                echo ""
-            fi
-            
-            if ! check_postgresql; then
-                print_requirement "PostgreSQL installation:"
-                echo "sudo apt install -y postgresql postgresql-contrib"
-                echo "sudo systemctl enable postgresql"
-                echo "sudo systemctl start postgresql"
-                echo ""
-            fi
-            
-            if ! check_mysql; then
-                print_requirement "MySQL installation:"
-                echo "sudo apt install -y mysql-server mysql-client"
-                echo "sudo systemctl enable mysql"
-                echo "sudo systemctl start mysql"
-                echo ""
-            fi
-            ;;
-            
-        "redhat")
-            echo "🎩 RedHat/CentOS/Fedora Installation Commands:"
-            echo "----------------------------------------------"
-            
-            if ! check_php; then
-                print_requirement "PHP 8.3+ installation:"
-                echo "sudo dnf install -y epel-release"
-                echo "sudo dnf install -y https://rpms.remirepo.net/enterprise/remi-release-8.rpm"
-                echo "sudo dnf module reset php"
-                echo "sudo dnf module enable php:remi-8.3"
-                echo "sudo dnf install -y php php-cli php-fpm php-mysql php-pgsql php-sqlite3 php-zip php-gd php-mbstring php-curl php-xml php-bcmath php-intl php-opcache"
-                echo ""
-            fi
-            
-            if ! check_composer; then
-                print_requirement "Composer installation:"
-                echo "curl -sS https://getcomposer.org/installer | php"
-                echo "sudo mv composer.phar /usr/local/bin/composer"
-                echo "sudo chmod +x /usr/local/bin/composer"
-                echo ""
-            fi
-            
-            if ! check_node; then
-                print_requirement "Node.js installation:"
-                echo "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash"
-                echo "source ~/.bashrc"
-                echo "nvm install --lts"
-                echo ""
-            fi
-            
-            if ! check_postgresql; then
-                print_requirement "PostgreSQL installation:"
-                echo "sudo dnf install -y postgresql postgresql-server postgresql-contrib"
-                echo "sudo postgresql-setup --initdb"
-                echo "sudo systemctl enable postgresql"
-                echo "sudo systemctl start postgresql"
-                echo ""
-            fi
-            
-            if ! check_mysql; then
-                print_requirement "MySQL installation:"
-                echo "sudo dnf install -y mysql-server"
-                echo "sudo systemctl enable mysqld"
-                echo "sudo systemctl start mysqld"
-                echo ""
-            fi
-            ;;
-            
-        "arch")
-            echo "🏛️ Arch Linux Installation Commands:"
-            echo "-----------------------------------"
-            
-            if ! check_php; then
-                print_requirement "PHP 8.3+ installation:"
-                echo "sudo pacman -S php php-fpm php-sqlite php-gd php-intl php-pgsql"
-                echo ""
-            fi
-            
-            if ! check_composer; then
-                print_requirement "Composer installation:"
-                echo "sudo pacman -S composer"
-                echo ""
-            fi
-            
-            if ! check_node; then
-                print_requirement "Node.js installation:"
-                echo "sudo pacman -S nodejs npm"
-                echo ""
-            fi
-            
-            if ! check_postgresql; then
-                print_requirement "PostgreSQL installation:"
-                echo "sudo pacman -S postgresql"
-                echo "sudo -u postgres initdb -D /var/lib/postgres/data"
-                echo "sudo systemctl enable postgresql"
-                echo "sudo systemctl start postgresql"
-                echo ""
-            fi
-            
-            if ! check_mysql; then
-                print_requirement "MySQL installation:"
-                echo "sudo pacman -S mysql"
-                echo "sudo systemctl enable mysqld"
-                echo "sudo systemctl start mysqld"
-                echo ""
-            fi
-            ;;
-            
-        "macos")
-            echo "🍎 macOS Installation Commands:"
-            echo "------------------------------"
-            
-            echo "First install Homebrew if not already installed:"
-            echo '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
-            echo ""
-            
-            if ! check_php; then
-                print_requirement "PHP 8.3+ installation:"
-                echo "brew install php@8.3"
-                echo "brew link php@8.3 --force"
-                echo ""
-            fi
-            
-            if ! check_composer; then
-                print_requirement "Composer installation:"
-                echo "brew install composer"
-                echo ""
-            fi
-            
-            if ! check_node; then
-                print_requirement "Node.js installation:"
-                echo "brew install node"
-                echo ""
-            fi
-            
-            if ! check_postgresql; then
-                print_requirement "PostgreSQL installation:"
-                echo "brew install postgresql"
-                echo "brew services start postgresql"
-                echo ""
-            fi
-            
-            if ! check_mysql; then
-                print_requirement "MySQL installation:"
-                echo "brew install mysql"
-                echo "brew services start mysql"
-                echo ""
-            fi
-            ;;
-            
-        *)
-            echo "❓ Unknown OS - Please install manually:"
-            echo "--------------------------------------"
-            echo "- PHP 8.3+ with extensions: cli, fpm, mysql, pgsql, sqlite3, zip, gd, mbstring, curl, xml, bcmath, intl, opcache"
-            echo "- Composer"
-            echo "- Node.js (LTS) and npm"
-            echo "- PostgreSQL"
-            echo "- MySQL"
-            echo ""
-            ;;
-    esac
-    
-    echo "🗄️ DATABASE SETUP COMMANDS:"
-    echo "--------------------------"
-    echo "After installing PostgreSQL:"
-    echo "sudo -u postgres psql -c \"CREATE DATABASE ngabaca;\""
-    echo "sudo -u postgres psql -c \"CREATE USER ngabaca WITH PASSWORD 'ngabaca123';\""
-    echo "sudo -u postgres psql -c \"GRANT ALL PRIVILEGES ON DATABASE ngabaca TO ngabaca;\""
-    echo ""
-    echo "After installing MySQL:"
-    echo "mysql -u root -e \"CREATE DATABASE ngabaca;\""
-    echo "mysql -u root -e \"CREATE USER 'ngabaca'@'localhost' IDENTIFIED BY 'ngabaca123';\""
-    echo "mysql -u root -e \"GRANT ALL PRIVILEGES ON ngabaca.* TO 'ngabaca'@'localhost';\""
-    echo "mysql -u root -e \"FLUSH PRIVILEGES;\""
-    echo ""
-}
-
-# Function to check all requirements
+# Function to check requirements
 check_requirements() {
     local missing_requirements=()
     
-    if ! check_php; then
+    if ! command -v php &> /dev/null || ! php -r "exit(PHP_MAJOR_VERSION >= 8 && PHP_MINOR_VERSION >= 3 ? 0 : 1);" 2>/dev/null; then
         missing_requirements+=("PHP 8.3+")
     fi
     
-    if ! check_composer; then
+    if ! command -v composer &> /dev/null; then
         missing_requirements+=("Composer")
     fi
     
-    if ! check_node; then
+    if ! command -v node &> /dev/null; then
         missing_requirements+=("Node.js")
     fi
     
-    if ! check_npm; then
+    if ! command -v npm &> /dev/null; then
         missing_requirements+=("npm")
-    fi
-    
-    if ! check_postgresql; then
-        missing_requirements+=("PostgreSQL")
-    fi
-    
-    if ! check_mysql; then
-        missing_requirements+=("MySQL")
     fi
     
     if [ ${#missing_requirements[@]} -gt 0 ]; then
         print_error "Missing requirements: ${missing_requirements[*]}"
+        print_error "Please install the missing requirements manually and run this script again."
         return 1
     fi
     
@@ -343,9 +73,6 @@ check_requirements() {
 print_status "Checking system requirements..."
 
 if ! check_requirements; then
-    show_installation_instructions
-    echo ""
-    print_warning "Please install the missing requirements above, then run this script again."
     exit 1
 fi
 
@@ -386,15 +113,6 @@ if [ -f ".env.encrypted" ]; then
             exit 1
         fi
     fi
-else
-    print_warning ".env.encrypted not found. Using .env.example."
-    if [ -f ".env.example" ]; then
-        cp .env.example .env
-        print_success "Environment file created from .env.example"
-    else
-        print_error "No .env.example file found!"
-        exit 1
-    fi
 fi
 
 # Install Node.js dependencies
@@ -418,23 +136,8 @@ fi
 
 # Set permissions
 print_status "Setting file permissions..."
-case $OS in
-    "debian")
-        sudo chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
-        sudo chmod -R 775 storage bootstrap/cache 2>/dev/null || true
-        ;;
-    "redhat")
-        sudo chown -R apache:apache storage bootstrap/cache 2>/dev/null || true
-        sudo chmod -R 775 storage bootstrap/cache 2>/dev/null || true
-        ;;
-    "arch")
-        sudo chown -R http:http storage bootstrap/cache 2>/dev/null || true
-        sudo chmod -R 775 storage bootstrap/cache 2>/dev/null || true
-        ;;
-    "macos")
-        chmod -R 775 storage bootstrap/cache 2>/dev/null || true
-        ;;
-esac
+sudo chown -R ubuntu:ubuntu /home/ubuntu/ngabaca
+sudo chmod -R 755 /home/ubuntu/ngabaca
 print_success "File permissions set!"
 
 # Clear cache

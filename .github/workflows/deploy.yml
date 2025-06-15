@@ -84,7 +84,7 @@ jobs:
           # PERHATIKAN: BARIS EOL PENUTUP DI BAWAH INI HARUS TANPA INDENTASI ATAU SPASI
           # Konten di dalamnya juga harus di-escape dengan benar untuk shell SSH
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} 'cat > ~/laravel-app-deployment/docker-compose.yml << "EOF_DOCKER_COMPOSE"
-          version: '"3.8"'
+          version: "3.8"
           services:
             php-fpm:
               image: '${{ env.PHP_IMAGE_NAME }}:latest'

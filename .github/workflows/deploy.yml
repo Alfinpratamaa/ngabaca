@@ -58,12 +58,12 @@ jobs:
         run: |
           echo "Starting deployment to EC2..."
 
-          # Login Docker di EC2 agar bisa pull image dari Docker Hub
+          # Login Docker di EC2
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo '${{ secrets.DOCKER_PASSWORD }}' | docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin"
 
           # Tarik image terbaru dari Docker Hub di EC2
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "docker pull ${{ env.PHP_IMAGE_NAME }}:latest"
-          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "docker pull nginx:alpine" # Tarik image Nginx resmi
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "docker pull nginx:alpine"
 
           echo "Images pulled on EC2."
 
@@ -71,44 +71,42 @@ jobs:
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ~/laravel-app-deployment/nginx_config"
           echo "Deployment directory created/ensured on EC2."
 
-          # **Langkah BARU: Salin konfigurasi Nginx dari runner ke EC2**
-          # Karena kita sudah checkout repository, file nginx/nginx.conf ada di runner
+          # Salin konfigurasi Nginx dari runner ke EC2
           scp -r nginx/nginx.conf ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/laravel-app-deployment/nginx_config/ngabaca.conf
 
-          # **Langkah BARU: Modifikasi server_name di file konfigurasi Nginx di EC2**
-          # Menggunakan sed untuk mengganti 'server_name localhost;' menjadi domain nip.io Anda
+          # Modifikasi server_name di file konfigurasi Nginx di EC2
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
             sed -i 's|server_name localhost;|server_name ${{ env.APP_DOMAIN }};|g' ~/laravel-app-deployment/nginx_config/ngabaca.conf
           "
           echo "Nginx config copied and modified on EC2."
 
           # Menulis docker-compose.yml langsung di EC2
-          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
-            cat > ~/laravel-app-deployment/docker-compose.yml <<EOL
-            version: '3.8'
-            services:
-              php-fpm:
-                image: ${{ env.PHP_IMAGE_NAME }}:latest
-                container_name: laravel-php-fpm
-                networks:
-                  - app-network
-              nginx:
-                image: nginx:alpine
-                container_name: laravel-nginx
-                volumes:
-                  # Mount konfigurasi Nginx yang sudah dimodifikasi di EC2
-                  - ~/laravel-app-deployment/nginx_config/ngabaca.conf:/etc/nginx/conf.d/default.conf:ro
-                ports:
-                  - \"80:80\" # Expose port 80 ke host EC2
-                depends_on:
-                  - php-fpm
-                networks:
-                  - app-network
+          # PERHATIKAN: BARIS EOL PENUTUP DI BAWAH INI HARUS TANPA INDENTASI ATAU SPASI
+          # Konten di dalamnya juga harus di-escape dengan benar untuk shell SSH
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} 'cat > ~/laravel-app-deployment/docker-compose.yml << "EOF_DOCKER_COMPOSE"
+          version: '"3.8"'
+          services:
+            php-fpm:
+              image: '${{ env.PHP_IMAGE_NAME }}:latest'
+              container_name: laravel-php-fpm
+              networks:
+                - app-network
+            nginx:
+              image: nginx:alpine
+              container_name: laravel-nginx
+              volumes:
+                - ~/laravel-app-deployment/nginx_config/ngabaca.conf:/etc/nginx/conf.d/default.conf:ro
+              ports:
+                - "80:80"
+              depends_on:
+                - php-fpm
+              networks:
+                - app-network
             networks:
-              app-network:
-                driver: bridge
-            EOL
-          "
+            app-network:
+              driver: bridge
+          EOF_DOCKER_COMPOSE
+          '
           echo "docker-compose.yml generated on EC2."
 
           # Menghentikan kontainer lama jika ada dan menjalankan yang baru

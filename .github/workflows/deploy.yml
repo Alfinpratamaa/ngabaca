@@ -91,19 +91,27 @@ jobs:
               container_name: laravel-php-fpm
               networks:
                 - app-network
+                - internal-app-network
             nginx:
               image: nginx:alpine
               container_name: laravel-nginx
               volumes:
                 - ~/laravel-app-deployment/nginx_config/ngabaca.conf:/etc/nginx/conf.d/default.conf:ro
+                - app_code:/var/www/html
               ports:
                 - "80:80"
               depends_on:
                 - php-fpm
               networks:
                 - app-network
+                - internal-app-network
+          volumes:
+            app_code:
+              driver: local
           networks:
             app-network:
+              driver: bridge
+            internal-app-network:
               driver: bridge
           EOF_DOCKER_COMPOSE
           '

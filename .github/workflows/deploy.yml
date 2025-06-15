@@ -34,10 +34,10 @@ jobs:
         with:
           context: . # Konteks build adalah root proyek Laravel Anda (tempat Dockerfile berada)
           dockerfile: Dockerfile # Menentukan Dockerfile PHP-FPM
-          push: true # Dorong image ke Docker Hub
+          push: true
           tags: |
-            ${{ env.PHP_IMAGE_NAME }}:${{ github.sha }} # Tag dengan commit SHA (unik)
-            ${{ env.PHP_IMAGE_NAME }}:latest # Tag dengan latest
+            ${{ env.PHP_IMAGE_NAME }}:${{ github.sha }} 
+            ${{ env.PHP_IMAGE_NAME }}:latest
 
       # Perhatikan: Nginx akan kita gunakan image resmi, tidak perlu build custom untuk Nginx jika tidak ada customisasi di dalamnya.
       # Jika Nginx Anda membutuhkan build khusus (misalnya, jika Anda modifikasi Dockerfile Nginx), Anda bisa membuat step build lain di sini.

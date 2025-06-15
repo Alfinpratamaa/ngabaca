@@ -102,7 +102,7 @@ jobs:
                 - php-fpm
               networks:
                 - app-network
-            networks:
+          networks:
             app-network:
               driver: bridge
           EOF_DOCKER_COMPOSE

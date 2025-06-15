@@ -46,7 +46,7 @@ jobs:
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.8.0
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }} # Kunci privat EC2 Anda dari GitHub Secret
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Add EC2 host to known_hosts
         run: |
@@ -67,40 +67,22 @@ jobs:
 
           echo "Images pulled on EC2."
 
-          # Membuat konfigurasi Nginx di EC2
-          # Kita perlu memodifikasi konfigurasi Nginx agar server_name sesuai
-          # Ini akan membuat file ngabaca.conf di EC2 dan mengganti placeholder IP
+          # Membuat direktori untuk deployment di EC2 jika belum ada
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ~/laravel-app-deployment/nginx_config"
+          echo "Deployment directory created/ensured on EC2."
+
+          # **Langkah BARU: Salin konfigurasi Nginx dari runner ke EC2**
+          # Karena kita sudah checkout repository, file nginx/nginx.conf ada di runner
+          scp -r nginx/nginx.conf ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/laravel-app-deployment/nginx_config/ngabaca.conf
+
+          # **Langkah BARU: Modifikasi server_name di file konfigurasi Nginx di EC2**
+          # Menggunakan sed untuk mengganti 'server_name localhost;' menjadi domain nip.io Anda
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
-            mkdir -p ~/laravel-app-deployment/nginx_config
-            cat > ~/laravel-app-deployment/nginx_config/ngabaca.conf <<EOL
-            server {
-                listen 80;
-                server_name ${{ env.APP_DOMAIN }}; # Menggunakan domain dari env
-                root /var/www/html/public;
-                add_header X-Frame-Options \"SAMEORIGIN\";
-                add_header X-XSS-Protection \"1; mode=block\";
-                add_header X-Content-Type-Options \"nosniff\";
-                index index.html index.htm index.php;
-                charset utf-8;
-                location / {
-                    try_files \$uri \$uri/ /index.php?\$query_string;
-                }
-                location ~ \\.php\$ {
-                    fastcgi_pass php-fpm:9000;
-                    fastcgi_index index.php;
-                    fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
-                    include fastcgi_params;
-                }
-                location ~ /\\.(?!well-known).* {
-                    deny all;
-                }
-            }
-            EOL
+            sed -i 's|server_name localhost;|server_name ${{ env.APP_DOMAIN }};|g' ~/laravel-app-deployment/nginx_config/ngabaca.conf
           "
-          echo "Nginx config generated on EC2."
+          echo "Nginx config copied and modified on EC2."
 
           # Menulis docker-compose.yml langsung di EC2
-          # Ini lebih mudah daripada menyalinnyaaa
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
             cat > ~/laravel-app-deployment/docker-compose.yml <<EOL
             version: '3.8'
@@ -108,16 +90,14 @@ jobs:
               php-fpm:
                 image: ${{ env.PHP_IMAGE_NAME }}:latest
                 container_name: laravel-php-fpm
-                volumes:
-                  - /home/${{ secrets.EC2_USER }}/laravel-app-deployment/app_code:/var/www/html # Akan mount kode dari EC2
                 networks:
                   - app-network
               nginx:
                 image: nginx:alpine
                 container_name: laravel-nginx
                 volumes:
-                  - /home/${{ secrets.EC2_USER }}/laravel-app-deployment/app_code:/var/www/html # Mount kode dari EC2
-                  - ~/laravel-app-deployment/nginx_config/ngabaca.conf:/etc/nginx/conf.d/default.conf # Mount config Nginx
+                  # Mount konfigurasi Nginx yang sudah dimodifikasi di EC2
+                  - ~/laravel-app-deployment/nginx_config/ngabaca.conf:/etc/nginx/conf.d/default.conf:ro
                 ports:
                   - \"80:80\" # Expose port 80 ke host EC2
                 depends_on:
@@ -143,7 +123,7 @@ jobs:
       - name: Verify Deployment (Optional)
         run: |
           echo "Verifying application access on EC2..."
-          sleep 30 # Beri waktu lebih lama agar aplikasi siap
+          sleep 60 # Beri waktu lebih lama agar aplikasi siap
           curl -H "Host: ${{ env.APP_DOMAIN }}" http://${{ secrets.EC2_HOST }}
           echo ""
           echo "Application verified!"

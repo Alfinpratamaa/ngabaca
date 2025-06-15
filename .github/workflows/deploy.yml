@@ -100,7 +100,7 @@ jobs:
           echo "Nginx config generated on EC2."
 
           # Menulis docker-compose.yml langsung di EC2
-          # Ini lebih mudah daripada menyalinnya
+          # Ini lebih mudah daripada menyalinnyaaa
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
             cat > ~/laravel-app-deployment/docker-compose.yml <<EOL
             version: '3.8'

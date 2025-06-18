@@ -92,11 +92,13 @@ jobs:
               networks:
                 - app-network
                 - internal-app-network
+              volumes:
+                - app_code:/var/www/html
             nginx:
               image: nginx:alpine
               container_name: laravel-nginx
               volumes:
-                - ~/laravel-app-deployment/nginx_config/ngabaca.conf:/etc/nginx/conf.d/default.conf:ro
+                - ~/laravel-app-deployment/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro      - ~/laravel-app-deployment/nginx_config/ngabaca.conf:/etc/nginx/conf.d/default.conf:ro
                 - app_code:/var/www/html
               ports:
                 - "80:80"

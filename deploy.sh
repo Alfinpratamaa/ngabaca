@@ -67,17 +67,19 @@ php artisan clear-compiled # Clear compiled classes
 php artisan optimize
 
 echo "checking npm version..."
-npm --version
-# Cek apakah NPM terpasang
-if ! command -v npm &> /dev/null; then
-    echo "NPM is not installed. Please install NPM to continue."
+# --- Perubahan di sini ---
+/usr/bin/npm --version # Ganti dengan path absolut yang Anda temukan
+# Cek apakah NPM terpasang (tetap relevan untuk debug)
+if ! command -v /usr/bin/npm &> /dev/null; then # Ganti dengan path absolut
+    echo "NPM is not installed at /usr/bin/npm. Please install NPM to continue."
     exit 1
 fi
 
 # Install NPM dependencies dan compile assets (jika ada frontend)
 echo "Installing NPM dependencies and compiling assets..."
-npm install --silent --no-progress
-npm run build # Atau npm run prod, sesuaikan dengan package.json Anda
+/usr/bin/npm install --silent --no-progress # Ganti dengan path absolut
+/usr/bin/npm run build # Ganti dengan path absolut
+# --- Akhir Perubahan ---
 
 
 # --- Bagian Dekripsi .env.enc menjadi .env ---

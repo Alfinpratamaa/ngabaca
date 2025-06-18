@@ -37,11 +37,6 @@ if [ ! -d "$APP_DIR" ]; then
     git clone "$REPO_URL" "$APP_DIR"
     echo "Repository cloned."
     cd "$APP_DIR"
-    # Pastikan direktori storage dan bootstrap/cache dibuat dan izinnya benar
-    sudo mkdir -p storage/logs storage/framework/{sessions,views,cache} bootstrap/cache
-    echo "Setting initial storage and cache permissions after first clone..."
-    sudo chown -R www-data:www-data storage bootstrap/cache
-    sudo chmod -R 775 storage bootstrap/cache
 else # Jika direktori sudah ada, navigasi dan pull
     echo "Directory $APP_DIR exists. Navigating and pulling latest changes."
     cd "$APP_DIR"
@@ -55,17 +50,25 @@ else # Jika direktori sudah ada, navigasi dan pull
     git reset --hard origin/production # Reset lokal ke kondisi branch production
     git pull origin production
     echo "Git pull completed."
-    
-    # Ensure all required directories exist
-    echo "Creating required Laravel directories..."
-    mkdir -p storage/logs storage/framework/{sessions,views,cache} bootstrap/cache
-    
-    # Now set proper permissions for web server after Git operations
-    echo "Setting proper permissions for storage and bootstrap/cache directories..."
-    sudo chown -R www-data:www-data storage bootstrap/cache
-    sudo chmod -R 775 storage bootstrap/cache
 fi
-# --- Akhir Logika Git ---
+
+# --- CRITICAL: Set up Laravel directories and permissions BEFORE any Laravel commands ---
+echo "Setting up Laravel directories and permissions..."
+mkdir -p storage/logs storage/framework/{sessions,views,cache} bootstrap/cache
+
+# Set proper ownership and permissions for Laravel directories
+sudo chown -R www-data:www-data storage bootstrap/cache
+sudo chmod -R 775 storage bootstrap/cache
+
+# Ensure the current user can also write (needed for some operations)
+sudo setfacl -R -m u:$USER:rwx storage bootstrap/cache 2>/dev/null || {
+    echo "setfacl not available, using alternative permission setup..."
+    sudo chown -R $USER:www-data storage bootstrap/cache
+    sudo chmod -R 775 storage bootstrap/cache
+}
+
+echo "Laravel directories and permissions set up successfully."
+# --- Akhir Setup Direktori Laravel ---
 
 # --- Dekripsi .env.enc menjadi .env ---
 if [ -z "$LARAVEL_ENV_ENCRYPTION_KEY" ]; then
@@ -86,20 +89,23 @@ else
 fi
 # --- Akhir Dekripsi .env ---
 
-# --- PERSIAPAN SEBELUM COMPOSER ---
-# Pastikan semua direktori Laravel ada dan memiliki izin yang benar SEBELUM Composer
-echo "Final check: ensuring all Laravel directories exist with correct permissions..."
-mkdir -p storage/logs storage/framework/{sessions,views,cache} bootstrap/cache
-sudo chown -R www-data:www-data storage bootstrap/cache
-sudo chmod -R 775 storage bootstrap/cache
-
-# Instal Composer dependencies (SEKARANG SUDAH AMAN)
+# --- Instal Composer dependencies (SEKARANG SUDAH AMAN) ---
 echo "Installing Composer dependencies..."
 if ! command -v composer &> /dev/null; then
     echo "Error: Composer not found. Please install Composer on EC2."
     exit 1
 fi
+
+# Set COMPOSER_ALLOW_SUPERUSER to avoid warnings if running as root
+export COMPOSER_ALLOW_SUPERUSER=1
+
 composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+echo "Composer dependencies installed successfully."
+
+# --- Verify permissions after Composer (Laravel might have created additional files) ---
+echo "Re-verifying Laravel directory permissions after Composer..."
+sudo chown -R www-data:www-data storage bootstrap/cache
+sudo chmod -R 775 storage bootstrap/cache
 
 # Masuk ke maintenance mode Laravel
 echo "Entering maintenance mode..."
@@ -113,7 +119,14 @@ php artisan route:clear
 php artisan view:clear
 php artisan clear-compiled # Clear compiled classes
 
+# Generate application key jika belum ada di .env yang baru didekripsi
+if [ -z "$(grep -E '^APP_KEY=' .env)" ]; then
+    echo "Generating application key..."
+    php artisan key:generate
+fi
+
 # Optimize Laravel application
+echo "Optimizing Laravel application..."
 php artisan optimize
 
 # --- NPM Dependencies dan Compile Assets ---
@@ -129,20 +142,32 @@ echo "NPM found at: $NPM_BIN"
 echo "Installing NPM dependencies and compiling assets..."
 "$NPM_BIN" install --silent --no-progress
 "$NPM_BIN" run build # Atau npm run prod, sesuaikan dengan package.json Anda
+echo "NPM build completed successfully."
 # --- Akhir NPM ---
 
 # Jalankan database migrations
 echo "Running database migrations ..."
 php artisan migrate --force
 
-# Generate application key jika belum ada di .env yang baru didekripsi
-if [ -z "$(grep -E '^APP_KEY=' .env)" ]; then
-    echo "Generating application key..."
-    php artisan key:generate
-fi
+# --- Final permission check ---
+echo "Final permission check and cleanup..."
+sudo chown -R www-data:www-data storage bootstrap/cache
+sudo chmod -R 775 storage bootstrap/cache
+
+# Ensure proper ownership for the entire application directory
+sudo chown -R www-data:www-data "$APP_DIR"
+sudo chmod -R 755 "$APP_DIR"
+# But keep storage and bootstrap/cache writable
+sudo chmod -R 775 "$APP_DIR/storage" "$APP_DIR/bootstrap/cache"
+
+# ---------- SET UP LOG DIRECTORY ----------------
+# Create logs directory structure if it doesn't exist
+mkdir -p storage/logs
+echo "Laravel log directory prepared."
 
 # Keluar dari maintenance mode
 echo "Exiting maintenance mode..."
 php artisan up
 
 echo "Deployment finished successfully!"
+echo "Application is now live and ready to serve requests."

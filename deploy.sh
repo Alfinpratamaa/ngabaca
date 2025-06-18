@@ -65,6 +65,13 @@ php artisan clear-compiled # Clear compiled classes
 # Optimize Laravel application
 php artisan optimize
 
+echo "checking npm version..."
+# Cek apakah NPM terpasang
+if ! command -v npm &> /dev/null; then
+    echo "NPM is not installed. Please install NPM to continue."
+    exit 1
+fi
+
 # Install NPM dependencies dan compile assets (jika ada frontend)
 echo "Installing NPM dependencies and compiling assets..."
 npm install --silent --no-progress

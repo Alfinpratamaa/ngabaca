@@ -4,7 +4,7 @@ set -e # Keluar jika ada perintah yang gagal
 echo "Deployment started on EC2 ..."
 
 APP_DIR="/var/www/ngabaca" # Direktori aplikasi di EC2
-REPO_URL="https://github.com/${GITHUB_REPOSITORY}" # URL Repositori Git Anda
+REPO_URL="https://github.com/Alfinpratamaa/ngabaca.git" # URL Repositori Git Anda
 # Jika repositori privat, Anda mungkin perlu mengkonfigurasi kredensial Git di EC2.
 # Untuk repo privat, bisa juga gunakan SSH: REPO_URL="git@github.com:your_user/your_repo.git" dan pastikan kunci SSH untuk Git sudah ada di EC2.
 

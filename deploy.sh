@@ -74,7 +74,7 @@ npm run build # Atau npm run prod, sesuaikan dengan package.json Anda
 # --- Bagian Dekripsi .env.enc menjadi .env ---
 
 # Jalankan database migrations
-echo "Running database migrations hehe..."
+echo "Running database migrations ..."
 php artisan migrate --force
 # Generate application key jika belum ada di .env yang baru didekripsi
 if [ -z "$(grep -E '^APP_KEY=' .env)" ]; then

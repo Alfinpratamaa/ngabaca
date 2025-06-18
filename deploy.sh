@@ -37,6 +37,18 @@ else # Jika direktori sudah ada, navigasi dan pull
     echo "Git pull completed."
 fi
 # --- Akhir Perubahan ---
+if [ -z "$LARAVEL_ENV_ENCRYPTION_KEY" ]; then
+    echo "Error: LARAVEL_ENV_ENCRYPTION_KEY not set. Cannot decrypt .env file."
+    exit 1
+fi
+
+if [ -f .env.enc ]; then
+    echo "Decrypting .env.enc to .env..."
+    openssl enc -aes-256-cbc -d -in .env.enc -out .env -k "$LARAVEL_ENV_ENCRYPTION_KEY"
+    echo ".env decrypted successfully."
+else
+    echo "Warning: .env.enc not found. Skipping decryption."
+fi
 
 # Instal Composer dependencies
 echo "Installing Composer dependencies..."
@@ -60,18 +72,6 @@ npm run build # Atau npm run prod, sesuaikan dengan package.json Anda
 
 
 # --- Bagian Dekripsi .env.enc menjadi .env ---
-if [ -z "$LARAVEL_ENV_ENCRYPTION_KEY" ]; then
-    echo "Error: LARAVEL_ENV_ENCRYPTION_KEY not set. Cannot decrypt .env file."
-    exit 1
-fi
-
-if [ -f .env.enc ]; then
-    echo "Decrypting .env.enc to .env..."
-    openssl enc -aes-256-cbc -d -in .env.enc -out .env -k "$LARAVEL_ENV_ENCRYPTION_KEY"
-    echo ".env decrypted successfully."
-else
-    echo "Warning: .env.enc not found. Skipping decryption."
-fi
 
 # Jalankan database migrations
 echo "Running database migrations..."

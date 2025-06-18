@@ -58,9 +58,6 @@ echo "Installing NPM dependencies and compiling assets..."
 npm install --silent --no-progress
 npm run build # Atau npm run prod, sesuaikan dengan package.json Anda
 
-# Jalankan database migrations
-echo "Running database migrations..."
-php artisan migrate --force
 
 # --- Bagian Dekripsi .env.enc menjadi .env ---
 if [ -z "$LARAVEL_ENV_ENCRYPTION_KEY" ]; then
@@ -76,6 +73,9 @@ else
     echo "Warning: .env.enc not found. Skipping decryption."
 fi
 
+# Jalankan database migrations
+echo "Running database migrations..."
+php artisan migrate --force
 # Generate application key jika belum ada di .env yang baru didekripsi
 if [ -z "$(grep -E '^APP_KEY=' .env)" ]; then
     echo "Generating application key..."

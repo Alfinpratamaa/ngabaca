@@ -2,6 +2,7 @@
 set -e # Keluar jika ada perintah yang gagal
 
 echo "Deployment started on EC2 ..."
+source home/$USER/.bashrc || true
 
 APP_DIR="/var/www/ngabaca" # Direktori aplikasi di EC2
 REPO_URL="https://github.com/Alfinpratamaa/ngabaca.git" # URL Repositori Git Anda

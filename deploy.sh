@@ -30,13 +30,15 @@ echo "Current PATH: $PATH"
 if [ ! -d "$APP_DIR" ]; then
     echo "Directory $APP_DIR does not exist. Creating and cloning repository..."
     sudo mkdir -p "$APP_DIR"
+    # Setel kepemilikan dan izin untuk APP_DIR secara keseluruhan
     sudo chown -R $USER:www-data "$APP_DIR"
-    sudo chmod -R 775 "$APP_DIR"
+    sudo chmod -R 775 "$APP_DIR" # Izinkan grup menulis
     echo "Cloning repository from $REPO_URL..."
     git clone "$REPO_URL" "$APP_DIR"
     echo "Repository cloned."
     cd "$APP_DIR"
-    # Setel izin awal untuk storage/bootstrap/cache setelah klon pertama
+    # Pastikan direktori storage dan bootstrap/cache dibuat dan izinnya benar
+    sudo mkdir -p storage bootstrap/cache || true
     echo "Setting initial storage and cache permissions after first clone..."
     sudo chown -R www-data:www-data storage bootstrap/cache
     sudo chmod -R 775 storage bootstrap/cache
@@ -44,39 +46,33 @@ else # Jika direktori sudah ada, navigasi dan pull
     echo "Directory $APP_DIR exists. Navigating and pulling latest changes."
     cd "$APP_DIR"
     
-    # --- KRUSIAL: Bersihkan direktori cache dan storage sebelum git pull/reset ---
-    echo "Cleaning up storage and bootstrap/cache directories before Git operations..."
+    # --- KRUSIAL: Bersihkan dan atur ulang izin direktori induk cache dan storage sebelum git pull/reset ---
+    echo "Aggressively cleaning and setting permissions for storage and bootstrap/cache directories before Git operations..."
     
-    # Pastikan kepemilikan dan izin direktori utama storage/bootstrap/cache sudah benar
-    sudo chown -R www-data:www-data storage bootstrap/cache || true
-    sudo chmod -R 775 storage bootstrap/cache || true
-
-    # Gunakan git clean dengan sudo untuk menghapus file yang tidak terlacak dan tidak bisa dihapus
-    # Ini akan menghapus file yang tidak ada di gitignore dan tidak terlacak
-    # PENTING: -x juga menghapus file yang diabaikan oleh git (seperti node_modules, vendor)
-    # -f untuk memaksa, -d untuk direktori
-    # sudo git clean -xdf || true # Opsi agresif, bisa menghapus vendor/node_modules jika belum diinstal
-    
-    # Pendekatan yang lebih aman: hapus secara spesifik folder cache dan log
-    sudo rm -rf storage/framework/cache/data/* || true
-    sudo rm -rf storage/framework/views/* || true
+    # Hapus konten yang mungkin menyebabkan konflik izin, pastikan ini pakai sudo
+    # Hapus juga direktori itu sendiri untuk memastikan permissions dan kepemilikan di-reset oleh git clone / re-creation
+    sudo rm -rf storage/* || true
     sudo rm -rf bootstrap/cache/* || true
-    sudo rm -f storage/logs/*.log || true
-    
-    # Hapus file .gitignore di storage/bootstrap/cache secara eksplisit jika perlu
-    sudo rm -f storage/app/.gitignore || true
-    sudo rm -f storage/app/private/.gitignore || true
-    sudo rm -f storage/app/public/.gitignore || true
-    sudo rm -f storage/framework/.gitignore || true
-    sudo rm -f storage/framework/cache/.gitignore || true
-    sudo rm -f storage/framework/cache/data/.gitignore || true
-    sudo rm -f storage/framework/sessions/.gitignore || true
-    sudo rm -f storage/framework/testing/.gitignore || true
-    sudo rm -f storage/framework/views/.gitignore || true
-    sudo rm -f storage/logs/.gitignore || true
-    sudo rm -f bootstrap/cache/.gitignore || true
 
-    echo "Storage and cache content cleared."
+    # Buat ulang direktori utama storage dan bootstrap/cache jika dihapus, dan set izinnya
+    sudo mkdir -p storage || true
+    sudo mkdir -p storage/app || true
+    sudo mkdir -p storage/app/private || true
+    sudo mkdir -p storage/app/public || true
+    sudo mkdir -p storage/framework || true
+    sudo mkdir -p storage/framework/cache || true
+    sudo mkdir -p storage/framework/cache/data || true
+    sudo mkdir -p storage/framework/sessions || true
+    sudo mkdir -p storage/framework/testing || true
+    sudo mkdir -p storage/framework/views || true
+    sudo mkdir -p storage/logs || true
+    sudo mkdir -p bootstrap/cache || true # Pastikan ini juga dibuat ulang jika dihapus
+
+    # Atur kepemilikan dan izin pada direktori utama storage dan bootstrap/cache secara rekursif
+    sudo chown -R www-data:www-data storage bootstrap/cache
+    sudo chmod -R 775 storage bootstrap/cache # Izinkan www-data untuk menulis
+
+    echo "Storage and cache directories reset and permissions set for Git operation."
     # --- Akhir Perubahan Cleanup ---
 
     echo "Fetching latest changes from Git..."

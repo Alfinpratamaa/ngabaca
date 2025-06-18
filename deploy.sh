@@ -149,9 +149,6 @@ sudo chmod -R 775 "$APP_DIR/storage" "$APP_DIR/bootstrap/cache"
 mkdir -p storage/logs
 echo "Laravel log directory prepared."
 
-# Keluar dari maintenance mode
-echo "Exiting maintenance mode..."
-php artisan up
 
 echo "Deployment finished successfully!"
 echo "Application is now live and ready to serve requests."

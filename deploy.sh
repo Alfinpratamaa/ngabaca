@@ -4,10 +4,12 @@ set -e # Keluar jika ada perintah yang gagal
 echo "Deployment started on EC2 ..."
 
 APP_DIR="/var/www/ngabaca" # Direktori aplikasi di EC2
-LOG_DIR="/var/log/app_deployment" # Direktori log deployment
+# --- Perubahan di sini ---
+LOG_DIR="/home/$USER/app_deployment_logs" # Direktori log deployment, gunakan home user
+# --- Akhir Perubahan ---
 DEPLOY_LOG_FILE="$LOG_DIR/$(date +%Y-%m-%d-%H-%M-%S)_deploy.log"
 
-# Pastikan direktori log ada
+# Pastikan direktori log ada (sekarang di home user, jadi tidak perlu sudo)
 mkdir -p "$LOG_DIR"
 exec > >(tee -a "$DEPLOY_LOG_FILE") 2>&1 # Redirect semua output ke log file
 

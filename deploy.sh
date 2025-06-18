@@ -163,7 +163,7 @@ sudo chmod -R 775 "$APP_DIR/storage" "$APP_DIR/bootstrap/cache"
 # ---------- SET UP LOG DIRECTORY ----------------
 # Create logs directory structure if it doesn't exist
 mkdir -p storage/logs
-echo "Laravel log directory prepared."
+echo "Laravel log directory prepared"
 
 # Keluar dari maintenance mode
 echo "Exiting maintenance mode..."

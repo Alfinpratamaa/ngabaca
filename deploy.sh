@@ -66,6 +66,7 @@ php artisan clear-compiled # Clear compiled classes
 php artisan optimize
 
 echo "checking npm version..."
+npm --version
 # Cek apakah NPM terpasang
 if ! command -v npm &> /dev/null; then
     echo "NPM is not installed. Please install NPM to continue."

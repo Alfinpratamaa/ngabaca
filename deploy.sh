@@ -27,13 +27,27 @@ if [ ! -d "$APP_DIR" ]; then # Jika direktori APP_DIR belum ada
     echo "Repository cloned."
     cd "$APP_DIR"
 else # Jika direktori sudah ada, navigasi dan pull
-    echo "Directory $APP_DIR exists. Navigating and pulling latest changes."
+    echo "Directory $APP_DIR exists. Navigating and checking contents."
     cd "$APP_DIR"
-    echo "Fetching latest changes from Git..."
-    git fetch origin production # Ambil perubahan dari branch production
-    git reset --hard origin/production # Reset lokal ke kondisi branch production
-    git pull origin production # Pull perubahan terbaru
-    echo "Git pull completed."
+    
+    # Cek apakah direktori kosong atau tidak ada .git
+    if [ ! -d ".git" ] || [ -z "$(ls -A .)" ]; then
+        echo "Directory is empty or missing .git folder. Re-cloning repository..."
+        cd .. # Keluar dari APP_DIR
+        sudo rm -rf "$APP_DIR" # Hapus direktori yang bermasalah
+        sudo mkdir -p "$APP_DIR" # Buat ulang direktori
+        sudo chown -R $USER:www-data "$APP_DIR" # Ubah kepemilikan
+        sudo chmod -R 775 "$APP_DIR" # Atur izin
+        git clone "$REPO_URL" "$APP_DIR" # Clone ulang
+        echo "Repository re-cloned."
+        cd "$APP_DIR"
+    else
+        echo "Git repository found. Fetching latest changes..."
+        git fetch origin production # Ambil perubahan dari branch production
+        git reset --hard origin/production # Reset lokal ke kondisi branch production
+        git pull origin production # Pull perubahan terbaru
+        echo "Git pull completed."
+    fi
 fi
 # --- Akhir Perubahan ---
 

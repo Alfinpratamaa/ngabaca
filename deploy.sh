@@ -109,7 +109,7 @@ fi
 # --- Akhir Bagian Dekripsi ---
 
 # Atur izin direktori storage dan bootstrap/cache
-echo "Setting storage and cache permissions..."
+echo "Setting storage and cache permissions.."
 sudo chown -R www-data:www-data storage bootstrap/cache
 sudo chmod -R 775 storage bootstrap/cache
 

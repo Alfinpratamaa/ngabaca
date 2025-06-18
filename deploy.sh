@@ -2,52 +2,65 @@
 set -e # Keluar jika ada perintah yang gagal
 
 echo "Deployment started on EC2 ..."
-# Pastikan ini hanya dieksekusi oleh bash dan hindari masalah path dengan "~"
-# source home/$USER/.bashrc || true # Baris ini seringkali tidak diperlukan atau bermasalah di sesi non-interaktif SSH, bisa dihapus.
 
+# Variabel konfigurasi
 APP_DIR="/var/www/ngabaca" # Direktori aplikasi di EC2
-REPO_URL="https://github.com/Alfinpratamaa/ngabaca.git" # URL Repositori Git Anda
+REPO_URL="https://github.com/Alfinpratamaa/ngabaca.git" # URL Repositori Git Anda (Sesuaikan jika privat atau berbeda)
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-nvm use default || nvm install node --default || nvm use node
-echo "NVM initialized and Node.js version set."
-
-
-export PATH=$PATH:/usr/local/bin:/usr/bin:/bin # Tambahkan path umum untuk binaries
-echo "Current PATH: $PATH"
-
+# Setup Logging
 LOG_DIR="/home/$USER/app_deployment_logs" # Direktori log deployment
 DEPLOY_LOG_FILE="$LOG_DIR/$(date +%Y-%m-%d-%H-%M-%S)_deploy.log"
 
 mkdir -p "$LOG_DIR"
-exec > >(tee -a "$DEPLOY_LOG_FILE") 2>&1
+exec > >(tee -a "$DEPLOY_LOG_FILE") 2>&1 # Redirect semua output ke log file
 
 echo "Timestamp: $(date)"
 
-# --- Perubahan di sini: Logika Git Clone/Pull yang lebih baik ---
+# --- Inisialisasi NVM dan PATH (Penting untuk NPM) ---
+# Asumsikan NVM terinstal di ~/.nvm
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+# Pilih versi node yang akan digunakan, sesuaikan dengan yang ada di EC2 Anda
+# Coba gunakan versi default, jika tidak ada, instal node LTS terbaru, lalu gunakan
+nvm use default || nvm install node --default || nvm use node
+echo "NVM initialized and Node.js version set."
+export PATH=$PATH:/usr/local/bin:/usr/bin:/bin # Tambahkan path umum untuk binaries sebagai fallback
+echo "Current PATH: $PATH"
+# --- Akhir Inisialisasi NVM/PATH ---
+
+# --- Logika Git Clone/Pull yang Robust ---
 if [ ! -d "$APP_DIR" ]; then # Jika direktori APP_DIR belum ada
     echo "Directory $APP_DIR does not exist. Creating and cloning repository..."
     sudo mkdir -p "$APP_DIR" # Buat direktori aplikasi sebagai root
-    sudo chown -R $USER:www-data "$APP_DIR" # Ubah kepemilikan
+    sudo chown -R $USER:www-data "$APP_DIR" # Ubah kepemilikan ke user SSH dan grup web server
     sudo chmod -R 775 "$APP_DIR" # Atur izin
     echo "Cloning repository from $REPO_URL..."
-    git clone "https://github.com/Alfinpratamaa/ngabaca.git" "$APP_DIR" # Clone ke direktori APP_DIR
+    git clone "$REPO_URL" "$APP_DIR" # Clone ke direktori APP_DIR
     echo "Repository cloned."
     cd "$APP_DIR"
-    # Lakukan initial permission set untuk storage/bootstrap/cache setelah clone pertama
+    # Setel izin awal untuk storage/bootstrap/cache setelah klon pertama
     echo "Setting initial storage and cache permissions after first clone..."
     sudo chown -R www-data:www-data storage bootstrap/cache
     sudo chmod -R 775 storage bootstrap/cache
 else # Jika direktori sudah ada, navigasi dan pull
     echo "Directory $APP_DIR exists. Navigating and pulling latest changes."
     cd "$APP_DIR"
-    # --- Perubahan di sini: Setel ulang izin SEBELUM git pull/reset ---
-    echo "Resetting permissions for storage and cache before git pull..."
-    sudo chown -R www-data:www-data storage bootstrap/cache
-    sudo chmod -R 775 storage bootstrap/cache
-    # --- Akhir Perubahan ---
+    
+    # --- KRUSIAL: Bersihkan direktori cache dan storage sebelum git pull/reset ---
+    echo "Cleaning up storage and bootstrap/cache directories before Git operations..."
+    # Pastikan kepemilikan dan izin direktori utama storage/bootstrap/cache sudah benar
+    sudo chown -R www-data:www-data storage bootstrap/cache || true
+    sudo chmod -R 775 storage bootstrap/cache || true
+
+    # Hapus konten yang mungkin menyebabkan konflik izin saat git reset/pull
+    sudo rm -rf storage/framework/cache/data/* || true
+    sudo rm -rf storage/framework/views/* || true
+    sudo rm -rf bootstrap/cache/* || true
+    sudo rm -f storage/logs/*.log || true # Hapus log file lama
+
+    echo "Storage and cache content cleared."
+    # --- Akhir Perubahan Cleanup ---
 
     echo "Fetching latest changes from Git..."
     git fetch origin production # Ambil perubahan dari branch production
@@ -55,8 +68,9 @@ else # Jika direktori sudah ada, navigasi dan pull
     git pull origin production # Pull perubahan terbaru
     echo "Git pull completed."
 fi
-# --- Akhir Perubahan Git Logic ---
+# --- Akhir Logika Git ---
 
+# --- Dekripsi .env.enc menjadi .env ---
 if [ -z "$LARAVEL_ENV_ENCRYPTION_KEY" ]; then
     echo "Error: LARAVEL_ENV_ENCRYPTION_KEY not set. Cannot decrypt .env file."
     exit 1
@@ -64,19 +78,34 @@ fi
 
 if [ -f .env.enc ]; then
     echo "Decrypting .env.enc to .env..."
+    # Periksa apakah openssl tersedia, jika tidak, berikan pesan error yang jelas
+    if ! command -v openssl &> /dev/null; then
+        echo "Error: openssl not found. Please install openssl on EC2 to decrypt .env.enc"
+        exit 1
+    fi
     openssl enc -aes-256-cbc -d -in .env.enc -out .env -k "$LARAVEL_ENV_ENCRYPTION_KEY"
     echo ".env decrypted successfully."
 else
     echo "Warning: .env.enc not found. Skipping decryption."
+    # Opsional: Jika .env.enc tidak ada dan .env.example yang digunakan
+    # if [ ! -f .env ] && [ -f .env.example ]; then
+    #     cp .env.example .env
+    #     echo ".env created from .env.example as .env.enc was not found."
+    # fi
 fi
+# --- Akhir Dekripsi .env ---
 
 # Masuk ke maintenance mode Laravel
 echo "Entering maintenance mode..."
 php artisan down || true
 
-
 # Instal Composer dependencies
 echo "Installing Composer dependencies..."
+# Cek apakah composer terpasang
+if ! command -v composer &> /dev/null; then
+    echo "Error: Composer not found. Please install Composer on EC2."
+    exit 1
+fi
 composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
 # Clear cache dan recreate cache Laravel
@@ -90,10 +119,11 @@ php artisan clear-compiled # Clear compiled classes
 # Optimize Laravel application
 php artisan optimize
 
-echo "checking npm version..."
+# --- NPM Dependencies dan Compile Assets ---
+echo "Checking npm version and compiling assets..."
 NPM_BIN=$(command -v npm || true)
 if [ -z "$NPM_BIN" ]; then
-    echo "ERROR: npm command not found. Please ensure Node.js and npm are correctly installed and available in a standard PATH."
+    echo "ERROR: npm command not found. Please ensure Node.js and npm are correctly installed."
     exit 1
 fi
 echo "NPM found at: $NPM_BIN"
@@ -101,7 +131,8 @@ echo "NPM found at: $NPM_BIN"
 
 echo "Installing NPM dependencies and compiling assets..."
 "$NPM_BIN" install --silent --no-progress
-"$NPM_BIN" run build
+"$NPM_BIN" run build # Atau npm run prod, sesuaikan dengan package.json Anda
+# --- Akhir NPM ---
 
 # Jalankan database migrations
 echo "Running database migrations ..."

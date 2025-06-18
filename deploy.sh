@@ -9,6 +9,15 @@ REPO_URL="https://github.com/Alfinpratamaa/ngabaca.git" # URL Repositori Git And
 # Jika repositori privat, Anda mungkin perlu mengkonfigurasi kredensial Git di EC2.
 # Untuk repo privat, bisa juga gunakan SSH: REPO_URL="git@github.com:your_user/your_repo.git" dan pastikan kunci SSH untuk Git sudah ada di EC2.
 
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+# Pilih versi node yang akan digunakan, sesuaikan dengan yang ada di EC2 Anda
+nvm use default || nvm install node --default || nvm use node # Fallback to install latest if default not found
+echo "NVM initialized and Node.js version set."
+# --- Akhir Perubahan ---
+
+
 # --- Perubahan di sini: Perluas PATH dan debug ---
 export PATH=$PATH:/usr/local/bin:/usr/bin:/bin # Tambahkan path umum untuk binaries
 echo "Current PATH: $PATH" # Debug PATH yang sedang aktif

@@ -46,40 +46,20 @@ else # Jika direktori sudah ada, navigasi dan pull
     echo "Directory $APP_DIR exists. Navigating and pulling latest changes."
     cd "$APP_DIR"
     
-    # --- KRUSIAL: Bersihkan dan atur ulang izin direktori induk cache dan storage sebelum git pull/reset ---
-    echo "Aggressively cleaning and setting permissions for storage and bootstrap/cache directories before Git operations..."
+    # Set ownership of the entire directory to current user for Git operations
+    echo "Setting temporary ownership for Git operations..."
+    sudo chown -R $USER:$USER "$APP_DIR"
     
-    # Hapus konten yang mungkin menyebabkan konflik izin, pastikan ini pakai sudo
-    # Hapus juga direktori itu sendiri untuk memastikan permissions dan kepemilikan di-reset oleh git clone / re-creation
-    sudo rm -rf storage/* || true
-    sudo rm -rf bootstrap/cache/* || true
-
-    # Buat ulang direktori utama storage dan bootstrap/cache jika dihapus, dan set izinnya
-    sudo mkdir -p storage || true
-    sudo mkdir -p storage/app || true
-    sudo mkdir -p storage/app/private || true
-    sudo mkdir -p storage/app/public || true
-    sudo mkdir -p storage/framework || true
-    sudo mkdir -p storage/framework/cache || true
-    sudo mkdir -p storage/framework/cache/data || true
-    sudo mkdir -p storage/framework/sessions || true
-    sudo mkdir -p storage/framework/testing || true
-    sudo mkdir -p storage/framework/views || true
-    sudo mkdir -p storage/logs || true
-    sudo mkdir -p bootstrap/cache || true # Pastikan ini juga dibuat ulang jika dihapus
-
-    # Atur kepemilikan dan izin pada direktori utama storage dan bootstrap/cache secara rekursif
-    sudo chown -R www-data:www-data storage bootstrap/cache
-    sudo chmod -R 775 storage bootstrap/cache # Izinkan www-data untuk menulis
-
-    echo "Storage and cache directories reset and permissions set for Git operation."
-    # --- Akhir Perubahan Cleanup ---
-
     echo "Fetching latest changes from Git..."
     git fetch origin production
     git reset --hard origin/production # Reset lokal ke kondisi branch production
     git pull origin production
     echo "Git pull completed."
+    
+    # Now set proper permissions for web server after Git operations
+    echo "Setting proper permissions for storage and bootstrap/cache directories..."
+    sudo chown -R www-data:www-data storage bootstrap/cache
+    sudo chmod -R 775 storage bootstrap/cache
 fi
 # --- Akhir Logika Git ---
 

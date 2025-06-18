@@ -23,7 +23,7 @@ if [ ! -d "$APP_DIR" ]; then # Jika direktori APP_DIR belum ada
     sudo mkdir -p "$APP_DIR" # Buat direktori aplikasi sebagai root
     sudo chown -R $USER:www-data "$APP_DIR" # Ubah kepemilikan
     sudo chmod -R 775 "$APP_DIR" # Atur izin
-    echo "Cloning repository from $REPO_URL..."
+    echo "Cloning wkkw repository from $REPO_URL..."
     git clone "https://github.com/Alfinpratamaa/ngabaca.git" "$APP_DIR" # Clone ke direktori APP_DIR
     echo "Repository cloned."
     cd "$APP_DIR"

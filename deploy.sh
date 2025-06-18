@@ -4,33 +4,38 @@ set -e # Keluar jika ada perintah yang gagal
 echo "Deployment started on EC2 ..."
 
 APP_DIR="/var/www/ngabaca" # Direktori aplikasi di EC2
-# --- Perubahan di sini ---
-LOG_DIR="/home/$USER/app_deployment_logs" # Direktori log deployment, gunakan home user
-# --- Akhir Perubahan ---
+REPO_URL="https://github.com/${GITHUB_REPOSITORY}" # URL Repositori Git Anda
+# Jika repositori privat, Anda mungkin perlu mengkonfigurasi kredensial Git di EC2.
+# Untuk repo privat, bisa juga gunakan SSH: REPO_URL="git@github.com:your_user/your_repo.git" dan pastikan kunci SSH untuk Git sudah ada di EC2.
+
+LOG_DIR="/home/$USER/app_deployment_logs" # Direktori log deployment
 DEPLOY_LOG_FILE="$LOG_DIR/$(date +%Y-%m-%d-%H-%M-%S)_deploy.log"
 
-# Pastikan direktori log ada (sekarang di home user, jadi tidak perlu sudo)
+# Pastikan direktori log ada
 mkdir -p "$LOG_DIR"
 exec > >(tee -a "$DEPLOY_LOG_FILE") 2>&1 # Redirect semua output ke log file
 
 echo "Timestamp: $(date)"
 
-# Masuk ke direktori aplikasi
-cd "$APP_DIR" || {
-    echo "Directory $APP_DIR does not exist. Cloning repository..."
-    # Jika direktori tidak ada, lakukan git clone
-    # GITHUB_REPOSITORY akan di-pass dari workflow GitHub Actions (misal: your_user/your_repo_name)
-    git clone https://github.com/${GITHUB_REPOSITORY} .
+# --- Perubahan di sini: Logika Git Clone/Pull yang lebih baik ---
+if [ ! -d "$APP_DIR" ]; then # Jika direktori APP_DIR belum ada
+    echo "Directory $APP_DIR does not exist. Creating and cloning repository..."
+    sudo mkdir -p "$APP_DIR" # Buat direktori aplikasi sebagai root
+    sudo chown -R $USER:www-data "$APP_DIR" # Ubah kepemilikan
+    sudo chmod -R 775 "$APP_DIR" # Atur izin
+    git clone "$REPO_URL" "$APP_DIR" # Clone ke direktori APP_DIR
     echo "Repository cloned."
-}
-
-# Pergi ke branch production dan pull terbaru
-echo "Fetching latest changes from Git..."
-git fetch origin production
-git reset --hard origin/production
-git pull origin production
-
-echo "Git pull completed."
+    cd "$APP_DIR"
+else # Jika direktori sudah ada, navigasi dan pull
+    echo "Directory $APP_DIR exists. Navigating and pulling latest changes."
+    cd "$APP_DIR"
+    echo "Fetching latest changes from Git..."
+    git fetch origin production # Ambil perubahan dari branch production
+    git reset --hard origin/production # Reset lokal ke kondisi branch production
+    git pull origin production # Pull perubahan terbaru
+    echo "Git pull completed."
+fi
+# --- Akhir Perubahan ---
 
 # Masuk ke maintenance mode Laravel
 echo "Entering maintenance mode..."
@@ -60,8 +65,7 @@ npm run build # Atau npm run prod, sesuaikan dengan package.json Anda
 echo "Running database migrations..."
 php artisan migrate --force
 
-# --- Bagian Baru: Dekripsi .env.enc menjadi .env ---
-# Memastikan OPENSLL_KEY tersedia dari GitHub Actions (variabel lingkungan)
+# --- Bagian Dekripsi .env.enc menjadi .env ---
 if [ -z "$LARAVEL_ENV_ENCRYPTION_KEY" ]; then
     echo "Error: LARAVEL_ENV_ENCRYPTION_KEY not set. Cannot decrypt .env file."
     exit 1
@@ -69,13 +73,10 @@ fi
 
 if [ -f .env.enc ]; then
     echo "Decrypting .env.enc to .env..."
-    # Gunakan OpenSSL untuk mendekripsi
     openssl enc -aes-256-cbc -d -in .env.enc -out .env -k "$LARAVEL_ENV_ENCRYPTION_KEY"
     echo ".env decrypted successfully."
 else
     echo "Warning: .env.enc not found. Skipping decryption."
-    # Opsional: bisa copy dari .env.example jika .env.enc tidak ada dan tidak diharapkan
-    # cp .env.example .env
 fi
 
 # Generate application key jika belum ada di .env yang baru didekripsi
@@ -83,7 +84,7 @@ if [ -z "$(grep -E '^APP_KEY=' .env)" ]; then
     echo "Generating application key..."
     php artisan key:generate
 fi
-# --- Akhir Bagian Baru ---
+# --- Akhir Bagian Dekripsi ---
 
 # Atur izin direktori storage dan bootstrap/cache
 echo "Setting storage and cache permissions..."

@@ -38,7 +38,7 @@ if [ ! -d "$APP_DIR" ]; then
     echo "Repository cloned."
     cd "$APP_DIR"
     # Pastikan direktori storage dan bootstrap/cache dibuat dan izinnya benar
-    sudo mkdir -p storage bootstrap/cache || true
+    sudo mkdir -p storage/logs storage/framework/{sessions,views,cache} bootstrap/cache
     echo "Setting initial storage and cache permissions after first clone..."
     sudo chown -R www-data:www-data storage bootstrap/cache
     sudo chmod -R 775 storage bootstrap/cache
@@ -55,6 +55,10 @@ else # Jika direktori sudah ada, navigasi dan pull
     git reset --hard origin/production # Reset lokal ke kondisi branch production
     git pull origin production
     echo "Git pull completed."
+    
+    # Ensure all required directories exist
+    echo "Creating required Laravel directories..."
+    mkdir -p storage/logs storage/framework/{sessions,views,cache} bootstrap/cache
     
     # Now set proper permissions for web server after Git operations
     echo "Setting proper permissions for storage and bootstrap/cache directories..."
@@ -82,9 +86,14 @@ else
 fi
 # --- Akhir Dekripsi .env ---
 
-# --- URUTAN KRUSIAL DI SINI ---
+# --- PERSIAPAN SEBELUM COMPOSER ---
+# Pastikan semua direktori Laravel ada dan memiliki izin yang benar SEBELUM Composer
+echo "Final check: ensuring all Laravel directories exist with correct permissions..."
+mkdir -p storage/logs storage/framework/{sessions,views,cache} bootstrap/cache
+sudo chown -R www-data:www-data storage bootstrap/cache
+sudo chmod -R 775 storage bootstrap/cache
 
-# Instal Composer dependencies (HARUS SEBELUM PERINTAH ARTISAN LAINNYA)
+# Instal Composer dependencies (SEKARANG SUDAH AMAN)
 echo "Installing Composer dependencies..."
 if ! command -v composer &> /dev/null; then
     echo "Error: Composer not found. Please install Composer on EC2."
@@ -92,15 +101,9 @@ if ! command -v composer &> /dev/null; then
 fi
 composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-# Masuk ke maintenance mode Laravel (SEKARANG SUDAH ADA vendor/autoload.php)
+# Masuk ke maintenance mode Laravel
 echo "Entering maintenance mode..."
 php artisan down || true
-
-# Atur izin direktori storage dan bootstrap/cache (SEBELUM ARTISAN LAINNYA)
-# Ini adalah final adjustment setelah composer install dan sebelum caching
-echo "Adjusting storage and cache permissions..."
-sudo chown -R www-data:www-data storage bootstrap/cache
-sudo chmod -R 775 storage bootstrap/cache
 
 # Clear cache dan recreate cache Laravel
 echo "Clearing and recreating Laravel cache..."

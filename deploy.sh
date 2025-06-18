@@ -94,9 +94,6 @@ export COMPOSER_ALLOW_SUPERUSER=1
 composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 echo "Composer dependencies installed successfully."
 
-# Masuk ke maintenance mode Laravel
-echo "Entering maintenance mode..."
-php artisan down || true
 
 # Clear cache dan recreate cache Laravel
 echo "Clearing and recreating Laravel cache..."

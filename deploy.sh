@@ -30,9 +30,8 @@ echo "Current PATH: $PATH"
 if [ ! -d "$APP_DIR" ]; then
     echo "Directory $APP_DIR does not exist. Creating and cloning repository..."
     sudo mkdir -p "$APP_DIR"
-    # Setel kepemilikan dan izin untuk APP_DIR secara keseluruhan
     sudo chown -R $USER:www-data "$APP_DIR"
-    sudo chmod -R 775 "$APP_DIR" # Izinkan grup menulis
+    sudo chmod -R 775 "$APP_DIR"
     echo "Cloning repository from $REPO_URL..."
     git clone "$REPO_URL" "$APP_DIR"
     echo "Repository cloned."
@@ -43,23 +42,32 @@ else # Jika direktori sudah ada, navigasi dan pull
     
     # Set ownership of the entire directory to current user for Git operations
     echo "Setting temporary ownership for Git operations..."
-    sudo chown -R $USER:$USER "$APP_DIR"
+    sudo chown -R $USER:$USER "$APP_DIR" # Pastikan user saat ini bisa menulis
     
     echo "Fetching latest changes from Git..."
     git fetch origin production
-    git reset --hard origin/production # Reset lokal ke kondisi branch production
+    git reset --hard origin/production
     git pull origin production
     echo "Git pull completed."
 fi
 
-# --- Setup Laravel directories dan permissions SEBELUM composer install ---
-echo "Creating Laravel directories..."
-mkdir -p storage/logs storage/framework/{sessions,views,cache} bootstrap/cache
+# --- Setup Laravel directories dan permissions UTAMA ---
+# Pastikan direktori ini ada dan memiliki izin yang benar SEBELUM Composer/Artisan
+echo "Ensuring Laravel directories exist and setting initial permissions..."
+sudo mkdir -p "$APP_DIR/storage" "$APP_DIR/bootstrap/cache" "$APP_DIR/storage/framework/sessions" "$APP_DIR/storage/framework/views" "$APP_DIR/storage/framework/cache/data" "$APP_DIR/storage/logs" || true
 
-echo "Setting permissions for Laravel directories..."
-sudo chown -R $USER:www-data storage bootstrap/cache
-sudo chmod -R 775 storage bootstrap/cache
-echo "Laravel directories and permissions set up successfully."
+# Hapus semua konten dari cache dan storage (kecuali .gitignore) sebelum Composer
+# Ini untuk memastikan clean state dan mengatasi masalah file lama yang mungkin terkunci
+sudo rm -rf storage/framework/cache/data/* || true
+sudo rm -rf storage/framework/views/* || true
+sudo rm -rf bootstrap/cache/* || true
+sudo rm -f storage/logs/*.log || true
+
+# Setel izin dasar untuk direktori ini agar www-data bisa menulis
+sudo chown -R www-data:www-data storage bootstrap/cache
+sudo chmod -R 775 storage bootstrap/cache # Memberi izin tulis untuk grup
+
+echo "Laravel directories cleaned and initial permissions set."
 # --- Akhir Setup Direktori Laravel ---
 
 # --- Dekripsi .env.enc menjadi .env ---
@@ -78,22 +86,36 @@ if [ -f .env.enc ]; then
     echo ".env decrypted successfully."
 else
     echo "Warning: .env.enc not found. Skipping decryption."
+    # Jika .env.enc tidak ada, copy dari .env.example
+    if [ ! -f .env ] && [ -f .env.example ]; then
+        cp .env.example .env
+        echo ".env created from .env.example as .env.enc was not found."
+    fi
 fi
 # --- Akhir Dekripsi .env ---
 
-# --- Instal Composer dependencies ---
+# --- Instal Composer dependencies (Ini harus dijalankan SEBELUM php artisan down) ---
 echo "Installing Composer dependencies..."
 if ! command -v composer &> /dev/null; then
     echo "Error: Composer not found. Please install Composer on EC2."
     exit 1
 fi
+# Jalankan composer install sebagai user www-data untuk menghindari masalah izin?
+# composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+# Jika masih ada masalah izin, coba jalankan dengan sudo -u www-data
+sudo -u www-data composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader || composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-# Set COMPOSER_ALLOW_SUPERUSER to avoid warnings if running as root
-export COMPOSER_ALLOW_SUPERUSER=1
-
-composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 echo "Composer dependencies installed successfully."
 
+# Masuk ke maintenance mode Laravel (SEKARANG SUDAH ADA vendor/autoload.php)
+echo "Entering maintenance mode..."
+php artisan down || true
+
+# Generate application key jika belum ada di .env yang baru didekripsi
+if [ -z "$(grep -E '^APP_KEY=' .env)" ]; then
+    echo "Generating application key..."
+    php artisan key:generate
+fi
 
 # Clear cache dan recreate cache Laravel
 echo "Clearing and recreating Laravel cache..."
@@ -102,12 +124,6 @@ php artisan cache:clear
 php artisan route:clear
 php artisan view:clear
 php artisan clear-compiled # Clear compiled classes
-
-# Generate application key jika belum ada di .env yang baru didekripsi
-if [ -z "$(grep -E '^APP_KEY=' .env)" ]; then
-    echo "Generating application key..."
-    php artisan key:generate
-fi
 
 # Optimize Laravel application
 echo "Optimizing Laravel application..."
@@ -133,22 +149,18 @@ echo "NPM build completed successfully."
 echo "Running database migrations ..."
 php artisan migrate --force
 
-# --- Final permission check ---
-echo "Final permission check and cleanup..."
+# --- Final permission adjustment ---
+echo "Final adjustment for storage and cache permissions..."
 sudo chown -R www-data:www-data storage bootstrap/cache
 sudo chmod -R 775 storage bootstrap/cache
-
-# Ensure proper ownership for the entire application directory
+# Ensure proper ownership for the entire application directory, especially for web server
 sudo chown -R www-data:www-data "$APP_DIR"
 sudo chmod -R 755 "$APP_DIR"
-# But keep storage and bootstrap/cache writable
 sudo chmod -R 775 "$APP_DIR/storage" "$APP_DIR/bootstrap/cache"
 
-# ---------- SET UP LOG DIRECTORY ----------------
-# Create logs directory structure if it doesn't exist
-mkdir -p storage/logs
-echo "Laravel log directory prepared."
-
+# --- Keluar dari maintenance mode ---
+echo "Exiting maintenance mode..."
+php artisan up
 
 echo "Deployment finished successfully!"
 echo "Application is now live and ready to serve requests."

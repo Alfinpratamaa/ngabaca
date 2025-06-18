@@ -12,7 +12,6 @@ jobs:
 
     env:
       APP_DOMAIN: ngabaca.${{ secrets.EC2_HOST }}.nip.io
-      # Tambahkan environment variable untuk encryption key
       LARAVEL_ENV_ENCRYPTION_KEY: ${{ secrets.LARAVEL_ENV_ENCRYPTION_KEY }}
 
     steps:
@@ -36,13 +35,11 @@ jobs:
         run: |
           echo "Starting deployment via deploy.sh on EC2.."
 
-          # Berikan hak eksekusi pada script deploy.sh di runner GitHub Actions
           chmod +x ./deploy.sh
 
-          # Jalankan script deployment di EC2 melalui SSH
-          # Pass environment variable LARAVEL_ENV_ENCRYPTION_KEY ke script
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
             export LARAVEL_ENV_ENCRYPTION_KEY='${{ secrets.LARAVEL_ENV_ENCRYPTION_KEY }}'
+            export GITHUB_REPOSITORY='${{ github.repository }}'
             bash -s
           " < ./deploy.sh
 
@@ -50,32 +47,23 @@ jobs:
 
       - name: Configure and Restart Nginx/PHP-FPM on EC2
         run: |
-          # Perintah ini akan dijalankan di EC2 melalui SSH
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
-            # Pastikan direktori nginx_config ada di EC2
             mkdir -p ~/laravel-app-deployment/nginx_config
-
-            # SALIN FILE NGINX CONFIG DARI REPO KE EC2
+            
             cat ./nginx/nginx.conf | sed 's|server_name localhost;|server_name ${{ env.APP_DOMAIN }};|g' | ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} 'cat > ~/laravel-app-deployment/nginx_config/ngabaca.conf'
-
-            # Hapus symbolic link default Nginx jika ada (penting untuk clean state)
+            
             sudo rm -f /etc/nginx/sites-enabled/default || true
-
-            # Hapus symbolic link config lama jika ada
             sudo rm -f /etc/nginx/sites-enabled/ngabaca.conf || true
 
-            # Buat symbolic link baru untuk config Nginx yang sudah dimodifikasi
             sudo ln -s ~/laravel-app-deployment/nginx_config/ngabaca.conf /etc/nginx/sites-available/ngabaca.conf
             sudo ln -s /etc/nginx/sites-available/ngabaca.conf /etc/nginx/sites-enabled/ngabaca.conf
 
-            # Uji konfigurasi Nginx
             sudo nginx -t
 
-            # Restart Nginx jika pengujian sukses
             sudo systemctl restart nginx
-            sudo systemctl restart php8.4-fpm # Sesuaikan versi PHP
+            sudo systemctl restart php8.2-fpm # <-- Pastikan versi PHP ini benar di EC2
           "
-           echo "Nginx and PHP-FPM configured and restarted on EC2."
+          echo "Nginx and PHP-FPM configured and restarted on EC2."
 
       - name: Verify Deployment (Optional)
         run: |

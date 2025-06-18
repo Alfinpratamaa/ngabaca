@@ -38,10 +38,6 @@ else # Jika direktori sudah ada, navigasi dan pull
 fi
 # --- Akhir Perubahan ---
 
-# Masuk ke maintenance mode Laravel
-echo "Entering maintenance mode..."
-php artisan down || true
-
 # Instal Composer dependencies
 echo "Installing Composer dependencies..."
 composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader

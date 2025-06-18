@@ -44,20 +44,44 @@ else # Jika direktori sudah ada, navigasi dan pull
     echo "Directory $APP_DIR exists. Navigating and pulling latest changes."
     cd "$APP_DIR"
     
-    # Bersihkan direktori cache dan storage sebelum git pull/reset
+    # --- KRUSIAL: Bersihkan direktori cache dan storage sebelum git pull/reset ---
     echo "Cleaning up storage and bootstrap/cache directories before Git operations..."
+    
+    # Pastikan kepemilikan dan izin direktori utama storage/bootstrap/cache sudah benar
     sudo chown -R www-data:www-data storage bootstrap/cache || true
     sudo chmod -R 775 storage bootstrap/cache || true
+
+    # Gunakan git clean dengan sudo untuk menghapus file yang tidak terlacak dan tidak bisa dihapus
+    # Ini akan menghapus file yang tidak ada di gitignore dan tidak terlacak
+    # PENTING: -x juga menghapus file yang diabaikan oleh git (seperti node_modules, vendor)
+    # -f untuk memaksa, -d untuk direktori
+    # sudo git clean -xdf || true # Opsi agresif, bisa menghapus vendor/node_modules jika belum diinstal
+    
+    # Pendekatan yang lebih aman: hapus secara spesifik folder cache dan log
     sudo rm -rf storage/framework/cache/data/* || true
     sudo rm -rf storage/framework/views/* || true
     sudo rm -rf bootstrap/cache/* || true
     sudo rm -f storage/logs/*.log || true
+    
+    # Hapus file .gitignore di storage/bootstrap/cache secara eksplisit jika perlu
+    sudo rm -f storage/app/.gitignore || true
+    sudo rm -f storage/app/private/.gitignore || true
+    sudo rm -f storage/app/public/.gitignore || true
+    sudo rm -f storage/framework/.gitignore || true
+    sudo rm -f storage/framework/cache/.gitignore || true
+    sudo rm -f storage/framework/cache/data/.gitignore || true
+    sudo rm -f storage/framework/sessions/.gitignore || true
+    sudo rm -f storage/framework/testing/.gitignore || true
+    sudo rm -f storage/framework/views/.gitignore || true
+    sudo rm -f storage/logs/.gitignore || true
+    sudo rm -f bootstrap/cache/.gitignore || true
 
     echo "Storage and cache content cleared."
+    # --- Akhir Perubahan Cleanup ---
 
     echo "Fetching latest changes from Git..."
     git fetch origin production
-    git reset --hard origin/production
+    git reset --hard origin/production # Reset lokal ke kondisi branch production
     git pull origin production
     echo "Git pull completed."
 fi

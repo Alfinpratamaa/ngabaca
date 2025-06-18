@@ -110,8 +110,8 @@ fi
 
 # Atur izin direktori storage dan bootstrap/cache
 echo "Setting storage and cache permissions..."
-chown -R www-data:www-data storage bootstrap/cache
-chmod -R 775 storage bootstrap/cache
+sudo chown -R www-data:www-data storage bootstrap/cache
+sudo chmod -R 775 storage bootstrap/cache
 
 # Keluar dari maintenance mode
 echo "Exiting maintenance mode..."

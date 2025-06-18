@@ -52,21 +52,13 @@ else # Jika direktori sudah ada, navigasi dan pull
     echo "Git pull completed."
 fi
 
-# --- CRITICAL: Set up Laravel directories and permissions BEFORE any Laravel commands ---
-echo "Setting up Laravel directories and permissions..."
+# --- Setup Laravel directories dan permissions SEBELUM composer install ---
+echo "Creating Laravel directories..."
 mkdir -p storage/logs storage/framework/{sessions,views,cache} bootstrap/cache
 
-# Set proper ownership and permissions for Laravel directories
-sudo chown -R www-data:www-data storage bootstrap/cache
+echo "Setting permissions for Laravel directories..."
+sudo chown -R $USER:www-data storage bootstrap/cache
 sudo chmod -R 775 storage bootstrap/cache
-
-# Ensure the current user can also write (needed for some operations)
-sudo setfacl -R -m u:$USER:rwx storage bootstrap/cache 2>/dev/null || {
-    echo "setfacl not available, using alternative permission setup..."
-    sudo chown -R $USER:www-data storage bootstrap/cache
-    sudo chmod -R 775 storage bootstrap/cache
-}
-
 echo "Laravel directories and permissions set up successfully."
 # --- Akhir Setup Direktori Laravel ---
 
@@ -89,7 +81,7 @@ else
 fi
 # --- Akhir Dekripsi .env ---
 
-# --- Instal Composer dependencies (SEKARANG SUDAH AMAN) ---
+# --- Instal Composer dependencies ---
 echo "Installing Composer dependencies..."
 if ! command -v composer &> /dev/null; then
     echo "Error: Composer not found. Please install Composer on EC2."
@@ -101,11 +93,6 @@ export COMPOSER_ALLOW_SUPERUSER=1
 
 composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 echo "Composer dependencies installed successfully."
-
-# --- Verify permissions after Composer (Laravel might have created additional files) ---
-echo "Re-verifying Laravel directory permissions after Composer..."
-sudo chown -R www-data:www-data storage bootstrap/cache
-sudo chmod -R 775 storage bootstrap/cache
 
 # Masuk ke maintenance mode Laravel
 echo "Entering maintenance mode..."
@@ -163,7 +150,7 @@ sudo chmod -R 775 "$APP_DIR/storage" "$APP_DIR/bootstrap/cache"
 # ---------- SET UP LOG DIRECTORY ----------------
 # Create logs directory structure if it doesn't exist
 mkdir -p storage/logs
-echo "Laravel log directory prepared"
+echo "Laravel log directory prepared."
 
 # Keluar dari maintenance mode
 echo "Exiting maintenance mode..."

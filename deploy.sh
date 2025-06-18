@@ -9,6 +9,11 @@ REPO_URL="https://github.com/Alfinpratamaa/ngabaca.git" # URL Repositori Git And
 # Jika repositori privat, Anda mungkin perlu mengkonfigurasi kredensial Git di EC2.
 # Untuk repo privat, bisa juga gunakan SSH: REPO_URL="git@github.com:your_user/your_repo.git" dan pastikan kunci SSH untuk Git sudah ada di EC2.
 
+# --- Perubahan di sini: Perluas PATH dan debug ---
+export PATH=$PATH:/usr/local/bin:/usr/bin:/bin # Tambahkan path umum untuk binaries
+echo "Current PATH: $PATH" # Debug PATH yang sedang aktif
+# --- Akhir Perubahan ---
+
 LOG_DIR="/home/$USER/app_deployment_logs" # Direktori log deployment
 DEPLOY_LOG_FILE="$LOG_DIR/$(date +%Y-%m-%d-%H-%M-%S)_deploy.log"
 
@@ -67,19 +72,19 @@ php artisan clear-compiled # Clear compiled classes
 php artisan optimize
 
 echo "checking npm version..."
-# --- Perubahan di sini ---
-/usr/bin/npm --version # Ganti dengan path absolut yang Anda temukan
-# Cek apakah NPM terpasang (tetap relevan untuk debug)
-if ! command -v /usr/bin/npm &> /dev/null; then # Ganti dengan path absolut
-    echo "NPM is not installed at /usr/bin/npm. Please install NPM to continue."
+# Coba temukan NPM secara eksplisit lagi
+NPM_BIN=$(which npm || true) # Coba temukan npm, kalau gagal jangan error
+if [ -z "$NPM_BIN" ]; then
+    echo "ERROR: npm command not found even after checking common paths. Please ensure Node.js and npm are correctly installed and available in a standard PATH."
     exit 1
 fi
+echo "NPM found at: $NPM_BIN"
+"$NPM_BIN" --version # Gunakan path yang ditemukan untuk memanggil npm
 
 # Install NPM dependencies dan compile assets (jika ada frontend)
 echo "Installing NPM dependencies and compiling assets..."
-/usr/bin/npm install --silent --no-progress # Ganti dengan path absolut
-/usr/bin/npm run build # Ganti dengan path absolut
-# --- Akhir Perubahan ---
+"$NPM_BIN" install --silent --no-progress
+"$NPM_BIN" run build 
 
 
 # --- Bagian Dekripsi .env.enc menjadi .env ---

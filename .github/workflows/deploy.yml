@@ -34,7 +34,7 @@ jobs:
       # --- Bagian Deployment ke EC2 ---
       - name: Execute Deployment Script on EC2
         run: |
-          echo "Starting deployment via deploy.sh on EC2..."
+          echo "Starting deployment via deploy.sh on EC2.."
 
           # Berikan hak eksekusi pada script deploy.sh di runner GitHub Actions
           chmod +x ./deploy.sh

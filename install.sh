@@ -100,20 +100,24 @@ fi
 print_status "Setting up environment file..."
 rm -f .env 2>/dev/null
 
-if [ -f ".env.encrypted" ]; then
-    if LARAVEL_ENV_ENCRYPTION_KEY="$ENCRYPTION_KEY" php artisan env:decrypt > /dev/null 2>&1; then
-        print_success "Environment file decrypted successfully!"
-    else
-        print_warning "Failed to decrypt environment file. Using .env.example as fallback."
-        if [ -f ".env.example" ]; then
-            cp .env.example .env
-            print_success "Environment file created from .env.example"
-        else
-            print_error "No .env.example file found!"
-            exit 1
-        fi
-    fi
+# --- Dekripsi .env.enc menjadi .env ---
+if [ -z "$LARAVEL_ENV_ENCRYPTION_KEY" ]; then
+    echo "Error: LARAVEL_ENV_ENCRYPTION_KEY not set. Cannot decrypt .env file."
+    exit 1
 fi
+
+if [ -f .env.enc ]; then
+    echo "Decrypting .env.enc to .env..."
+    if ! command -v openssl &> /dev/null; then
+        echo "Error: openssl not found. Please install openssl on EC2 to decrypt .env.enc"
+        exit 1
+    fi
+    openssl enc -aes-256-cbc -d -in .env.enc -out .env -k "$LARAVEL_ENV_ENCRYPTION_KEY"
+    echo ".env decrypted successfully."
+else
+    echo "Warning: .env.enc not found. Skipping decryption."
+fi
+# --- Akhir Dekripsi .env ---
 
 # Install Node.js dependencies
 print_status "Installing Node.js dependencies..."

@@ -22,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'avatar'
     ];
 
     /**
@@ -72,5 +73,14 @@ class User extends Authenticatable
     public function verifiedPayments()
     {
         return $this->hasMany(Payment::class, 'verified_by');
+    }
+     public function getAvatarUrlAttribute()
+    {
+        if ($this->avatar) {
+            return asset('storage/' . $this->avatar);
+        }
+        
+        // Default avatar jika tidak ada
+        return asset('assets/images/default-avatar.png');
     }
 }

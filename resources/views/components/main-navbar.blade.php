@@ -45,9 +45,7 @@
 
                     <!-- Profile -->
                     <flux:dropdown position="bottom" align="end" class="text-zinc-950">
-                        <flux:profile
-                            avatar="{{ auth()->user()->avatar ?? '/assets/images/default-avatar.png' }}"
-                            name="{{ auth()->user()->name }}" />
+                        <flux:profile avatar="{{ auth()->user()->avatar ?? '/assets/images/default-avatar.png' }}" />
                         <flux:navmenu>
                             <flux:navmenu.item icon="user" href="/profile">Profile</flux:navmenu.item>
                             <flux:navmenu.item icon="book-open" href="/my-books">My Books</flux:navmenu.item>

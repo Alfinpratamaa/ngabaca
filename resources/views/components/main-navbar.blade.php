@@ -3,10 +3,10 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between gap-5 items-center h-16">
             <!-- Logo -->
-            <div class="flex items-center">
+            <a href="{{ route('home') }}" class="flex items-center">
                 <flux:icon.book-open class="h-8 w-8 text-blue-600 mr-2" />
                 <span class="text-xl font-bold text-gray-900">Ngabaca</span>
-            </div>
+            </a>
 
             <!-- Navigation Links -->
             <div class="hidden md:flex items-center space-x-8">
@@ -45,11 +45,21 @@
 
                     <!-- Profile -->
                     <flux:dropdown position="bottom" align="end" class="text-zinc-950">
-                        <flux:profile avatar="{{ auth()->user()->avatar ?? '/assets/images/default-avatar.png' }}" />
+                        <flux:profile
+                            avatar="{{ auth()->user()->avatar ? asset('storage/' . auth()->user()->avatar) : asset('assets/images/default-avatar.png') }}" />
                         <flux:navmenu>
-                            <flux:navmenu.item icon="user" href="/profile">Profile</flux:navmenu.item>
-                            <flux:navmenu.item icon="book-open" href="/my-books">My Books</flux:navmenu.item>
+                            <flux:navmenu.item icon="user" href="{{ route('settings.profile') }}">Profile
+                            </flux:navmenu.item>
+                            @if (auth()->user()->role !== 'admin')
+                                <flux:navmenu.item icon="book-open" href="/my-book">My book</flux:navmenu.item>
+                            @endif
+                            @if (auth()->user()->role === 'admin')
+                                <flux:navmenu.separator />
+                                <flux:navmenu.item icon="shield-check" href="/admin/dashboard">Admin Panel
+                                </flux:navmenu.item>
+                            @endif
                             <flux:navmenu.item icon="cog-6-tooth" href="/settings">Settings</flux:navmenu.item>
+
 
                             <flux:navmenu.separator />
 

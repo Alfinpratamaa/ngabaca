@@ -3,7 +3,10 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "format": "prettier --write \"resources/**/*.{js,jsx,ts,tsx,vue,css,scss,html}\"",
+        "format:check": "prettier --check \"resources/**/*.{js,jsx,ts,tsx,vue,css,scss,html}\"",
+        "format:blade": "prettier --write \"resources/**/*.blade.php\" --parser=php"
     },
     "dependencies": {
         "@tailwindcss/vite": "^4.0.7",
@@ -19,5 +22,9 @@
         "@rollup/rollup-linux-x64-gnu": "4.9.5",
         "@tailwindcss/oxide-linux-x64-gnu": "^4.0.1",
         "lightningcss-linux-x64-gnu": "^1.29.1"
+    },
+    "devDependencies": {
+        "@prettier/plugin-php": "^0.22.4",
+        "prettier": "^3.6.0"
     }
 }

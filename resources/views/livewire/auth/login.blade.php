@@ -11,7 +11,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Volt\Component;
 
-new #[Layout('components.layouts.auth')] class extends Component {
+new #[Layout('components.layouts.main')] class extends Component {
     #[Validate('required|string|email')]
     public string $email = '';
 
@@ -29,7 +29,7 @@ new #[Layout('components.layouts.auth')] class extends Component {
 
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
+        if (!Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -40,7 +40,15 @@ new #[Layout('components.layouts.auth')] class extends Component {
         RateLimiter::clear($this->throttleKey());
         Session::regenerate();
 
-        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+        $this->dispatch('$refresh');
+
+        // Redirect dengan delay kecil
+        $user = Auth::user();
+        if ($user->role === 'admin') {
+            $this->redirect(route('admin.dashboard'));
+        } else {
+            $this->redirect(route('home'));
+        }
     }
 
     /**
@@ -48,7 +56,7 @@ new #[Layout('components.layouts.auth')] class extends Component {
      */
     protected function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if (!RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
             return;
         }
 
@@ -69,90 +77,60 @@ new #[Layout('components.layouts.auth')] class extends Component {
      */
     protected function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->email).'|'.request()->ip());
+        return Str::transliterate(Str::lower($this->email) . '|' . request()->ip());
     }
 }; ?>
 
-<div class="relative flex size-full min-h-screen flex-col bg-white  group/design-root overflow-x-hidden" style='font-family: "Plus Jakarta Sans", "Noto Sans", sans-serif;'>
+<div class="relative flex size-full min-h-screen flex-col mt-20 bg-white group/design-root overflow-x-hidden"
+    style='font-family: "Plus Jakarta Sans", "Noto Sans", sans-serif;'>
     <div class="layout-container flex h-full grow flex-col">
-        <div class="flex flex-1 justify-center py-5">
-            <div class="layout-content-container flex flex-col w-[512px] max-w-[512px] py-5 max-w-[960px] flex-1">
-                
+        <div class="flex flex-1 justify-center">
+            <div class="layout-content-container flex flex-col w-full max-w-md px-4">
+
                 <!-- Header -->
-                <h2 class="text-[#0C161B] tracking-light text-[24px] font-bold leading-tight px-4 text-center pb-3 pt-5"
-                style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                <h2 class="text-[#0C161B] tracking-light text-[24px] font-bold leading-tight text-center pb-3 pt-5"
+                    style="font-family: 'Plus Jakarta Sans', sans-serif;">
                     Selamat Kembali Ke Ngabaca
                 </h2>
 
                 <!-- Session Status -->
-                @if (session('status'))
-                    <div class="px-4 py-3 text-center text-sm text-green-600">
-                        {{ session('status') }}
-                    </div>
-                @endif
+                <x-auth-session-status class="text-center" :status="session('status')" />
 
                 <!-- Login Form -->
-                <form wire:submit="login">
+                <form wire:submit="login" class="w-full">
                     <!-- Email Input -->
-                    <div class="flex max-w-[480px] flex-col flex-wrap gap-4 px-4 py-3">
-                        
-                        <input
-                            wire:model="email"
-                            type="email"
-                            placeholder="Email"
-                            required
-                            autocomplete="username"
-                            class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-black focus:outline-0 focus:ring-0 border-none bg-gray-200 focus:border-none h-14 placeholder:text-[#4c7b9a] p-4 text-base font-normal leading-normal @error('email') @enderror"
-                        />
-                    </div>
-
-                    <!-- Password Input -->
-                    <div class="flex max-w-[480px] flex-col flex-wrap gap-4 px-4 py-3">
-                        
-                        <input
-                                wire:model="password"
-                                type="password"
-                                placeholder="Password"
-                                required
-                                autocomplete="current-password"
-                                class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-black focus:outline-0 focus:ring-0 border-none bg-gray-200 focus:border-none h-14 placeholder:text-[#4c7b9a] p-4 text-base font-normal leading-normal @error('password') bg-red-50 @enderror"
-                            />
-                            @error('password')
-                                <span class="text-red-600 text-sm mt-1 px-4">{{ $message }}</span>
-                            @enderror
+                    <div class="flex flex-col gap-2 py-3">
+                        <flux:input wire:model="email" label="Email Address"
+                            class="bg-gray-200 rounded-md text-slate-900 [&_label]:text-slate-700" type="email"
+                            required autofocus autocomplete="email" placeholder="email@example.com" />
+                        <flux:input wire:model="password" :label="__('Password')" type="password" placeholder="Password"
+                            required viewable autocomplete="current-password"
+                            class="bg-gray-200 rounded-md [&_label]:text-slate-700" />
                     </div>
 
                     <!-- Remember Me (Optional) -->
-                    <div class="flex items-center px-4 py-2">
+                    <div class="flex items-center py-2">
                         <label class="flex items-center">
-                            <input 
-                                wire:model="remember" 
-                                type="checkbox" 
-                                class="rounded border-gray-300 text-[#2a9fed] shadow-sm focus:ring-[#2a9fed]"
-                            >
+                            <input wire:model="remember" type="checkbox"
+                                class="rounded border-gray-300 text-[#2a9fed] shadow-sm focus:ring-[#2a9fed]">
                             <span class="ml-2 text-sm text-[#4c7b9a]">{{ __('Remember me') }}</span>
                         </label>
                     </div>
 
                     <!-- Login Button -->
-                    <div class="flex px-4 py-3">
-                        <button
-                            type="submit"
-                            class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 flex-1 bg-[#2a9fed] text-slate-50 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                            wire:loading.attr="disabled"
-                        >
-                            <span wire:loading.remove class="truncate">Login</span>
-                            <span wire:loading class="truncate">Logging in...</span>
-                        </button>
+                    <div class="flex items-center justify-center">
+                        <flux:button variant="primary" type="submit"
+                            class="w-full cursor-pointer bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-md px-4 py-2 transition-colors duration-200">
+                            {{ __('Log in') }}
+                        </flux:button>
                     </div>
                 </form>
 
                 <!-- Forgot Password Link (Optional) -->
                 @if (Route::has('password.request'))
-                    <div class="px-4 py-1 text-center">
-                        <a href="{{ route('password.request') }}" 
-                           wire:navigate 
-                           class="text-[#4c7b9a] text-sm font-normal leading-normal underline hover:text-blue-600">
+                    <div class="py-1 text-center">
+                        <a href="{{ route('password.request') }}" wire:navigate
+                            class="text-[#4c7b9a] text-sm font-normal leading-normal underline hover:text-blue-600">
                             {{ __('Forgot your password?') }}
                         </a>
                     </div>
@@ -160,11 +138,10 @@ new #[Layout('components.layouts.auth')] class extends Component {
 
                 <!-- Register Link -->
                 @if (Route::has('register'))
-                    <div class="px-4 py-3 text-center">
+                    <div class="py-3 text-center">
                         <span class="text-[#4c7b9a] text-sm font-normal leading-normal">Don't have an account? </span>
-                        <a href="{{ route('register') }}" 
-                           wire:navigate 
-                           class="text-[#4c7b9a] text-sm font-normal leading-normal underline hover:text-blue-600">
+                        <a href="{{ route('register') }}" wire:navigate
+                            class="text-[#4c7b9a] text-sm font-normal leading-normal underline hover:text-blue-600">
                             Register
                         </a>
                     </div>

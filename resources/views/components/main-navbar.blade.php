@@ -3,7 +3,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between gap-5 items-center h-16">
             <!-- Logo -->
-            <a href="{{ route('home') }}" class="flex items-center">
+            <a href="{{ route('home') }}" wire:navigate class="flex items-center">
                 <flux:icon.book-open class="h-8 w-8 text-blue-600 mr-2" />
                 <span class="text-xl font-bold text-gray-900">Ngabaca</span>
             </a>
@@ -44,9 +44,11 @@
                     </a>
 
                     <!-- Profile -->
-                    <flux:dropdown position="bottom" align="end" class="text-zinc-950">
+                    <flux:dropdown position="bottom" align="end" >
                         <flux:profile
-                            avatar="{{ auth()->user()->avatar ? asset('storage/' . auth()->user()->avatar) : asset('assets/images/default-avatar.png') }}" />
+                            icon-variant="micro"
+                            circle
+                            avatar="{{ auth()->user()->avatar ? asset('storage/' . auth()->user()->avatar) : asset('assets/images/avatar.jpg') }}" />
                         <flux:navmenu>
                             <flux:navmenu.item icon="user" href="{{ route('settings.profile') }}">Profile
                             </flux:navmenu.item>

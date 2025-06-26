@@ -6,7 +6,7 @@
 @source '../../vendor/livewire/flux-pro/stubs/**/*.blade.php';
 @source '../../vendor/livewire/flux/stubs/**/*.blade.php';
 
-@custom-variant dark (&:where(.dark, .dark *));
+/* @custom-variant dark (&:where(.dark, .dark *)); */
 
 @theme {
     --font-sans:
@@ -30,13 +30,13 @@
     --color-accent-foreground: var(--color-white);
 }
 
-@layer theme {
+/* @layer theme {
     .dark {
         --color-accent: var(--color-white);
         --color-accent-content: var(--color-white);
         --color-accent-foreground: var(--color-neutral-800);
     }
-}
+} */
 
 @layer base {
     *,
@@ -60,6 +60,27 @@ input:focus[data-flux-control],
 textarea:focus[data-flux-control],
 select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+}
+[data-flux-dropdown] [data-flux-control] {
+    @apply text-slate-800;
+    @apply bg-white;
+    @apply border border-gray-200;
+    @apply hover:bg-gray-50;
+}
+
+[data-flux-navmenu] {
+    @apply bg-gray-100;
+    @apply border border-gray-200;
+    @apply text-slate-800;
+}
+[data-flux-navmenu] [data-flux-navmenu-item] {
+    @apply border-0 text-inherit hover:bg-gray-200;
+}
+[data-flux-dropdown] [data-flux-icon]:last-child {
+    @apply text-slate-800;
+}
+[data-flux-profile] {
+    @apply bg-white;
 }
 
 /* \[:where(&)\]:size-4 {

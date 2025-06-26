@@ -62,7 +62,7 @@ select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
 }
 [data-flux-dropdown] [data-flux-control] {
-    @apply text-slate-800;
+    @apply text-gray-800;
     @apply bg-white;
     @apply border border-gray-200;
     @apply hover:bg-gray-50;
@@ -71,13 +71,13 @@ select:focus[data-flux-control] {
 [data-flux-navmenu] {
     @apply bg-gray-100;
     @apply border border-gray-200;
-    @apply text-slate-800;
+    @apply text-gray-800;
 }
 [data-flux-navmenu] [data-flux-navmenu-item] {
-    @apply border-0 text-inherit hover:bg-gray-200;
+    @apply border-0 text-gray-700 hover:bg-gray-200;
 }
 [data-flux-dropdown] [data-flux-icon]:last-child {
-    @apply text-slate-800;
+    @apply text-gray-700;
 }
 [data-flux-profile] {
     @apply bg-white;

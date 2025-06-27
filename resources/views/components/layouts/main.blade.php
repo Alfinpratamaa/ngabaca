@@ -3,7 +3,7 @@
 
 <head>
     @include('partials.head')
-    @fluxAppearance
+    @
 </head>
 
 <body class="bg-white">

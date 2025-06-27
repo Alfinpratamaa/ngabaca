@@ -21,9 +21,7 @@ class Book extends Model
         'stock',
         'published_year',
         'cover_image_url',
-        'preview_file_url',
-        'secure_file_url',
-        'category_id',
+        'private_file_path',
     ];
 
     public function category()

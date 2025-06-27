@@ -3,7 +3,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between gap-5 items-center h-16">
             <!-- Logo -->
-            <a href="{{ route('home') }}" class="flex items-center">
+            <a href="{{ route('home') }}" wire:navigate class="flex items-center">
                 <flux:icon.book-open class="h-8 w-8 text-blue-600 mr-2" />
                 <span class="text-xl font-bold text-gray-900">Ngabaca</span>
             </a>
@@ -44,21 +44,22 @@
                     </a>
 
                     <!-- Profile -->
-                    <flux:dropdown position="bottom" align="end" class="text-zinc-950">
+                    <flux:dropdown position="bottom" align="end" >
                         <flux:profile
-                            avatar="{{ auth()->user()->avatar ? asset('storage/' . auth()->user()->avatar) : asset('assets/images/default-avatar.png') }}" />
+                            icon-variant="micro"
+                            circle
+                            avatar="{{ auth()->user()->avatar ? asset('storage/' . auth()->user()->avatar) : asset('assets/images/avatar.jpg') }}" />
                         <flux:navmenu>
-                            <flux:navmenu.item icon="user" href="{{ route('settings.profile') }}">Profile
+                            <flux:navmenu.item icon="user" wire:navigate href="{{ route('settings.profile') }}">Profile
                             </flux:navmenu.item>
                             @if (auth()->user()->role !== 'admin')
-                                <flux:navmenu.item icon="book-open" href="/my-book">My book</flux:navmenu.item>
+                                <flux:navmenu.item icon="book-open" wire:navigate href="/my-book">My book</flux:navmenu.item>
                             @endif
                             @if (auth()->user()->role === 'admin')
                                 <flux:navmenu.separator />
-                                <flux:navmenu.item icon="shield-check" href="/admin/dashboard">Admin Panel
+                                <flux:navmenu.item icon="shield-check" wire:navigate href="{{ route('admin.dashboard')}}">Admin Panel
                                 </flux:navmenu.item>
                             @endif
-                            <flux:navmenu.item icon="cog-6-tooth" href="/settings">Settings</flux:navmenu.item>
 
 
                             <flux:navmenu.separator />

@@ -1,7 +1,7 @@
 <x-layouts.main>
     <div class="py-12 px-6 max-w-7xl mx-auto">
         <nav class="text-sm text-gray-500 mb-6">
-            <a href="{{ url('/') }}" class="hover:underline">Home</a> /
+            <a href="{{ route('home') }}" wire:navigate class="hover:underline">Home</a> /
             <span class="text-gray-800">Contact</span>
         </nav>
 
@@ -37,9 +37,12 @@
             <!-- Contact Form -->
             <form wire:submit.prevent="submitForm" class="bg-white rounded-lg shadow p-6 space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <input type="text" wire:model="name" placeholder="Your Name *" class="input input-bordered w-full">
-                    <input type="email" wire:model="email" placeholder="Your Email *" class="input input-bordered w-full">
-                    <input type="text" wire:model="phone" placeholder="Your Phone *" class="input input-bordered w-full">
+                    <input type="text" wire:model="name" placeholder="Your Name *"
+                        class="input input-bordered w-full">
+                    <input type="email" wire:model="email" placeholder="Your Email *"
+                        class="input input-bordered w-full">
+                    <input type="text" wire:model="phone" placeholder="Your Phone *"
+                        class="input input-bordered w-full">
                 </div>
                 <textarea wire:model="message" rows="5" placeholder="Your Message" class="textarea textarea-bordered w-full"></textarea>
 

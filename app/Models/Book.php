@@ -19,6 +19,7 @@ class Book extends Model
         'description',
         'price',
         'stock',
+        'published_year',
         'cover_image_url',
         'preview_file_url',
         'secure_file_url',

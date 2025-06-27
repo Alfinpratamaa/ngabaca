@@ -13,13 +13,17 @@
 
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('Platform')" class="grid">
-                    <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
+                    <flux:navlist.item icon="home" :href="route('admin.dashboard')" :current="request()->routeIs('admin.dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
+                    <flux:navlist.item icon="book-open" :href="route('admin.book.index')" :current="request()->routeIs('admin.book.index')" wire:navigate>{{ __('Book') }}</flux:navlist.item>
+                    <flux:navlist.item icon="user-group" :href="route('admin.user.index')" :current="request()->routeIs('admin.user.index')" wire:navigate>{{ __('User') }}</flux:navlist.item>
+                    <flux:navlist.item icon="shopping-bag" :href="route('admin.order.index')" :current="request()->routeIs('admin.order.index')" wire:navigate>{{ __('Order') }}</flux:navlist.item>
+                    <flux:navlist.item icon="credit-card" :href="route('admin.payment.index')" :current="request()->routeIs('admin.payment.index')" wire:navigate>{{ __('Payment') }}</flux:navlist.item>
                 </flux:navlist.group>
             </flux:navlist>
 
             <flux:spacer />
 
-           
+
 
             <!-- Desktop User Menu -->
             <flux:dropdown class="hidden lg:block" position="bottom" align="start">

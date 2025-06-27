@@ -422,8 +422,11 @@ sudo chown -R $USER:$USER /path/to/ngabaca
 # Test OpenSSL installation
 openssl version
 
-# Test decryption manually
-openssl enc -aes-256-cbc -d -in .env.encrypted -out test.env -k "your-key-here"
+#decryption manually
+openssl enc -aes-256-cbc -d -pbkdf2 -in .env.encrypted -out .env -k "key"
+
+#encryption manually
+openssl enc -aes-256-cbc -pbkdf2 -in .env -out .env.encrypted -k "key"
 ```
 
 ## 📞 Contact

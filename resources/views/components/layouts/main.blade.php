@@ -3,7 +3,6 @@
 
 <head>
     @include('partials.head')
-    @
 </head>
 
 <body class="bg-white">

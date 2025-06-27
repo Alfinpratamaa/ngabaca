@@ -6,7 +6,7 @@
 @source '../../vendor/livewire/flux-pro/stubs/**/*.blade.php';
 @source '../../vendor/livewire/flux/stubs/**/*.blade.php';
 
-/* @custom-variant dark (&:where(.dark, .dark *)); */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
     --font-sans:
@@ -30,13 +30,13 @@
     --color-accent-foreground: var(--color-white);
 }
 
-/* @layer theme {
+@layer theme {
     .dark {
         --color-accent: var(--color-white);
         --color-accent-content: var(--color-white);
         --color-accent-foreground: var(--color-neutral-800);
     }
-} */
+}
 
 @layer base {
     *,
@@ -81,6 +81,14 @@ select:focus[data-flux-control] {
 }
 [data-flux-profile] {
     @apply bg-white;
+}
+
+[data-flux-navlist] [data-flux-control] {
+    @apply text-zinc-800;
+}
+[data-flux-sidebar] {
+    @apply bg-white;
+    @apply border-r border-gray-200;
 }
 
 /* \[:where(&)\]:size-4 {

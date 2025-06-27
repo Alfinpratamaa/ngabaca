@@ -23,8 +23,9 @@ class BookController extends Controller
     public function create()
     {
         // This method can be used to return a view for creating a new book
+        $categories = \App\Models\Category::all();
         // For example, you might return a view with a form to create a new book
-        return view('admin.book.create');
+        return view('admin.book.create', compact('categories'));
     }
 
     /**
@@ -48,7 +49,8 @@ class BookController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $book = Book::findOrFail($id);
+        return view('admin.book.edit', compact('book'));
     }
 
     /**

@@ -1,4 +1,4 @@
-<!-- filepath: c:\Users\alfin\Desktop\ngabaca\resources\views\livewire\edit-book-form.blade.php -->
+<!-- filepath: /home/alfin/Desktop/ngabaca/resources/views/livewire/edit-book-form.blade.php -->
 <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
     <h1 class="text-2xl font-bold mb-4">{{ __('Edit Book') }}</h1>
 
@@ -9,7 +9,8 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <flux:field class="w-full">
                     <flux:label>{{ __('Title') }}</flux:label>
-                    <flux:input wire:model="title" type="text" class="w-full" required placeholder="Title of book" />
+                    <flux:input wire:model="title" type="text" class="w-full" required placeholder="Title of book"
+                        value="{{ $title }}" />
                     @error('title')
                         <span class="text-red-500 text-sm">{{ $message }}</span>
                     @enderror
@@ -17,8 +18,8 @@
 
                 <flux:field class="w-full">
                     <flux:label>{{ __('Author') }}</flux:label>
-                    <flux:input wire:model="author" type="text" class="w-full" required
-                        placeholder="Author of book" />
+                    <flux:input wire:model="author" type="text" class="w-full" required placeholder="Author of book"
+                        value="{{ $author }}" />
                     @error('author')
                         <span class="text-red-500 text-sm">{{ $message }}</span>
                     @enderror
@@ -27,7 +28,7 @@
                 <flux:field class="w-full">
                     <flux:label>{{ __('Published Year') }}</flux:label>
                     <flux:input wire:model="published_year" type="number" class="w-full" required
-                        placeholder="Year published" />
+                        placeholder="Year published" value="{{ $published_year }}" />
                     @error('published_year')
                         <span class="text-red-500 text-sm">{{ $message }}</span>
                     @enderror
@@ -38,7 +39,9 @@
                     <flux:select wire:model="category_id" class="w-full" required>
                         <option value="" disabled>Select category</option>
                         @foreach ($categories as $category)
-                            <option value="{{ $category->id }}" wire:key="{{ $category->id }}">{{ $category->name }}
+                            <option value="{{ $category->id }}" wire:key="{{ $category->id }}"
+                                {{ $category_id == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
                             </option>
                         @endforeach
                     </flux:select>
@@ -51,7 +54,8 @@
             <flux:field class="w-full mt-4">
                 <flux:label>{{ __('Description') }} <span class="text-gray-500 text-sm">({{ __('Optional') }})</span>
                 </flux:label>
-                <flux:textarea wire:model="description" class="w-full" rows="4" placeholder="Book description" />
+                <flux:textarea wire:model="description" class="w-full" rows="4" placeholder="Book description">
+                    {{ $description }}</flux:textarea>
                 @error('description')
                     <span class="text-red-500 text-sm">{{ $message }}</span>
                 @enderror
@@ -65,7 +69,7 @@
                 <flux:field class="w-full">
                     <flux:label>{{ __('Price') }}</flux:label>
                     <flux:input wire:model="price" type="number" step="0.01" class="w-full" required
-                        placeholder="0.00" />
+                        placeholder="0.00" value="{{ $price }}" />
                     @error('price')
                         <span class="text-red-500 text-sm">{{ $message }}</span>
                     @enderror
@@ -73,7 +77,8 @@
 
                 <flux:field class="w-full">
                     <flux:label>{{ __('Stock') }}</flux:label>
-                    <flux:input wire:model="stock" type="number" class="w-full" placeholder="Stock quantity" />
+                    <flux:input wire:model="stock" type="number" class="w-full" placeholder="Stock quantity"
+                        value="{{ $stock }}" />
                     @error('stock')
                         <span class="text-red-500 text-sm">{{ $message }}</span>
                     @enderror
@@ -84,12 +89,26 @@
         <!-- Media Section -->
         <div class="bg-white rounded-lg border border-gray-200 p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ __('Media') }}</h3>
+
+            <!-- Show Current Cover Image if exists -->
+            @if (isset($currentCoverImage) && $currentCoverImage && !$cover_image)
+                <div class="mb-4">
+                    <flux:label>{{ __('Current Cover Image', 'Current Cover Image') }}</flux:label>
+                    <div class="mt-2 p-4 border rounded-lg bg-gray-50">
+                        <img src="{{ $currentCoverImage }}" alt="Current cover"
+                            class="w-32 h-48 object-cover rounded-lg">
+                        <p class="text-sm text-gray-600 mt-2">{{ __('Current cover image', 'Current cover image') }}
+                        </p>
+                    </div>
+                </div>
+            @endif
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Cover Image Upload -->
                 <!-- Cover Image Upload -->
                 <flux:field class="w-full">
                     <flux:label>{{ __('Cover Image') }} <span
-                            class="text-gray-500 text-sm">({{ __('Optional') }})</span></flux:label>
+                            class="text-gray-500 text-sm">({{ __('Optional - Leave empty to keep current') }})</span>
+                    </flux:label>
 
                     <!-- Custom Upload Area with Bento Style -->
                     <div class="relative">
@@ -113,7 +132,7 @@
                                             d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                 </div>
-                                <h4 class="text-lg font-semibold text-gray-900 mb-2">{{ __('Upload Cover Image') }}
+                                <h4 class="text-lg font-semibold text-gray-900 mb-2">{{ __('Upload New Cover Image') }}
                                 </h4>
                                 <p class="text-sm text-gray-600 text-center mb-1">
                                     {{ __('Drag and drop your image here, or click to browse') }}</p>
@@ -159,7 +178,7 @@
                                             </svg>
                                         </div>
                                         <h4 class="text-lg font-semibold text-gray-900 mb-3">
-                                            {{ __('Image Selected') }}</h4>
+                                            {{ __('New Image Selected') }}</h4>
 
                                         <!-- File Info -->
                                         <div
@@ -202,7 +221,8 @@
                     </div>
 
                     <flux:description class="mt-2">
-                        {{ __('Upload book cover image (JPG, PNG, WebP) - Maximum size: 10MB') }}</flux:description>
+                        {{ __('Upload new cover image to replace current one (JPG, PNG, WebP) - Maximum size: 10MB') }}
+                    </flux:description>
                     @error('cover_image')
                         <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                     @enderror
@@ -210,7 +230,28 @@
 
                 <!-- Book File Upload -->
                 <flux:field class="w-full">
-                    <flux:label>{{ __('Book File') }}</flux:label>
+                    <flux:label>{{ __('Book File') }} <span
+                            class="text-gray-500 text-sm">({{ __('Optional - Leave empty to keep current') }})</span>
+                    </flux:label>
+
+                    <!-- Show Current File Info if exists -->
+                    @if (isset($currentBookFile) && $currentBookFile && !$book_file)
+                        <div class="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900">{{ __('Current file uploaded') }}</p>
+                                    <p class="text-xs text-gray-600">{{ basename($currentBookFile) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
 
                     <!-- Custom Upload Area with Bento Style -->
                     <div class="relative">
@@ -234,7 +275,8 @@
                                             d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                     </svg>
                                 </div>
-                                <h4 class="text-lg font-semibold text-gray-900 mb-2">{{ __('Upload Book File') }}</h4>
+                                <h4 class="text-lg font-semibold text-gray-900 mb-2">{{ __('Upload New Book File') }}
+                                </h4>
                                 <p class="text-sm text-gray-600 text-center mb-1">
                                     {{ __('Drag and drop your file here, or click to browse') }}</p>
                                 <p class="text-xs text-gray-500">{{ __('Supports PDF, EPUB, MOBI files') }}</p>
@@ -278,7 +320,8 @@
                                                     clip-rule="evenodd" />
                                             </svg>
                                         </div>
-                                        <h4 class="text-lg font-semibold text-gray-900 mb-3">{{ __('File Selected') }}
+                                        <h4 class="text-lg font-semibold text-gray-900 mb-3">
+                                            {{ __('New File Selected') }}
                                         </h4>
 
                                         <!-- File Info -->
@@ -321,7 +364,8 @@
                     </div>
 
                     <flux:description class="mt-2">
-                        {{ __('Upload book file (PDF, EPUB, MOBI) - Maximum size: 50MB') }}</flux:description>
+                        {{ __('Upload new book file to replace current one (PDF, EPUB, MOBI) - Maximum size: 50MB') }}
+                    </flux:description>
                     @error('book_file')
                         <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                     @enderror
@@ -334,7 +378,8 @@
                     <flux:label>{{ __('Or Book File URL') }} <span
                             class="text-gray-500 text-sm">({{ __('Alternative to file upload') }})</span></flux:label>
                     <flux:input type="url" wire:model="private_file_path" class="w-full"
-                        placeholder="https://secure-storage.example.com/book-file" />
+                        placeholder="https://secure-storage.example.com/book-file"
+                        value="{{ $private_file_path }}" />
                     <flux:description>{{ __('Update secure URL to book file') }}</flux:description>
                     @error('private_file_path')
                         <span class="text-red-500 text-sm">{{ $message }}</span>
@@ -357,19 +402,110 @@
         </div>
     </form>
 
-    <!-- Loading overlay for entire form -->
-    <div wire:loading.delay wire:target="save"
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
-            <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none"
-                viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                    stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                </path>
-            </svg>
-            <span class="text-gray-700">{{ __('Updating book...') }}</span>
-        </div>
-    </div>
+    
 </div>
+<script>
+    document.addEventListener('livewire:initialized', () => {
+        let loadingSwal = null;
+
+        // Show loading dialog when form submission starts
+        Livewire.hook('morph.updating', () => {
+            if (loadingSwal) {
+                loadingSwal.close();
+            }
+
+            loadingSwal = Swal.fire({
+                title: 'Updating Book...',
+                text: 'Please wait while we update your book',
+                icon: 'info',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                showCancelButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        });
+
+        // Listen for book updated event
+        Livewire.on('book-updated', () => {
+            if (loadingSwal) {
+                loadingSwal.close();
+            }
+
+            Swal.fire({
+                title: 'Success!',
+                text: 'Book updated successfully!',
+                icon: 'success',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3085d6'
+            });
+        });
+
+        // Listen for book update error event
+        Livewire.on('book-update-error', (data) => {
+            if (loadingSwal) {
+                loadingSwal.close();
+            }
+
+            Swal.fire({
+                title: 'Error!',
+                text: data[0].message || 'Failed to update book',
+                icon: 'error',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#d33'
+            });
+        });
+
+        // Listen for image deleted event
+        Livewire.on('image-deleted', () => {
+            Swal.fire({
+                title: 'Success!',
+                text: 'Cover image deleted successfully!',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        });
+
+        // Listen for image delete error event
+        Livewire.on('image-delete-error', (data) => {
+            Swal.fire({
+                title: 'Error!',
+                text: data[0].message || 'Failed to delete image',
+                icon: 'error',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#d33'
+            });
+        });
+
+        // Alternative approach: Listen for wire loading events
+        document.addEventListener('livewire:request', (event) => {
+            if (event.detail.method === 'save') {
+                if (loadingSwal) {
+                    loadingSwal.close();
+                }
+
+                loadingSwal = Swal.fire({
+                    title: 'Updating Book...',
+                    text: 'Please wait while we update your book',
+                    icon: 'info',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showConfirmButton: false,
+                    showCancelButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            }
+        });
+
+        document.addEventListener('livewire:finished', (event) => {
+            if (event.detail.method === 'save' && loadingSwal) {
+                loadingSwal.close();
+            }
+        });
+    });
+</script>

@@ -35,7 +35,13 @@ class EditBookForm extends Component
         $this->categories = Category::all();
 
         // Load existing book data
-        $book = Book::findOrFail($bookId);
+        $book = Book::find($bookId);
+        // Menampilkan data ke console browser
+        Log::info('Book data:', $book->toArray());
+        // Atau menggunakan dd() untuk debugging (akan menghentikan eksekusi)
+        // dd($book);
+        // Atau menggunakan dump() untuk melihat data tanpa menghentikan eksekusi
+        // dump($book);
         $this->title = $book->title;
         $this->author = $book->author;
         $this->published_year = $book->published_year;
@@ -106,6 +112,8 @@ class EditBookForm extends Component
                 'type' => 'success',
                 'message' => 'Book updated successfully!'
             ]);
+
+            session()->flash('success', 'Book updated successfully!');
 
             return $this->redirect(route('admin.book.index'), navigate: true);
         } catch (\Exception $e) {

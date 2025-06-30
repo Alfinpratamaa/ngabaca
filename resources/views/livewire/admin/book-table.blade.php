@@ -85,9 +85,21 @@
                 confirmButtonText: 'Yes, delete it!'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    // Show loading dialog
+                    Swal.fire({
+                        title: 'Deleting...',
+                        text: 'Please wait while we delete the book.',
+                        icon: 'info',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
                     // Call Livewire method
                     @this.deleteBook(bookId);
-                    
                 }
             });
         }

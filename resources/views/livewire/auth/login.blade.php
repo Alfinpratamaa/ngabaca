@@ -11,7 +11,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Volt\Component;
 
-new #[Layout('components.layouts.auth')] class extends Component {
+new #[Layout('components.layouts.main')] class extends Component {
     #[Validate('required|string|email')]
     public string $email = '';
 
@@ -29,7 +29,7 @@ new #[Layout('components.layouts.auth')] class extends Component {
 
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
+        if (!Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -40,7 +40,15 @@ new #[Layout('components.layouts.auth')] class extends Component {
         RateLimiter::clear($this->throttleKey());
         Session::regenerate();
 
-        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+        $this->dispatch('$refresh');
+
+        // Redirect dengan delay kecil
+        $user = Auth::user();
+        if ($user->role === 'admin') {
+            $this->redirect(route('admin.dashboard'));
+        } else {
+            $this->redirect(route('home'));
+        }
     }
 
     /**
@@ -48,7 +56,7 @@ new #[Layout('components.layouts.auth')] class extends Component {
      */
     protected function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if (!RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
             return;
         }
 
@@ -69,59 +77,77 @@ new #[Layout('components.layouts.auth')] class extends Component {
      */
     protected function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->email).'|'.request()->ip());
+        return Str::transliterate(Str::lower($this->email) . '|' . request()->ip());
     }
 }; ?>
 
-<div class="flex flex-col gap-6">
-    <x-auth-header :title="__('Log in to your account')" :description="__('Enter your email and password below to log in')" />
+<div class="relative flex size-full min-h-screen flex-col mt-20 bg-white group/design-root overflow-x-hidden"
+    style='font-family: "Plus Jakarta Sans", "Noto Sans", sans-serif;'>
+    <div class="layout-container flex h-full grow flex-col">
+        <div class="flex flex-1 justify-center">
+            <div class="layout-content-container flex flex-col w-full max-w-md px-4">
 
-    <!-- Session Status -->
-    <x-auth-session-status class="text-center" :status="session('status')" />
+                <!-- Header -->
+                <h2 class="text-[#0C161B] tracking-light text-[24px] font-bold leading-tight text-center pb-3 pt-5"
+                    style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                    Selamat Kembali Ke Ngabaca
+                </h2>
 
-    <form wire:submit="login" class="flex flex-col gap-6">
-        <!-- Email Address -->
-        <flux:input
-            wire:model="email"
-            :label="__('Email address')"
-            type="email"
-            required
-            autofocus
-            autocomplete="email"
-            placeholder="email@example.com"
-        />
+                <!-- Session Status -->
+                <x-auth-session-status class="text-center" :status="session('status')" />
 
-        <!-- Password -->
-        <div class="relative">
-            <flux:input
-                wire:model="password"
-                :label="__('Password')"
-                type="password"
-                required
-                autocomplete="current-password"
-                :placeholder="__('Password')"
-                viewable
-            />
+                <!-- Login Form -->
+                <form wire:submit="login" class="w-full">
+                    <!-- Email Input -->
+                    <div class="flex flex-col gap-2 py-3">
+                        <flux:input wire:model="email" label="Email Address"
+                            class="bg-gray-200 rounded-md text-slate-900 [&_label]:text-slate-700" type="email"
+                            required autofocus autocomplete="email" placeholder="email@example.com" />
+                        <flux:input wire:model="password" :label="__('Password')" type="password" placeholder="Password"
+                            required viewable autocomplete="current-password"
+                            class="bg-gray-200 rounded-md [&_label]:text-slate-700" />
+                    </div>
 
-            @if (Route::has('password.request'))
-                <flux:link class="absolute end-0 top-0 text-sm" :href="route('password.request')" wire:navigate>
-                    {{ __('Forgot your password?') }}
-                </flux:link>
-            @endif
+                    <!-- Remember Me (Optional) -->
+                    <div class="flex items-center py-2">
+                        <label class="flex items-center">
+                            <input wire:model="remember" type="checkbox"
+                                class="rounded border-gray-300 text-[#2a9fed] shadow-sm focus:ring-[#2a9fed]">
+                            <span class="ml-2 text-sm text-[#4c7b9a]">{{ __('Remember me') }}</span>
+                        </label>
+                    </div>
+
+                    <!-- Login Button -->
+                    <div class="flex items-center justify-center">
+                        <flux:button variant="primary" type="submit"
+                            class="w-full cursor-pointer bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-md px-4 py-2 transition-colors duration-200">
+                            {{ __('Log in') }}
+                        </flux:button>
+                    </div>
+                </form>
+
+                <!-- Forgot Password Link (Optional) -->
+                @if (Route::has('password.request'))
+                    <div class="py-1 text-center">
+                        <a href="{{ route('password.request') }}" wire:navigate
+                            class="text-[#4c7b9a] text-sm font-normal leading-normal underline hover:text-blue-600">
+                            {{ __('Forgot your password?') }}
+                        </a>
+                    </div>
+                @endif
+
+                <!-- Register Link -->
+                @if (Route::has('register'))
+                    <div class="py-3 text-center">
+                        <span class="text-[#4c7b9a] text-sm font-normal leading-normal">Don't have an account? </span>
+                        <a href="{{ route('register') }}" wire:navigate
+                            class="text-[#4c7b9a] text-sm font-normal leading-normal underline hover:text-blue-600">
+                            Register
+                        </a>
+                    </div>
+                @endif
+
+            </div>
         </div>
-
-        <!-- Remember Me -->
-        <flux:checkbox wire:model="remember" :label="__('Remember me')" />
-
-        <div class="flex items-center justify-end">
-            <flux:button variant="primary" type="submit" class="w-full">{{ __('Log in') }}</flux:button>
-        </div>
-    </form>
-
-    @if (Route::has('register'))
-        <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-600 dark:text-zinc-400">
-            {{ __('Don\'t have an account?') }}
-            <flux:link :href="route('register')" wire:navigate>{{ __('Sign up') }}</flux:link>
-        </div>
-    @endif
+    </div>
 </div>

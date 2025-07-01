@@ -90,143 +90,160 @@
         <div class="bg-white rounded-lg border border-gray-200 p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ __('Media') }}</h3>
 
-            <!-- Show Current Cover Image if exists -->
-            @if (isset($currentCoverImage) && $currentCoverImage && !$cover_image)
-                <div class="mb-4">
-                    <flux:label>{{ __('Current Cover Image', 'Current Cover Image') }}</flux:label>
-                    <div class="mt-2 p-4 border rounded-lg bg-gray-50">
-                        <img src="{{ $currentCoverImage }}" alt="Current cover"
-                            class="w-32 h-48 object-cover rounded-lg">
-                        <p class="text-sm text-gray-600 mt-2">{{ __('Current cover image', 'Current cover image') }}
-                        </p>
-                    </div>
-                </div>
-            @endif
-
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Cover Image Upload -->
-                <flux:field class="w-full">
-                    <flux:label>{{ __('Cover Image') }} <span
-                            class="text-gray-500 text-sm">({{ __('Optional - Leave empty to keep current') }})</span>
-                    </flux:label>
-
-                    <!-- Custom Upload Area with Bento Style -->
-                    <div class="relative">
-                        <!-- Hidden File Input -->
-                        <input type="file" wire:model="cover_image" accept="image/*" id="cover-image-input"
-                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
-
-                        <!-- Custom Upload UI -->
-                        <div
-                            class="relative min-h-[160px] border-2 border-dashed border-gray-300 rounded-xl bg-gradient-to-br from-gray-50 to-white hover:border-purple-400 hover:bg-gradient-to-br hover:from-purple-50 hover:to-white transition-all duration-300 ease-in-out group">
-
-                            <!-- Upload Icon & Text (Default State) -->
-                            <div class="absolute inset-0 flex flex-col items-center justify-center p-6"
-                                wire:loading.remove wire:target="cover_image"
-                                style="display: {{ $cover_image ? 'none' : 'flex' }}">
-                                <div
-                                    class="w-16 h-16 mb-4 rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                    <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
+                <!-- Show Current Cover Image if exists -->
+                @if ($current_cover_image && !$cover_image)
+                    <div class="mb-4">
+                        <flux:label>{{ __('Current Cover Image') }}</flux:label>
+                        <div class="mt-2 p-4 border rounded-lg bg-gray-50">
+                            <div class="flex items-start space-x-4">
+                                <img src="{{ $current_cover_image }}" alt="Current cover"
+                                    class="w-32 h-48 object-cover rounded-lg">
+                                <div class="flex-1">
+                                    <p class="text-sm text-gray-600 mb-3">{{ __('Current cover image') }}</p>
+                                    <button type="button" wire:click="confirmDeleteCoverImage"
+                                        class="inline-flex items-center px-3 py-1 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-lg">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                        {{ __('Delete Current Image') }}
+                                    </button>
                                 </div>
-                                <h4 class="text-lg font-semibold text-gray-900 mb-2">{{ __('Upload New Cover Image') }}
-                                </h4>
-                                <p class="text-sm text-gray-600 text-center mb-1">
-                                    {{ __('Drag and drop your image here, or click to browse') }}</p>
-                                <p class="text-xs text-gray-500">{{ __('Supports JPG, PNG, WebP images') }}</p>
                             </div>
-
-                            <!-- Loading State -->
-                            <div wire:loading wire:target="cover_image"
-                                class="absolute inset-0 flex flex-col items-center justify-center p-6 bg-white bg-opacity-95">
-                                <div
-                                    class="w-16 h-16 mb-4 rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                                    <svg class="animate-spin w-8 h-8 text-purple-600" fill="none"
-                                        viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10"
-                                            stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                        </path>
-                                    </svg>
-                                </div>
-                                <h4 class="text-lg font-semibold text-gray-900 mb-2">{{ __('Uploading...') }}</h4>
-                                <div class="w-48 bg-gray-200 rounded-full h-2 mb-2">
-                                    <div
-                                        class="bg-gradient-to-r from-purple-500 to-pink-600 h-2 rounded-full animate-pulse w-full">
-                                    </div>
-                                </div>
-                                <p class="text-sm text-gray-600">{{ __('Please wait while we process your image') }}
-                                </p>
-                            </div>
-
-                            <!-- Success State -->
-                            @if ($cover_image)
-                                <div
-                                    class="absolute inset-0 flex items-center justify-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 border-purple-300">
-                                    <div class="text-center w-full max-w-sm">
-                                        <div
-                                            class="w-16 h-16 mb-4 mx-auto rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                                            <svg class="w-8 h-8 text-purple-600" fill="currentColor"
-                                                viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd"
-                                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                    clip-rule="evenodd" />
-                                            </svg>
-                                        </div>
-                                        <h4 class="text-lg font-semibold text-gray-900 mb-3">
-                                            {{ __('New Image Selected') }}</h4>
-
-                                        <!-- File Info -->
-                                        <div
-                                            class="bg-white rounded-lg p-3 shadow-sm border border-purple-200 max-w-xs mx-auto mb-3">
-                                            <div class="flex items-center space-x-3">
-                                                <div
-                                                    class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center flex-shrink-0">
-                                                    <svg class="w-5 h-5 text-purple-600" fill="none"
-                                                        stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                    </svg>
-                                                </div>
-                                                <div class="flex-1 min-w-0">
-                                                    <p class="text-sm font-medium text-gray-900 truncate">
-                                                        {{ $cover_image->getClientOriginalName() }}
-                                                    </p>
-                                                    <p class="text-xs text-gray-500">
-                                                        {{ number_format($cover_image->getSize() / 1024, 1) }} KB
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Remove Button -->
-                                        <button type="button" wire:click="$set('cover_image', null)"
-                                            class="inline-flex items-center px-4 py-2 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-lg transition-colors duration-200">
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                            {{ __('Remove') }}
-                                        </button>
-                                    </div>
-                                </div>
-                            @endif
                         </div>
                     </div>
+                @else
+                    <!-- Cover Image Upload -->
+                    <flux:field class="w-full">
+                        <flux:label>{{ __('Cover Image') }} <span
+                                class="text-gray-500 text-sm">({{ __('Optional - Leave empty to keep current') }})</span>
+                        </flux:label>
 
-                    <flux:description class="mt-2">
-                        {{ __('Upload new cover image to replace current one (JPG, PNG, WebP) - Maximum size: 10MB') }}
-                    </flux:description>
-                    @error('cover_image')
-                        <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
-                    @enderror
-                </flux:field>
+                        <!-- Custom Upload Area with Bento Style -->
+                        <div class="relative">
+                            <!-- Hidden File Input -->
+                            <input type="file" wire:model="cover_image" accept="image/*" id="cover-image-input"
+                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+
+                            <!-- Custom Upload UI -->
+                            <div
+                                class="relative min-h-[160px] border-2 border-dashed border-gray-300 rounded-xl bg-gradient-to-br from-gray-50 to-white hover:border-purple-400 hover:bg-gradient-to-br hover:from-purple-50 hover:to-white transition-all duration-300 ease-in-out group">
+
+                                <!-- Upload Icon & Text (Default State) -->
+                                <div class="absolute inset-0 flex flex-col items-center justify-center p-6"
+                                    wire:loading.remove wire:target="cover_image"
+                                    style="display: {{ $cover_image ? 'none' : 'flex' }}">
+                                    <div
+                                        class="w-16 h-16 mb-4 rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                        <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">
+                                        {{ __('Upload New Cover Image') }}
+                                    </h4>
+                                    <p class="text-sm text-gray-600 text-center mb-1">
+                                        {{ __('Drag and drop your image here, or click to browse') }}</p>
+                                    <p class="text-xs text-gray-500">{{ __('Supports JPG, PNG, WebP images') }}</p>
+                                </div>
+
+                                <!-- Loading State -->
+                                <div wire:loading wire:target="cover_image"
+                                    class="absolute inset-0 flex flex-col items-center justify-center p-6 bg-white bg-opacity-95">
+                                    <div
+                                        class="w-16 h-16 mb-4 rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                                        <svg class="animate-spin w-8 h-8 text-purple-600" fill="none"
+                                            viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">{{ __('Uploading...') }}</h4>
+                                    <div class="w-48 bg-gray-200 rounded-full h-2 mb-2">
+                                        <div
+                                            class="bg-gradient-to-r from-purple-500 to-pink-600 h-2 rounded-full animate-pulse w-full">
+                                        </div>
+                                    </div>
+                                    <p class="text-sm text-gray-600">
+                                        {{ __('Please wait while we process your image') }}
+                                    </p>
+                                </div>
+
+                                <!-- Success State -->
+                                @if ($cover_image)
+                                    <div
+                                        class="absolute inset-0 flex items-center justify-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 border-purple-300">
+                                        <div class="text-center w-full max-w-sm">
+                                            <div
+                                                class="w-16 h-16 mb-4 mx-auto rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                                                <svg class="w-8 h-8 text-purple-600" fill="currentColor"
+                                                    viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd"
+                                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                        clip-rule="evenodd" />
+                                                </svg>
+                                            </div>
+                                            <h4 class="text-lg font-semibold text-gray-900 mb-3">
+                                                {{ __('New Image Selected') }}</h4>
+
+                                            <!-- File Info -->
+                                            <div
+                                                class="bg-white rounded-lg p-3 shadow-sm border border-purple-200 max-w-xs mx-auto mb-3">
+                                                <div class="flex items-center space-x-3">
+                                                    <div
+                                                        class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center flex-shrink-0">
+                                                        <svg class="w-5 h-5 text-purple-600" fill="none"
+                                                            stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                        </svg>
+                                                    </div>
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="text-sm font-medium text-gray-900 truncate">
+                                                            {{ $cover_image->getClientOriginalName() }}
+                                                        </p>
+                                                        <p class="text-xs text-gray-500">
+                                                            {{ number_format($cover_image->getSize() / 1024, 1) }} KB
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Remove Button -->
+                                            <button type="button" wire:click="$set('cover_image', null)"
+                                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-lg transition-colors duration-200">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                                {{ __('Remove') }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <flux:description class="mt-2">
+                            {{ __('Upload new cover image to replace current one (JPG, PNG, WebP) - Maximum size: 10MB') }}
+                        </flux:description>
+                        @error('cover_image')
+                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                        @enderror
+                    </flux:field>
+                @endif
+
+
 
                 <!-- Book File Upload -->
                 <flux:field class="w-full">
@@ -235,7 +252,7 @@
                     </flux:label>
 
                     <!-- Show Current File Info if exists -->
-                    @if (isset($currentBookFile) && $currentBookFile && !$book_file)
+                    @if ($current_book_file && !$book_file)
                         <div class="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                             <div class="flex items-center space-x-3">
                                 <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
@@ -247,13 +264,22 @@
                                 </div>
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-gray-900">{{ __('Current file uploaded') }}</p>
-                                    <p class="text-xs text-gray-600">{{ basename($currentBookFile) }}</p>
+                                    <p class="text-xs text-gray-600">{{ basename($current_book_file) }}</p>
                                 </div>
                             </div>
+                            <div class="mt-3 flex justify-end">
+                                <button type="button" wire:click="confirmDeleteBookFile"
+                                    class="inline-flex items-center px-3 py-1 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-lg">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    {{ __('Delete Current File') }}
+                                </button>
+                            </div>
                         </div>
-                    @endif
-
-                    <!-- Custom Upload Area with Bento Style -->
+                    @else
                     <div class="relative">
                         <!-- Hidden File Input -->
                         <input type="file" wire:model="book_file" accept=".pdf,.epub,.mobi" id="book-file-input"
@@ -362,6 +388,7 @@
                             @endif
                         </div>
                     </div>
+                    @endif
 
                     <flux:description class="mt-2">
                         {{ __('Upload new book file to replace current one (PDF, EPUB, MOBI) - Maximum size: 50MB') }}
@@ -402,110 +429,239 @@
         </div>
     </form>
 
-    
+
 </div>
 <script>
-    document.addEventListener('livewire:initialized', () => {
-        let loadingSwal = null;
+document.addEventListener('livewire:initialized', () => {
+    let loadingSwal = null;
+    let hasUnsavedChanges = false;
 
-        // Show loading dialog when form submission starts
-        Livewire.hook('morph.updating', () => {
-            if (loadingSwal) {
-                loadingSwal.close();
-            }
+    // Track if there are unsaved changes
+    function trackChanges() {
+        hasUnsavedChanges = true;
+    }
 
-            loadingSwal = Swal.fire({
-                title: 'Updating Book...',
-                text: 'Please wait while we update your book',
-                icon: 'info',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                showConfirmButton: false,
-                showCancelButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-        });
+    // Add event listeners to form inputs to track changes
+    document.querySelectorAll('input, textarea, select').forEach(element => {
+        element.addEventListener('input', trackChanges);
+        element.addEventListener('change', trackChanges);
+    });
 
-        // Listen for book updated event
-        Livewire.on('book-updated', () => {
-            if (loadingSwal) {
-                loadingSwal.close();
-            }
-
+    // Handle cancel with confirmation if there are unsaved changes
+    window.handleCancelEdit = function() {
+        // Check if cover image or book file was deleted but update wasn't saved
+        const coverImageDeleted = {{ $cover_image_deleted ? 'true' : 'false' }};
+        const bookFileDeleted = {{ $book_file_deleted ? 'true' : 'false' }};
+        
+        if (coverImageDeleted || bookFileDeleted || hasUnsavedChanges) {
             Swal.fire({
-                title: 'Success!',
-                text: 'Book updated successfully!',
-                icon: 'success',
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#3085d6'
-            });
-        });
-
-        // Listen for book update error event
-        Livewire.on('book-update-error', (data) => {
-            if (loadingSwal) {
-                loadingSwal.close();
-            }
-
-            Swal.fire({
-                title: 'Error!',
-                text: data[0].message || 'Failed to update book',
-                icon: 'error',
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#d33'
-            });
-        });
-
-        // Listen for image deleted event
-        Livewire.on('image-deleted', () => {
-            Swal.fire({
-                title: 'Success!',
-                text: 'Cover image deleted successfully!',
-                icon: 'success',
-                timer: 2000,
-                showConfirmButton: false
-            });
-        });
-
-        // Listen for image delete error event
-        Livewire.on('image-delete-error', (data) => {
-            Swal.fire({
-                title: 'Error!',
-                text: data[0].message || 'Failed to delete image',
-                icon: 'error',
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#d33'
-            });
-        });
-
-        // Alternative approach: Listen for wire loading events
-        document.addEventListener('livewire:request', (event) => {
-            if (event.detail.method === 'save') {
-                if (loadingSwal) {
-                    loadingSwal.close();
-                }
-
-                loadingSwal = Swal.fire({
-                    title: 'Updating Book...',
-                    text: 'Please wait while we update your book',
-                    icon: 'info',
-                    allowOutsideClick: false,
-                    allowEscapeKey: false,
-                    showConfirmButton: false,
-                    showCancelButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
+                title: 'Unsaved Changes',
+                text: 'You have unsaved changes. Are you sure you want to leave without saving?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, discard changes',
+                cancelButtonText: 'Stay and continue editing'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // If any files were deleted, restore them before leaving
+                    if (coverImageDeleted || bookFileDeleted) {
+                        // Refresh page to restore original state
+                        window.location.reload();
+                    } else {
+                        // Just go back to index
+                        window.location.href = '{{ route("admin.book.index") }}';
                     }
-                });
-            }
-        });
+                }
+            });
+        } else {
+            // No changes, safe to leave
+            window.location.href = '{{ route("admin.book.index") }}';
+        }
+    };
 
-        document.addEventListener('livewire:finished', (event) => {
-            if (event.detail.method === 'save' && loadingSwal) {
-                loadingSwal.close();
+    // Listen for specific book updating event
+    Livewire.on('book-updating', () => {
+        if (loadingSwal) {
+            loadingSwal.close();
+        }
+        
+        loadingSwal = Swal.fire({
+            title: 'Updating Book...',
+            text: 'Please wait while we update your book',
+            icon: 'info',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            showCancelButton: false,
+            didOpen: () => {
+                Swal.showLoading();
             }
         });
     });
+
+    // Listen for book updated event
+    Livewire.on('book-updated', () => {
+        if (loadingSwal) {
+            loadingSwal.close();
+        }
+        
+        hasUnsavedChanges = false; // Reset unsaved changes flag
+        
+        Swal.fire({
+            title: 'Success!',
+            text: 'Book updated successfully!',
+            icon: 'success',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#22c55e'
+        });
+    });
+
+    // Listen for book update error event
+    Livewire.on('book-update-error', (data) => {
+        if (loadingSwal) {
+            loadingSwal.close();
+        }
+        
+        Swal.fire({
+            title: 'Error!',
+            text: data[0].message || 'Failed to update book',
+            icon: 'error',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#ef4444'
+        });
+    });
+
+    // Listen for validation stops
+    Livewire.on('book-update-stopped', () => {
+        if (loadingSwal) {
+            loadingSwal.close();
+        }
+    });
+    
+    // COVER IMAGE EVENTS
+    // Listen for delete cover image confirmation request
+    Livewire.on('confirm-delete-cover-image', () => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'This will permanently delete the current cover image from the database and storage. This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Track that we have changes
+                hasUnsavedChanges = true;
+                // Dispatch delete event back to Livewire
+                Livewire.dispatch('delete-cover-image');
+            }
+        });
+    });
+    
+    // Listen for cover image deleted event
+    Livewire.on('cover-image-deleted', () => {
+        Swal.fire({
+            title: 'Deleted!',
+            text: 'Cover image has been deleted successfully',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    });
+
+    // Listen for image delete error event
+    Livewire.on('image-delete-error', (data) => {
+        Swal.fire({
+            title: 'Error!',
+            text: data[0].message || 'Failed to delete image',
+            icon: 'error',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#ef4444'
+        });
+    });
+
+    // BOOK FILE EVENTS
+    // Listen for delete book file confirmation request
+    Livewire.on('confirm-delete-book-file', () => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'This will permanently delete the current book file from the database and storage. This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Track that we have changes
+                hasUnsavedChanges = true;
+                // Dispatch delete event back to Livewire
+                Livewire.dispatch('delete-book-file');
+            }
+        });
+    });
+
+    // Listen for book file processing
+    Livewire.on('book-file-processing', () => {
+        if (loadingSwal) {
+            loadingSwal.close();
+        }
+        
+        loadingSwal = Swal.fire({
+            title: 'Deleting Book File...',
+            text: 'Please wait while we delete the book file',
+            icon: 'info',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            showCancelButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    });
+
+    // Listen for book file deleted event
+    Livewire.on('book-file-deleted', () => {
+        if (loadingSwal) {
+            loadingSwal.close();
+        }
+        
+        Swal.fire({
+            title: 'Deleted!',
+            text: 'Book file has been deleted successfully',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    });
+
+    // Listen for book file delete error event
+    Livewire.on('file-delete-error', (data) => {
+        if (loadingSwal) {
+            loadingSwal.close();
+        }
+        
+        Swal.fire({
+            title: 'Error!',
+            text: data[0].message || 'Failed to delete book file',
+            icon: 'error',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#ef4444'
+        });
+    });
+
+    // Prevent accidental page reload/close when there are unsaved changes
+    window.addEventListener('beforeunload', function(e) {
+        if (hasUnsavedChanges) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+});
 </script>

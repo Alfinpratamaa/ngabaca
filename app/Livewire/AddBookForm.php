@@ -62,14 +62,15 @@ class AddBookForm extends Component
 
             // 1. Tangani Upload Cover Image (Opsional)
             if ($this->cover_image) {
-                $book->cover_image_url = $this->cover_image->store('covers', 'public');
+                $filePath = $this->cover_image->store('covers', 'public');
+                $book->cover_image_url = config('app.url') . '/storage/covers/' . basename($filePath);
             }
 
             // 2. Tangani Upload Book File atau URL
             if ($this->book_file && $this->book_file instanceof \Illuminate\Http\UploadedFile) {
-                // Upload file ke storage lokal
+                // Upload file ke storage lokal dan simpan dengan app URL
                 $filePath = $this->book_file->store('books_private', 'local');
-                $book->private_file_path = $filePath;
+                $book->private_file_path = config('app.url') . '/storage/books_private/' . basename($filePath);
             } elseif (!empty($this->private_file_path)) {
                 // Gunakan URL yang diinput
                 $book->private_file_path = $this->private_file_path;
@@ -81,10 +82,8 @@ class AddBookForm extends Component
 
             $book->save();
 
-            $this->dispatch('show-alert', [
-                'type' => 'success',
-                'message' => 'Buku berhasil ditambahkan!'
-            ]);
+            // Dispatch event untuk SweetAlert
+            $this->dispatch('book-created');
 
             $this->reset([
                 'title',
@@ -98,12 +97,14 @@ class AddBookForm extends Component
                 'book_file',
                 'private_file_path'
             ]);
-            $this->redirect(route('admin.book.index'), navigate: true);
+
+            // Use session flash and regular redirect instead of navigate
+            session()->flash('success', 'Book created successfully!');
+
+            // Remove the navigate parameter or use redirectRoute
+            return redirect()->route('admin.book.index');
         } catch (\Exception $e) {
-            $this->dispatch('show-alert', [
-                'type' => 'error',
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ]);
+            $this->dispatch('book-create-error', ['message' => 'Error creating book: ' . $e->getMessage()]);
             Log::error('Error saving book: ' . $e->getMessage() . ' Trace: ' . $e->getTraceAsString());
         }
     }

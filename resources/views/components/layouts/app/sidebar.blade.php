@@ -4,7 +4,7 @@
 <head>
     @include('partials.head')
     {{-- @fluxAppearance --}}
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
 </head>
 
 <body class="min-h-screen bg-white text-zinc-800">

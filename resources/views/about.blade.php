@@ -56,7 +56,7 @@
                         'title' => 'Founder & Chairman', 
                         'image' => 'eben.jpg',
                         'social' => [
-                            'instagram' => '#',
+                            'instagram' => 'https://instagram.com/hnxzl',
                             'wa' => '#',
                             'linkedin' => '#'
                         ]
@@ -76,7 +76,7 @@
                         'title' => 'CEO MANAGER', 
                         'image' => 'alpin.jpg',
                         'social' => [
-                            'instagram' => '#',
+                            'instagram' => 'https://instagram.com/visfiveor5',
                             'wa' => '#',
                             'linkedin' => '#'
                         ]
@@ -86,7 +86,7 @@
                         'title' => 'FrontEnd Dev', 
                         'image' => 'nopal.jpg',
                         'social' => [
-                            'instagram' => 'instagram.com/boulleva',
+                            'instagram' => 'https://instagram.com/boulleva',
                             'wa' => '#',
                             'linkedin' => '#'
                         ]

@@ -95,25 +95,22 @@
                 @if ($current_cover_image && !$cover_image)
                     <div class="mb-4">
                         <flux:label>{{ __('Current Cover Image') }}</flux:label>
-                        <div class="mt-2 p-4 border rounded-lg bg-gray-50">
-                            <div class="flex items-start space-x-4">
+                        <div class="mt-2 p-4 border rounded-lg bg-gray-50 max-h-[350px] overflow-hidden">
+                            <div class="flex flex-col items-center justify-center w-full text-center">
                                 <img src="{{ $current_cover_image }}" alt="Current cover"
-                                    class="w-32 h-48 object-cover rounded-lg">
-                                <div class="flex-1">
+                                    class="w-32 h-48 object-cover rounded-lg mb-3">
+                                <div class="mt-2">
                                     <p class="text-sm text-gray-600 mb-3">{{ __('Current cover image') }}</p>
                                     <button type="button" wire:click="confirmDeleteCoverImage"
-                                        class="inline-flex items-center px-3 py-1 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-lg">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
+                                        class="inline-flex cursor-pointer items-center px-3 py-1 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-lg">
+                                        <flux:icon.trash class="w-4 h-4 mr-2" />
                                         {{ __('Delete Current Image') }}
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    
                 @else
                     <!-- Cover Image Upload -->
                     <flux:field class="w-full">
@@ -241,41 +238,34 @@
                             <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                         @enderror
                     </flux:field>
+                    
                 @endif
+                
 
 
 
                 <!-- Book File Upload -->
-                <flux:field class="w-full">
+                 <div class="mb-4">
                     <flux:label>{{ __('Book File') }} <span
                             class="text-gray-500 text-sm">({{ __('Optional - Leave empty to keep current') }})</span>
                     </flux:label>
 
                     <!-- Show Current File Info if exists -->
                     @if ($current_book_file && !$book_file)
-                        <div class="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                </div>
+                        <div class="mt-2 p-4 border rounded-lg bg-gray-50 min-h-[285px] overflow-hidden">
+                            <div class="flex flex-col items-center justify-center w-full text-center">
+                                 <img src="{{ asset('assets/images/book.png') }}" alt="Current cover"
+                                    class="w-32 h-48 object-cover rounded-lg mb-3">
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-gray-900">{{ __('Current file uploaded') }}</p>
                                     <p class="text-xs text-gray-600">{{ basename($current_book_file) }}</p>
                                 </div>
                             </div>
-                            <div class="mt-3 flex justify-end">
+                            <div class="mt-3 flex justify-center">
                                 <button type="button" wire:click="confirmDeleteBookFile"
-                                    class="inline-flex items-center px-3 py-1 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-lg">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                    {{ __('Delete Current File') }}
+                                    class="inline-flex cursor-pointer items-center px-3 py-1 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-lg">
+                                    <flux:icon.trash class="w-4 h-4 mr-2" />
+                                    {{ __('Delete Current Book') }}
                                 </button>
                             </div>
                         </div>
@@ -388,15 +378,13 @@
                             @endif
                         </div>
                     </div>
-                    @endif
+                    
 
-                    <flux:description class="mt-2">
-                        {{ __('Upload new book file to replace current one (PDF, EPUB, MOBI) - Maximum size: 50MB') }}
-                    </flux:description>
+                    
                     @error('book_file')
                         <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                     @enderror
-                </flux:field>
+                </div>
             </div>
 
             <!-- Alternative URL Input -->
@@ -412,11 +400,12 @@
                         <span class="text-red-500 text-sm">{{ $message }}</span>
                     @enderror
                 </flux:field>
+                @endif
             </div>
         </div>
 
         <!-- Submit Button -->
-        <div class="flex justify-between">
+        <div class="flex w-full mt-5 justify-between">
             <flux:button :href="route('admin.book.index')" variant="outline" wire:navigate>
                 {{ __('Cancel') }}
             </flux:button>
@@ -430,7 +419,7 @@
     </form>
 
 
-</div>
+</div>                              
 <script>
 document.addEventListener('livewire:initialized', () => {
     let loadingSwal = null;

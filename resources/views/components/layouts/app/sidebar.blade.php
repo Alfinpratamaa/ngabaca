@@ -1,10 +1,12 @@
-<!DOCTYPE html>
+{{-- components/layouts/app/sidebar.blade.php --}}
+ <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
     @include('partials.head')
     {{-- @fluxAppearance --}}
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    
 </head>
 
 <body class="min-h-screen bg-white text-zinc-800">

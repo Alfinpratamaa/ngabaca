@@ -98,11 +98,11 @@ class EditBookForm extends Component
             if ($this->cover_image) {
                 // Delete old cover image if exists
                 if ($book->cover_image_url) {
-                    $oldPath = str_replace(config('app.url') . '/storage/', '', $book->cover_image_url);
+                    $oldPath = str_replace(env('APP_URL') . '/storage/', '', $book->cover_image_url);
                     Storage::disk('public')->delete($oldPath);
                 }
                 $path = $this->cover_image->store('covers', 'public');
-                $book->cover_image_url = config('app.url') . '/storage/' . $path;
+                $book->cover_image_url = env('APP_URL') . '/storage/' . $path;
             }
             // Jika cover image sudah dihapus sebelumnya, set ke null
             elseif ($this->cover_image_deleted) {

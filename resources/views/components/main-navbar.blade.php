@@ -10,7 +10,7 @@
 
             <!-- Navigation Links -->
             <div class="hidden md:flex items-center space-x-8">
-                <a href="#" class="text-gray-700 hover:text-gray-900 font-medium">Katalog</a>
+                <a href="{{ route('catalog') }}" wire:navigate class="text-gray-700 hover:text-gray-900 font-medium">Katalog</a>
                 <a href="#" class="text-gray-700 hover:text-gray-900 font-medium">Bestsellers</a>
                 <a href="#" class="text-gray-700 hover:text-gray-900 font-medium">Buku Baru</a>
                 <a href="{{ route('contact') }}" wire:navigate class="text-zinc-700 hover:text-zinc-900 font-medium">

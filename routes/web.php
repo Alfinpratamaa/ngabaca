@@ -10,32 +10,33 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
-
-Route::get('/', function(){
+Route::get('/', function () {
     return view('home');
 })->name('home');
 
-Route::get('about-us', function(){
+Route::get('about-us', function () {
     return view('about');
 })->name('about');
 
-Route::get('contact-us', function(){
+Route::get('contact-us', function () {
     return view('contact');
 })->name('contact');
 
-Route::middleware(['auth'])->group(function(){
+Route::get('catalog', function () {
+    return view('catalog');
+})->name('catalog');
+
+Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
     Volt::route('settings/profile', 'settings.profile')->name('settings.profile');
     Volt::route('settings/password', 'settings.password')->name('settings.password');
 });
 
-
-Route::middleware(['auth','role:pelanggan'])->group(function () {
+Route::middleware(['auth', 'role:pelanggan'])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
-
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
@@ -46,7 +47,4 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('admin/payment', PaymentController::class)->names('admin.payment');
 });
 
-
-
-
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

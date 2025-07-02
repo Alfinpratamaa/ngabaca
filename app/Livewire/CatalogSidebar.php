@@ -53,6 +53,26 @@ class CatalogSidebar extends Component
         ]);
     }
 
+    public function resetFilters()
+    {
+        // Reset semua filter ke nilai default
+        $this->selectedCategory = '';
+        $this->minPrice = 0;
+        $this->maxPrice = 999999999;
+        $this->selectedRating = '';
+        $this->sortBy = 'featured';
+
+        // Format ulang harga
+        $this->minPriceFormatted = $this->formatPrice($this->minPrice);
+        $this->maxPriceFormatted = $this->formatPrice($this->maxPrice);
+
+        // Emit event untuk JavaScript
+        $this->dispatch('filtersReset');
+
+        // Terapkan filter setelah reset
+        $this->applyFilters();
+    }
+
     public function setPriceRange($min, $max)
     {
         $this->minPrice = (int) $min;

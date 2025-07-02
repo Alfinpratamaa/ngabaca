@@ -70,9 +70,16 @@
 
             </div>
 
-            <button wire:click="applyFilters"
-                class="w-full bg-yellow-400 hover:bg-yellow-500 text-[#92400E] font-semibold py-2.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400">Apply
-                Filters</button>
+            <div class="flex flex-col gap-3">
+                <button wire:click="resetFilters"
+                    class="flex-1 bg-gray-100 hover:bg-gray-200 text-[#92400E] font-semibold py-2.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300">
+                    Reset Filters
+                </button>
+                <button wire:click="applyFilters"
+                    class="flex-1 bg-yellow-400 hover:bg-yellow-500 text-[#92400E] font-semibold py-2.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400">
+                    Apply Filters
+                </button>
+            </div>
         </div>
 
         <div class="w-full bg-white rounded-xl p-8">

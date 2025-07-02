@@ -33,11 +33,14 @@ class EditBookForm extends Component
 
     public function mount($bookId)
     {
+
         $this->bookId = $bookId;
         $this->categories = Category::all();
 
         // Load existing book data
         $book = Book::findOrFail($bookId);
+
+
 
         Log::info('Loading book data for editing', [
             'book_id' => $book->id,

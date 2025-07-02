@@ -417,7 +417,7 @@
             </div>
 
             <!-- Alternative URL Input -->
-            <div class="mt-4">
+            <div class="{{ $book_file || $private_file_path ? 'hidden' : 'flex'}} mt-4">
                 <flux:field class="w-full {{ $book_file ? 'opacity-50 pointer-events-none' : '' }}">
                     <flux:label>{{ __('Or Book File URL') }} <span
                             class="text-gray-500 text-sm">({{ __('Alternative to file upload') }})</span></flux:label>
@@ -426,7 +426,7 @@
                         <flux:input type="url" wire:model="private_file_path"
                             class="w-full {{ $book_file || $private_file_path ? 'cursor-not-allowed bg-gray-100 text-gray-400' : '' }}"
                             placeholder="https://secure-storage.example.com/book-file"
-                            value="{{ $private_file_path }}" {{ $book_file ? 'disabled' : 'enabled' }} />
+                            value="{{ $private_file_path }}" />
 
                         @if ($book_file)
                             <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -466,11 +466,16 @@
     
     </form>
 </div>
-<script>
-    document.addEventListener('livewire:initialized', () => {
-        let loadingSwal = null;
-        let hasUnsavedChanges = false;
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let loadingSwal = null;
+    let hasUnsavedChanges = false;
+    let listenersInitialized = false;
+
+    function initializeListeners() {
+        if (listenersInitialized) return;
+        
         // Track if there are unsaved changes
         function trackChanges() {
             hasUnsavedChanges = true;
@@ -515,6 +520,24 @@
                 window.location.href = '{{ route('admin.book.index') }}';
             }
         };
+
+        // Prevent accidental page reload/close when there are unsaved changes
+        window.addEventListener('beforeunload', function(e) {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+
+        listenersInitialized = true;
+    }
+
+    // Initialize listeners immediately
+    initializeListeners();
+
+    // Also initialize when Livewire loads
+    document.addEventListener('livewire:initialized', function() {
+        initializeListeners();
 
         // Listen for specific book updating event
         Livewire.on('book-updating', () => {
@@ -690,13 +713,6 @@
                 confirmButtonColor: '#ef4444'
             });
         });
-
-        // Prevent accidental page reload/close when there are unsaved changes
-        window.addEventListener('beforeunload', function(e) {
-            if (hasUnsavedChanges) {
-                e.preventDefault();
-                e.returnValue = '';
-            }
-        });
     });
+});
 </script>

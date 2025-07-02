@@ -75,9 +75,8 @@ class AddBookForm extends Component
                 // Gunakan URL yang diinput
                 $book->private_file_path = $this->private_file_path;
             } else {
-                // Error jika tidak ada file atau URL
-                $this->addError('book_file', 'Please provide either a book file or a secure URL');
-                return;
+                // Jika tidak ada file atau URL, tetap lanjutkan eksekusi
+                $book->private_file_path = null;
             }
 
             $book->save();

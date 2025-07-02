@@ -26,7 +26,7 @@
         <table class="min-w-full bg-white border border-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book ID</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Title') }}</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Author') }}</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Published Year') }}</th>
@@ -36,7 +36,7 @@
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($books as $book)
                     <tr wire:key="book-{{ $book->id }}" class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $books->firstItem() + $loop->index }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#{{ $book->id }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $book->title }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $book->author }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $book->published_year }}</td>
@@ -85,9 +85,21 @@
                 confirmButtonText: 'Yes, delete it!'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    // Show loading dialog
+                    Swal.fire({
+                        title: 'Deleting...',
+                        text: 'Please wait while we delete the book.',
+                        icon: 'info',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
                     // Call Livewire method
                     @this.deleteBook(bookId);
-                    
                 }
             });
         }

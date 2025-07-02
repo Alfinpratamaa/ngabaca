@@ -160,7 +160,8 @@
                                             {{ __('Image Selected') }}</h4>
 
                                         <!-- File Info -->
-                                        <div class="bg-white rounded-lg p-3 shadow-sm border border-purple-200 max-w-xs mx-auto mb-3">
+                                        <div
+                                            class="bg-white rounded-lg p-3 shadow-sm border border-purple-200 max-w-xs mx-auto mb-3">
                                             <p class="text-sm font-medium text-gray-900 truncate">
                                                 {{ $cover_image->getClientOriginalName() }}
                                             </p>
@@ -170,10 +171,10 @@
                                         </div>
 
                                         <!-- Remove Button -->
-                                        <button type="button"
-                                            wire:click="$set('cover_image', null)"
+                                        <button type="button" wire:click="$set('cover_image', null)"
                                             class="inline-flex items-center px-4 py-2 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-md transition-colors duration-200">
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
@@ -264,9 +265,10 @@
                                         </div>
                                         <h4 class="text-lg font-semibold text-gray-900 mb-3">{{ __('File Selected') }}
                                         </h4>
-                                        
+
                                         <!-- File Info -->
-                                        <div class="bg-white rounded-lg p-3 shadow-sm border border-green-200 max-w-xs mx-auto mb-3">
+                                        <div
+                                            class="bg-white rounded-lg p-3 shadow-sm border border-green-200 max-w-xs mx-auto mb-3">
                                             <div class="flex items-center space-x-3">
                                                 <div
                                                     class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center flex-shrink-0">
@@ -288,13 +290,11 @@
                                         </div>
 
                                         <!-- Remove Button -->
-                                        <button type="button"
-                                            wire:click="$set('book_file', null)"
+                                        <button type="button" wire:click="$set('book_file', null)"
                                             class="inline-flex items-center px-4 py-2 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-lg transition-colors duration-200">
                                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    stroke-width="2"
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
                                             {{ __('Remove File') }}
@@ -329,28 +329,82 @@
         </div>
 
         <!-- Submit Button -->
-        <div class="flex justify-end">
-            <flux:button type="submit" variant="primary" wire:loading.attr="disabled"
-                class="px-8 py-2 bg-green-500 hover:bg-green-600 text-white disabled:opacity-50">
+        <div class="flex justify-between">
+            <a href="{{ route('admin.book.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 rounded-md">
+                {{ __('Cancel') }}
+            </a>
+            
+            <flux:button type="submit" variant="primary" wire:loading.attr="disabled" class="px-8 py-2 bg-green-500 hover:bg-green-600 text-white disabled:opacity-50">
                 <span wire:loading.remove wire:target="save">{{ __('Create Book') }}</span>
                 <span wire:loading wire:target="save">{{ __('Creating...') }}</span>
             </flux:button>
         </div>
     </form>
 
-    <!-- Loading overlay for entire form -->
-    <div wire:loading.delay wire:target="save"
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
-            <svg class="animate-spin h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none"
-                viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                    stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                </path>
-            </svg>
-            <span class="text-gray-700">{{ __('Saving book...') }}</span>
-        </div>
-    </div>
+
 </div>
+
+<script>
+document.addEventListener('livewire:initialized', () => {
+    let loadingSwal = null;
+
+    // Listen for specific book saving event (hanya untuk save)
+    Livewire.on('book-saving', () => {
+        if (loadingSwal) {
+            loadingSwal.close();
+        }
+        
+        loadingSwal = Swal.fire({
+            title: 'Creating Book...',
+            text: 'Please wait while we create your book',
+            icon: 'info',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            showCancelButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    });
+
+    // Listen for book created event
+    Livewire.on('book-created', () => {
+        if (loadingSwal) {
+            loadingSwal.close();
+        }
+        
+        Swal.fire({
+            title: 'Success!',
+            text: 'Book created successfully!',
+            icon: 'success',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#22c55e'
+        }).then(() => {
+            // Redirect akan terjadi otomatis dari komponen
+        });
+    });
+
+    // Listen for book create error event
+    Livewire.on('book-create-error', (data) => {
+        if (loadingSwal) {
+            loadingSwal.close();
+        }
+        
+        Swal.fire({
+            title: 'Error!',
+            text: data[0].message || 'Failed to create book',
+            icon: 'error',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#ef4444'
+        });
+    });
+
+    // Listen for validation stops
+    Livewire.on('book-save-stopped', () => {
+        if (loadingSwal) {
+            loadingSwal.close();
+        }
+    });
+});
+</script>

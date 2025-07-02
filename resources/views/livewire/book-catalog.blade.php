@@ -1,4 +1,4 @@
-<div class="flex-1 px-8 py-6 bg-[#FFFBF5]">
+    <div class="flex-1 px-2 py-3 bg-[#FFFBF5]">
     <h1 class="text-3xl font-bold text-[#A05A1B] mb-6">Katalog Buku</h1>
 
     <!-- Search Bar -->

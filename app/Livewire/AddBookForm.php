@@ -98,14 +98,14 @@ class AddBookForm extends Component
             // 1. Tangani Upload Cover Image (Opsional)
             if ($this->cover_image) {
                 $filePath = $this->cover_image->store('covers', 'public');
-                $book->cover_image_url = config('app.url') . '/storage/covers/' . basename($filePath);
+                $book->cover_image_url = env('APP_URL') . '/storage/covers/' . basename($filePath);
             }
 
             // 2. Tangani Upload Book File atau URL
             if ($this->book_file && $this->book_file instanceof \Illuminate\Http\UploadedFile) {
                 // Upload file ke storage lokal dan simpan dengan app URL
                 $filePath = $this->book_file->store('books_private', 'local');
-                $book->private_file_path = config('app.url') . '/storage/books_private/' . basename($filePath);
+                $book->private_file_path = env('APP_URL') . '/storage/books_private/' . basename($filePath);
             } elseif (!empty($this->private_file_path)) {
                 // Gunakan URL yang diinput
                 $book->private_file_path = $this->private_file_path;

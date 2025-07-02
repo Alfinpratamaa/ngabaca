@@ -41,7 +41,9 @@ class BookController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $book = Book::where('slug', $id)->firstOrFail();
+
+        return view('book.show', compact('book'));
     }
 
     /**

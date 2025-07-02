@@ -22,7 +22,7 @@ class AddBookForm extends Component
     public $cover_image;
     public $book_file;
     public $private_file_path;
-
+    public $slug;
     public $categories;
 
     public function mount()
@@ -43,7 +43,33 @@ class AddBookForm extends Component
             'cover_image' => 'nullable|image|max:2048',
             'book_file' => 'nullable|file|max:10240|mimes:pdf,epub,mobi',
             'private_file_path' => 'nullable|url',
+            'slug' => 'nullable|string|max:255|unique:books,slug',
         ];
+    }
+
+    // Method untuk generate slug secara real-time (opsional)
+    public function updatedTitle()
+    {
+        if (!empty($this->title)) {
+            $this->slug = Book::generateUniqueSlug($this->title);
+        }
+    }
+
+    // Method untuk manual generate slug
+    public function generateSlug()
+    {
+        if (!empty($this->title)) {
+            $this->slug = Book::generateUniqueSlug($this->title);
+            $this->dispatch('show-alert', [
+                'type' => 'success',
+                'message' => 'Slug berhasil di-generate: ' . $this->slug
+            ]);
+        } else {
+            $this->dispatch('show-alert', [
+                'type' => 'warning',
+                'message' => 'Harap isi title terlebih dahulu'
+            ]);
+        }
     }
 
     public function save()
@@ -59,6 +85,15 @@ class AddBookForm extends Component
             $book->description = $this->description;
             $book->price = $this->price;
             $book->stock = $this->stock;
+
+            // Generate unique slug jika belum ada
+            if (empty($this->slug)) {
+                $book->slug = Book::generateUniqueSlug($this->title);
+            } else {
+                // Validasi ulang slug yang diinput manual
+                $uniqueSlug = Book::generateUniqueSlug($this->slug);
+                $book->slug = $uniqueSlug;
+            }
 
             // 1. Tangani Upload Cover Image (Opsional)
             if ($this->cover_image) {
@@ -96,7 +131,9 @@ class AddBookForm extends Component
                 'stock',
                 'cover_image',
                 'book_file',
-                'private_file_path'
+                'private_file_path',
+                'slug'
+
             ]);
             $this->redirect(route('admin.book.index'), navigate: true);
         } catch (\Exception $e) {

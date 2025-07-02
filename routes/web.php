@@ -26,6 +26,8 @@ Route::get('catalog', function () {
     return view('catalog');
 })->name('catalog');
 
+Route::get('book/{slug}', [BookController::class, 'show'])->name('book.show');
+
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 

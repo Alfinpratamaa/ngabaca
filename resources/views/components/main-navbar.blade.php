@@ -1,29 +1,29 @@
 {{-- resources/views/components/main-navbar.blade.php --}}
-<nav class="bg-white shadow-sm border-b">
+<nav class="bg-surface  border-b">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between gap-5 items-center h-16">
             <!-- Logo -->
             <a href="{{ route('home') }}" wire:navigate class="flex items-center">
                 <flux:icon.book-open class="h-8 w-8 text-blue-600 mr-2" />
-                <span class="text-xl font-bold text-gray-900">Ngabaca</span>
+                <span class="text-xl font-bold text-secondary">Ngabaca</span>
             </a>
 
             <!-- Navigation Links -->
             <div class="hidden md:flex items-center space-x-8">
-                <a href="{{ route('catalog') }}" wire:navigate class="text-gray-700 hover:text-gray-900 font-medium">Katalog</a>
-                <a href="#" class="text-gray-700 hover:text-gray-900 font-medium">Bestsellers</a>
-                <a href="#" class="text-gray-700 hover:text-gray-900 font-medium">Buku Baru</a>
-                <a href="{{ route('contact') }}" wire:navigate class="text-zinc-700 hover:text-zinc-900 font-medium">
+                <a href="{{ route('catalog') }}" wire:navigate class="text-secondary hover:text-secondary/60 font-medium">Katalog</a>
+                <a href="#" class="text-secondary hover:text-secondary/60 font-medium">Bestsellers</a>
+                <a href="#" class="text-secondary hover:text-secondary/60 font-medium">Buku Baru</a>
+                <a href="{{ route('contact') }}" wire:navigate class="text-secondary hover:text-secondary/60 font-medium">
                     Kontak Kami
                 </a>
                 <a href="{{ route('about') }}" wire:navigate
-                    class="text-gray-700 hover:text-gray-900 font-medium">Tentang Kami</a>
+                    class="text-secondary hover:text-secondary/60 font-medium">Tentang Kami</a>
             </div>
 
             <!-- Right side icons -->
             <div class="flex items-center space-x-2 text-black">
                 <!-- Search Bar -->
-                <div class="relative text-gray-400 bg-[#F0F2F5] rounded-lg flex items-center w-64">
+                <div class="relative text-gray-400 bg-muted rounded-lg flex items-center w-64">
                     <input
                         class="pl-9 pr-4 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent w-36 sm:w-48 md:w-56 lg:w-64"
                         placeholder="Search" type="text" />
@@ -33,14 +33,14 @@
 
                 @auth
                     <!-- Wishlist -->
-                    <a href="/whislist" class="p-1 rounded-md bg-[#F0F2F5]">
+                    <a href="/whislist" class="p-1 rounded-md bg-muted">
                         <flux:button variant="ghost" size="sm" class=" cursor-pointer">
                             <flux:icon.heart class="h-5 w-5 text-gray-600" />
                         </flux:button>
                     </a>
 
                     <!-- Shopping Cart -->
-                    <a href="/cart" class="p-1 rounded-md bg-[#F0F2F5]">
+                    <a href="/cart" class="p-1 rounded-md bg-muted">
                         <flux:button variant="ghost" size="sm" class=" cursor-pointer">
                             <flux:icon.shopping-bag class="h-5 w-5 text-gray-600" />
                         </flux:button>

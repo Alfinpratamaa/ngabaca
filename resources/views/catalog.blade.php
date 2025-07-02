@@ -1,7 +1,8 @@
-@extends('layouts.main')
-
-@section('content')
-<div class="min-h-screen bg-[#FFF8F1] flex justify-center">
+<x-layouts.main 
+title="Katalog Buku" 
+description="Temukan buku favorit Anda di katalog kami. Jelajahi berbagai genre dan penulis untuk menemukan bacaan yang sempurna."
+>
+<div class="min-h-screen bg-surface flex justify-center">
     <div class="flex w-full px-[10rem] gap-8 py-10">
         <!-- Sidebar kiri -->
         <div class="hidden max-w-[27rem] lg:block">
@@ -17,4 +18,4 @@
         </div>
     </div>
 </div>
-@endsection 
+    </x-layouts.main>

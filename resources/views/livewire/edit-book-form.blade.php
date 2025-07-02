@@ -110,7 +110,6 @@
                             </div>
                         </div>
                     </div>
-                    
                 @else
                     <!-- Cover Image Upload -->
                     <flux:field class="w-full">
@@ -238,23 +237,25 @@
                             <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                         @enderror
                     </flux:field>
-                    
+
                 @endif
-                
+
 
 
 
                 <!-- Book File Upload -->
-                 <div class="mb-4">
-                    <flux:label>{{ __('Book File') }} <span
-                            class="text-gray-500 text-sm">({{ __('Optional - Leave empty to keep current') }})</span>
+                <div class="mb-4">
+                    <flux:label>{{ __('Book File') }} 
+                        <span class="text-gray-500 text-sm">
+                            ({{ __('Optional - Leave empty to keep current') }})
+                        </span>
                     </flux:label>
 
                     <!-- Show Current File Info if exists -->
                     @if ($current_book_file && !$book_file)
                         <div class="mt-2 p-4 border rounded-lg bg-gray-50 min-h-[285px] overflow-hidden">
                             <div class="flex flex-col items-center justify-center w-full text-center">
-                                 <img src="{{ asset('assets/images/book.png') }}" alt="Current cover"
+                                <img src="{{ asset('assets/images/book.png') }}" alt="Current cover"
                                     class="w-32 h-48 object-cover rounded-lg mb-3">
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-gray-900">{{ __('Current file uploaded') }}</p>
@@ -270,32 +271,62 @@
                             </div>
                         </div>
                     @else
-                    <div class="relative">
-                        <!-- Hidden File Input -->
-                        <input type="file" wire:model="book_file" accept=".pdf,.epub,.mobi" id="book-file-input"
-                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                        <div class="relative {{ $private_file_path ? 'pointer-events-none opacity-50' : '' }}">
+                            <!-- Hidden File Input -->
+                            <input type="file" wire:model="book_file" accept=".pdf,.epub,.mobi"
+                                id="book-file-input"
+                                class="absolute inset-0 w-full h-full opacity-0 z-10 {{ $private_file_path ? 'cursor-not-allowed' : 'cursor-pointer' }}"
+                                {{ $private_file_path ? 'disabled' : '' }} />
 
-                        <!-- Custom Upload UI -->
-                        <div
-                            class="relative min-h-[160px] border-2 border-dashed border-gray-300 rounded-xl bg-gradient-to-br from-gray-50 to-white hover:border-blue-400 hover:bg-gradient-to-br hover:from-blue-50 hover:to-white transition-all duration-300 ease-in-out group">
+                            <!-- Custom Upload UI -->
+                            <div
+                                class="relative min-h-[160px] border-2 border-dashed rounded-xl bg-gradient-to-br transition-all duration-300 ease-in-out group
+                                {{ $private_file_path
+                                ? 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                                : 'border-gray-300 from-gray-50 to-white hover:border-blue-400 hover:bg-gradient-to-br hover:from-blue-50 hover:to-white' }}">
+
+                                <!-- Disabled Overlay -->
+                                @if ($private_file_path)
+                                    <div
+                                        class="absolute inset-0 bg-gray-100 bg-opacity-75 rounded-xl flex items-center justify-center z-5">
+                                        <div class="text-center">
+                                            <svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728">
+                                                </path>
+                                            </svg>
+                                            <p class="text-sm text-gray-500 font-medium">{{ __('Disabled') }}</p>
+                                            <p class="text-xs text-gray-400">{{ __('URL input is active') }}</p>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
 
                             <!-- Upload Icon & Text (Default State) -->
                             <div class="absolute inset-0 flex flex-col items-center justify-center p-6"
                                 wire:loading.remove wire:target="book_file"
                                 style="display: {{ $book_file ? 'none' : 'flex' }}">
                                 <div
-                                    class="w-16 h-16 mb-4 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
+                                    class="w-16 h-16 mb-4 rounded-2xl bg-gradient-to-br flex items-center justify-center transition-transform duration-300
+                                    {{ $private_file_path ? 'from-gray-100 to-gray-200' : 'from-blue-100 to-indigo-100 group-hover:scale-110' }}">
+                                    <svg class="w-8 h-8 {{ $private_file_path ? 'text-gray-400' : 'text-blue-600' }}"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                     </svg>
                                 </div>
-                                <h4 class="text-lg font-semibold text-gray-900 mb-2">{{ __('Upload New Book File') }}
+                                <h4
+                                    class="text-lg font-semibold mb-2 {{ $private_file_path ? 'text-gray-400' : 'text-gray-900' }}">
+                                    {{ __('Upload New Book File') }}
                                 </h4>
-                                <p class="text-sm text-gray-600 text-center mb-1">
-                                    {{ __('Drag and drop your file here, or click to browse') }}</p>
-                                <p class="text-xs text-gray-500">{{ __('Supports PDF, EPUB, MOBI files') }}</p>
+                                <p
+                                    class="text-sm text-center mb-1 {{ $private_file_path ? 'text-gray-400' : 'text-gray-600' }}">
+                                    {{ __('Drag and drop your file here, or click to browse') }}
+                                </p>
+                                <p class="text-xs {{ $private_file_path ? 'text-gray-300' : 'text-gray-500' }}">
+                                    {{ __('Supports PDF, EPUB, MOBI files') }}
+                                </p>
                             </div>
 
                             <!-- Loading State -->
@@ -318,8 +349,8 @@
                                         class="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full animate-pulse w-full">
                                     </div>
                                 </div>
-                                <p class="text-sm text-gray-600">{{ __('Please wait while we process your file') }}
-                                </p>
+                                <p class="text-sm text-gray-600">
+                                    {{ __('Please wait while we process your file') }}</p>
                             </div>
 
                             <!-- Success State -->
@@ -337,8 +368,7 @@
                                             </svg>
                                         </div>
                                         <h4 class="text-lg font-semibold text-gray-900 mb-3">
-                                            {{ __('New File Selected') }}
-                                        </h4>
+                                            {{ __('New File Selected') }}</h4>
 
                                         <!-- File Info -->
                                         <div
@@ -357,8 +387,8 @@
                                                     <p class="text-sm font-medium text-gray-900 truncate">
                                                         {{ $book_file->getClientOriginalName() }}</p>
                                                     <p class="text-xs text-gray-500">
-                                                        {{ number_format($book_file->getSize() / 1024 / 1024, 2) }} MB
-                                                    </p>
+                                                        {{ number_format($book_file->getSize() / 1024 / 1024, 2) }}
+                                                        MB</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -368,7 +398,8 @@
                                             class="inline-flex items-center px-4 py-2 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-lg transition-colors duration-200">
                                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    stroke-width="2"
                                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
                                             {{ __('Remove File') }}
@@ -377,30 +408,46 @@
                                 </div>
                             @endif
                         </div>
-                    </div>
-                    
 
-                    
-                    @error('book_file')
-                        <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
-                    @enderror
+                        @error('book_file')
+                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                        @enderror
+                    @endif
                 </div>
             </div>
 
             <!-- Alternative URL Input -->
             <div class="mt-4">
-                <flux:field class="w-full">
+                <flux:field class="w-full {{ $book_file ? 'opacity-50 pointer-events-none' : '' }}">
                     <flux:label>{{ __('Or Book File URL') }} <span
                             class="text-gray-500 text-sm">({{ __('Alternative to file upload') }})</span></flux:label>
-                    <flux:input type="url" wire:model="private_file_path" class="w-full"
-                        placeholder="https://secure-storage.example.com/book-file"
-                        value="{{ $private_file_path }}" />
-                    <flux:description>{{ __('Update secure URL to book file') }}</flux:description>
+
+                    <div class="relative">
+                        <flux:input type="url" wire:model="private_file_path"
+                            class="w-full {{ $book_file || $private_file_path ? 'cursor-not-allowed bg-gray-100 text-gray-400' : '' }}"
+                            placeholder="https://secure-storage.example.com/book-file"
+                            value="{{ $private_file_path }}" {{ $book_file ? 'disabled' : 'enabled' }} />
+
+                        @if ($book_file)
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728">
+                                    </path>
+                                </svg>
+                            </div>
+                        @endif
+                    </div>
+
+                    <flux:description class="{{ $book_file ? 'text-gray-400' : '' }}">
+                        {{ $book_file ? __('Disabled - File upload is active') : __('Update secure URL to book file') }}
+                    </flux:description>
+
                     @error('private_file_path')
                         <span class="text-red-500 text-sm">{{ $message }}</span>
                     @enderror
                 </flux:field>
-                @endif
             </div>
         </div>
 
@@ -416,241 +463,240 @@
                 <span wire:loading wire:target="save">{{ __('Updating...') }}</span>
             </flux:button>
         </div>
+    
     </form>
-
-
-</div>                              
+</div>
 <script>
-document.addEventListener('livewire:initialized', () => {
-    let loadingSwal = null;
-    let hasUnsavedChanges = false;
+    document.addEventListener('livewire:initialized', () => {
+        let loadingSwal = null;
+        let hasUnsavedChanges = false;
 
-    // Track if there are unsaved changes
-    function trackChanges() {
-        hasUnsavedChanges = true;
-    }
+        // Track if there are unsaved changes
+        function trackChanges() {
+            hasUnsavedChanges = true;
+        }
 
-    // Add event listeners to form inputs to track changes
-    document.querySelectorAll('input, textarea, select').forEach(element => {
-        element.addEventListener('input', trackChanges);
-        element.addEventListener('change', trackChanges);
-    });
+        // Add event listeners to form inputs to track changes
+        document.querySelectorAll('input, textarea, select').forEach(element => {
+            element.addEventListener('input', trackChanges);
+            element.addEventListener('change', trackChanges);
+        });
 
-    // Handle cancel with confirmation if there are unsaved changes
-    window.handleCancelEdit = function() {
-        // Check if cover image or book file was deleted but update wasn't saved
-        const coverImageDeleted = {{ $cover_image_deleted ? 'true' : 'false' }};
-        const bookFileDeleted = {{ $book_file_deleted ? 'true' : 'false' }};
-        
-        if (coverImageDeleted || bookFileDeleted || hasUnsavedChanges) {
+        // Handle cancel with confirmation if there are unsaved changes
+        window.handleCancelEdit = function() {
+            // Check if cover image or book file was deleted but update wasn't saved
+            const coverImageDeleted = {{ $cover_image_deleted ? 'true' : 'false' }};
+            const bookFileDeleted = {{ $book_file_deleted ? 'true' : 'false' }};
+
+            if (coverImageDeleted || bookFileDeleted || hasUnsavedChanges) {
+                Swal.fire({
+                    title: 'Unsaved Changes',
+                    text: 'You have unsaved changes. Are you sure you want to leave without saving?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Yes, discard changes',
+                    cancelButtonText: 'Stay and continue editing'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // If any files were deleted, restore them before leaving
+                        if (coverImageDeleted || bookFileDeleted) {
+                            // Refresh page to restore original state
+                            window.location.reload();
+                        } else {
+                            // Just go back to index
+                            window.location.href = '{{ route('admin.book.index') }}';
+                        }
+                    }
+                });
+            } else {
+                // No changes, safe to leave
+                window.location.href = '{{ route('admin.book.index') }}';
+            }
+        };
+
+        // Listen for specific book updating event
+        Livewire.on('book-updating', () => {
+            if (loadingSwal) {
+                loadingSwal.close();
+            }
+
+            loadingSwal = Swal.fire({
+                title: 'Updating Book...',
+                text: 'Please wait while we update your book',
+                icon: 'info',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                showCancelButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        });
+
+        // Listen for book updated event
+        Livewire.on('book-updated', () => {
+            if (loadingSwal) {
+                loadingSwal.close();
+            }
+
+            hasUnsavedChanges = false; // Reset unsaved changes flag
+
             Swal.fire({
-                title: 'Unsaved Changes',
-                text: 'You have unsaved changes. Are you sure you want to leave without saving?',
+                title: 'Success!',
+                text: 'Book updated successfully!',
+                icon: 'success',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#22c55e'
+            });
+        });
+
+        // Listen for book update error event
+        Livewire.on('book-update-error', (data) => {
+            if (loadingSwal) {
+                loadingSwal.close();
+            }
+
+            Swal.fire({
+                title: 'Error!',
+                text: data[0].message || 'Failed to update book',
+                icon: 'error',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#ef4444'
+            });
+        });
+
+        // Listen for validation stops
+        Livewire.on('book-update-stopped', () => {
+            if (loadingSwal) {
+                loadingSwal.close();
+            }
+        });
+
+        // COVER IMAGE EVENTS
+        // Listen for delete cover image confirmation request
+        Livewire.on('confirm-delete-cover-image', () => {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'This will permanently delete the current cover image from the database and storage. This action cannot be undone.',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
                 cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Yes, discard changes',
-                cancelButtonText: 'Stay and continue editing'
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // If any files were deleted, restore them before leaving
-                    if (coverImageDeleted || bookFileDeleted) {
-                        // Refresh page to restore original state
-                        window.location.reload();
-                    } else {
-                        // Just go back to index
-                        window.location.href = '{{ route("admin.book.index") }}';
-                    }
+                    // Track that we have changes
+                    hasUnsavedChanges = true;
+                    // Dispatch delete event back to Livewire
+                    Livewire.dispatch('delete-cover-image');
                 }
             });
-        } else {
-            // No changes, safe to leave
-            window.location.href = '{{ route("admin.book.index") }}';
-        }
-    };
+        });
 
-    // Listen for specific book updating event
-    Livewire.on('book-updating', () => {
-        if (loadingSwal) {
-            loadingSwal.close();
-        }
-        
-        loadingSwal = Swal.fire({
-            title: 'Updating Book...',
-            text: 'Please wait while we update your book',
-            icon: 'info',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            showConfirmButton: false,
-            showCancelButton: false,
-            didOpen: () => {
-                Swal.showLoading();
+        // Listen for cover image deleted event
+        Livewire.on('cover-image-deleted', () => {
+            Swal.fire({
+                title: 'Deleted!',
+                text: 'Cover image has been deleted successfully',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        });
+
+        // Listen for image delete error event
+        Livewire.on('image-delete-error', (data) => {
+            Swal.fire({
+                title: 'Error!',
+                text: data[0].message || 'Failed to delete image',
+                icon: 'error',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#ef4444'
+            });
+        });
+
+        // BOOK FILE EVENTS
+        // Listen for delete book file confirmation request
+        Livewire.on('confirm-delete-book-file', () => {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'This will permanently delete the current book file from the database and storage. This action cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Track that we have changes
+                    hasUnsavedChanges = true;
+                    // Dispatch delete event back to Livewire
+                    Livewire.dispatch('delete-book-file');
+                }
+            });
+        });
+
+        // Listen for book file processing
+        Livewire.on('book-file-processing', () => {
+            if (loadingSwal) {
+                loadingSwal.close();
+            }
+
+            loadingSwal = Swal.fire({
+                title: 'Deleting Book File...',
+                text: 'Please wait while we delete the book file',
+                icon: 'info',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                showCancelButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        });
+
+        // Listen for book file deleted event
+        Livewire.on('book-file-deleted', () => {
+            if (loadingSwal) {
+                loadingSwal.close();
+            }
+
+            Swal.fire({
+                title: 'Deleted!',
+                text: 'Book file has been deleted successfully',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        });
+
+        // Listen for book file delete error event
+        Livewire.on('file-delete-error', (data) => {
+            if (loadingSwal) {
+                loadingSwal.close();
+            }
+
+            Swal.fire({
+                title: 'Error!',
+                text: data[0].message || 'Failed to delete book file',
+                icon: 'error',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#ef4444'
+            });
+        });
+
+        // Prevent accidental page reload/close when there are unsaved changes
+        window.addEventListener('beforeunload', function(e) {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
             }
         });
     });
-
-    // Listen for book updated event
-    Livewire.on('book-updated', () => {
-        if (loadingSwal) {
-            loadingSwal.close();
-        }
-        
-        hasUnsavedChanges = false; // Reset unsaved changes flag
-        
-        Swal.fire({
-            title: 'Success!',
-            text: 'Book updated successfully!',
-            icon: 'success',
-            confirmButtonText: 'OK',
-            confirmButtonColor: '#22c55e'
-        });
-    });
-
-    // Listen for book update error event
-    Livewire.on('book-update-error', (data) => {
-        if (loadingSwal) {
-            loadingSwal.close();
-        }
-        
-        Swal.fire({
-            title: 'Error!',
-            text: data[0].message || 'Failed to update book',
-            icon: 'error',
-            confirmButtonText: 'OK',
-            confirmButtonColor: '#ef4444'
-        });
-    });
-
-    // Listen for validation stops
-    Livewire.on('book-update-stopped', () => {
-        if (loadingSwal) {
-            loadingSwal.close();
-        }
-    });
-    
-    // COVER IMAGE EVENTS
-    // Listen for delete cover image confirmation request
-    Livewire.on('confirm-delete-cover-image', () => {
-        Swal.fire({
-            title: 'Are you sure?',
-            text: 'This will permanently delete the current cover image from the database and storage. This action cannot be undone.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Track that we have changes
-                hasUnsavedChanges = true;
-                // Dispatch delete event back to Livewire
-                Livewire.dispatch('delete-cover-image');
-            }
-        });
-    });
-    
-    // Listen for cover image deleted event
-    Livewire.on('cover-image-deleted', () => {
-        Swal.fire({
-            title: 'Deleted!',
-            text: 'Cover image has been deleted successfully',
-            icon: 'success',
-            timer: 2000,
-            showConfirmButton: false
-        });
-    });
-
-    // Listen for image delete error event
-    Livewire.on('image-delete-error', (data) => {
-        Swal.fire({
-            title: 'Error!',
-            text: data[0].message || 'Failed to delete image',
-            icon: 'error',
-            confirmButtonText: 'OK',
-            confirmButtonColor: '#ef4444'
-        });
-    });
-
-    // BOOK FILE EVENTS
-    // Listen for delete book file confirmation request
-    Livewire.on('confirm-delete-book-file', () => {
-        Swal.fire({
-            title: 'Are you sure?',
-            text: 'This will permanently delete the current book file from the database and storage. This action cannot be undone.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Track that we have changes
-                hasUnsavedChanges = true;
-                // Dispatch delete event back to Livewire
-                Livewire.dispatch('delete-book-file');
-            }
-        });
-    });
-
-    // Listen for book file processing
-    Livewire.on('book-file-processing', () => {
-        if (loadingSwal) {
-            loadingSwal.close();
-        }
-        
-        loadingSwal = Swal.fire({
-            title: 'Deleting Book File...',
-            text: 'Please wait while we delete the book file',
-            icon: 'info',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            showConfirmButton: false,
-            showCancelButton: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-    });
-
-    // Listen for book file deleted event
-    Livewire.on('book-file-deleted', () => {
-        if (loadingSwal) {
-            loadingSwal.close();
-        }
-        
-        Swal.fire({
-            title: 'Deleted!',
-            text: 'Book file has been deleted successfully',
-            icon: 'success',
-            timer: 2000,
-            showConfirmButton: false
-        });
-    });
-
-    // Listen for book file delete error event
-    Livewire.on('file-delete-error', (data) => {
-        if (loadingSwal) {
-            loadingSwal.close();
-        }
-        
-        Swal.fire({
-            title: 'Error!',
-            text: data[0].message || 'Failed to delete book file',
-            icon: 'error',
-            confirmButtonText: 'OK',
-            confirmButtonColor: '#ef4444'
-        });
-    });
-
-    // Prevent accidental page reload/close when there are unsaved changes
-    window.addEventListener('beforeunload', function(e) {
-        if (hasUnsavedChanges) {
-            e.preventDefault();
-            e.returnValue = '';
-        }
-    });
-});
 </script>

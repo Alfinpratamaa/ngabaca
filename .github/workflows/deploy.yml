@@ -65,8 +65,9 @@ jobs:
 
             - name: Verify Deployment (Optional)
               run: |
-                  echo "Verifying application access on EC2..."
-                  sleep 60
-                  curl ${{ env.APP_DOMAIN }}
+                  echo "Verifying application..."
+                  echo "Accessing domain: ${{ secrets.APP_DOMAIN }}"
+                  sleep 20
+                  curl ${{ secrets.APP_DOMAIN }}
                   echo ""
                   echo "Application verified!"

@@ -12,7 +12,7 @@ class BookCatalog extends Component
 
     public $selectedCategory = '';
     public $minPrice = 0;
-    public $maxPrice = 500000;
+    public $maxPrice = 999999999;
     public $selectedRating = '';
     public $search = '';
     public $sortBy = 'featured';
@@ -68,6 +68,39 @@ class BookCatalog extends Component
     public function updatedSearch()
     {
         $this->resetPage();
+    }
+
+    public function addToCart($bookId)
+    {
+        $book = Book::find($bookId);
+
+        if (!$book) {
+            session()->flash('error', 'Buku tidak ditemukan!');
+            return;
+        }
+
+        $cart = session()->get('cart', []);
+
+        // Periksa apakah buku sudah ada di keranjang
+        if (isset($cart[$bookId])) {
+            $cart[$bookId]['quantity']++; // Tambah kuantitas
+        } else {
+            // Tambahkan buku baru ke keranjang
+            $cart[$bookId] = [
+                "id" => $book->id, // Penting untuk menyimpan ID
+                "name" => $book->title,
+                "quantity" => 1,
+                "price" => $book->price,
+                "image" => $book->cover_image_url ?? "https://placehold.co/400x600/e2c9a0/6B3F13?text=Cover+Not+Found", // Tambahkan gambar untuk tampilan keranjang
+            ];
+        }
+
+        session()->put('cart', $cart); // Simpan keranjang ke sesi
+
+        // Dispatch event ke komponen lain (CartCounter) untuk memperbarui tampilan keranjang
+        $this->dispatch('cartUpdated');
+
+        session()->flash('success', 'Buku berhasil ditambahkan ke keranjang!');
     }
 
     public function render()

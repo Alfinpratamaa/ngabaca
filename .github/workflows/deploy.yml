@@ -67,6 +67,6 @@ jobs:
               run: |
                   echo "Verifying application access on EC2..."
                   sleep 60
-                  curl -H "Host: ${{ env.APP_DOMAIN }}" http://${{ secrets.EC2_HOST }}
+                  curl ${{ env.APP_DOMAIN }}
                   echo ""
                   echo "Application verified!"

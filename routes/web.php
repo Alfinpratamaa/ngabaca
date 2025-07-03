@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
+use App\Livewire\CartPage;
 use App\Livewire\Home;
 use App\Models\Payment;
 use Illuminate\Support\Facades\Auth;
@@ -25,6 +26,10 @@ Route::get('contact-us', function () {
 Route::get('catalog', function () {
     return view('catalog');
 })->name('catalog');
+
+Route::get('/cart', function () {
+    return view('cart');
+})->name('cart');
 
 Route::get('book/{slug}', [BookController::class, 'show'])->name('book.show');
 

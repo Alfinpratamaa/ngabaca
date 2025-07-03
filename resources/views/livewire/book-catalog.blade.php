@@ -1,4 +1,5 @@
     <div class="flex-1 px-2 py-3">
+        
         <h1 class="text-3xl font-bold text-secondary mb-6">Katalog Buku</h1>
 
         <!-- Search Bar -->
@@ -23,7 +24,7 @@
                     <!-- Image Container with padding -->
                     <div class="p-4">
                         <a href="{{ route('book.show', $book->slug) }}" wire:navigate>
-                            <img src="{{ $book->cover_image_url }}" alt="{{ $book->title }}"
+                            <img src="{{ $book->cover_image_url ?? "https://placehold.co/400x600/e2c9a0/6B3F13?text=Cover+Not+Found';" }}" alt="{{ $book->title }}"
                                 class="w-full h-64 object-cover rounded-lg"
                                 onerror="this.onerror=null;this.src='https://placehold.co/400x600/e2c9a0/6B3F13?text=Cover+Not+Found';" />
                         </a>

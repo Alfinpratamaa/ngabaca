@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use Illuminate\Support\Facades\Session;
 
 class CartPage extends Component
 {
@@ -37,22 +38,35 @@ class CartPage extends Component
         $this->total = $this->subtotal + $this->shippingCost;
     }
 
-    public function updateQuantity($bookId, $action)
+    public function increaseQuantity($bookId)
     {
-        if (isset($this->cartItems[$bookId])) {
-            if ($action === 'increase') {
-                $this->cartItems[$bookId]['quantity']++;
-            } elseif ($action === 'decrease') {
-                $this->cartItems[$bookId]['quantity']--;
-                // Hapus item jika kuantitas kurang dari 1
-                if ($this->cartItems[$bookId]['quantity'] < 1) {
-                    $this->removeItem($bookId);
-                    return; // Keluar dari fungsi setelah menghapus
-                }
+        $cart = Session::get('cart', []);
+        if (isset($cart[$bookId])) {
+            $cart[$bookId]['quantity']++;
+            Session::put('cart', $cart);
+            $this->cartItems = $cart;
+            $this->dispatch('cartUpdated');
+        }
+    }
+
+    public function decreaseQuantity($bookId)
+    {
+        $cart = Session::get('cart', []);
+        if (isset($cart[$bookId])) {
+            if ($cart[$bookId]['quantity'] <= 1) {
+                // Langsung hapus tanpa konfirmasi untuk decrease
+                unset($cart[$bookId]);
+                Session::put('cart', $cart);
+                $this->cartItems = $cart;
+                $this->dispatch('cartUpdated');
+                $this->dispatch('showToast', ['type' => 'success', 'message' => 'Buku berhasil dihapus dari keranjang!']);
+            } else {
+                // Directly decrease quantity if > 1
+                $cart[$bookId]['quantity']--;
+                Session::put('cart', $cart);
+                $this->cartItems = $cart;
+                $this->dispatch('cartUpdated');
             }
-            session()->put('cart', $this->cartItems); // Simpan perubahan ke session
-            $this->calculateTotals(); // Hitung ulang total
-            $this->dispatch('cartUpdated'); // Beri tahu komponen lain (misal CartCounter)
         }
     }
 

@@ -16,6 +16,7 @@ class BookCatalog extends Component
     public $selectedRating = '';
     public $search = '';
     public $sortBy = 'featured';
+    public $cartItems = [];
 
     protected $listeners = [
         'categoryChanged' => 'updateCategory',
@@ -23,11 +24,18 @@ class BookCatalog extends Component
         'ratingChanged' => 'updateRating',
         'filtersApplied' => 'applyFilters',
         'sortChanged' => 'updateSort',
+        'cartUpdated' => 'loadCartItems',
     ];
 
     public function mount()
     {
         $this->resetPage();
+        $this->loadCartItems();
+    }
+
+    public function loadCartItems()
+    {
+        $this->cartItems = session()->get('cart', []);
     }
 
     public function updateCategory($category)
@@ -91,16 +99,65 @@ class BookCatalog extends Component
                 "name" => $book->title,
                 "quantity" => 1,
                 "price" => $book->price,
-                "image" => $book->cover_image_url ?? "https://placehold.co/400x600/e2c9a0/6B3F13?text=Cover+Not+Found", // Tambahkan gambar untuk tampilan keranjang
+                "cover_image_url" => $book->cover_image_url ?? "/public/assets/images/cover-book-nofound.jpg", // Tambahkan gambar untuk tampilan keranjang
             ];
         }
 
         session()->put('cart', $cart); // Simpan keranjang ke sesi
+        $this->loadCartItems(); // Reload cart items
 
         // Dispatch event ke komponen lain (CartCounter) untuk memperbarui tampilan keranjang
         $this->dispatch('cartUpdated');
 
         session()->flash('success', 'Buku berhasil ditambahkan ke keranjang!');
+    }
+
+    public function removeFromCart($bookId)
+    {
+        $cart = session()->get('cart', []);
+
+        if (isset($cart[$bookId])) {
+            unset($cart[$bookId]);
+            session()->put('cart', $cart);
+            $this->loadCartItems();
+            $this->dispatch('cartUpdated');
+            session()->flash('success', 'Buku berhasil dihapus dari keranjang!');
+        } else {
+            session()->flash('error', 'Buku tidak ditemukan di keranjang!');
+        }
+    }
+
+
+
+    public function increaseQuantity($bookId)
+    {
+        $cart = session()->get('cart', []);
+
+        if (isset($cart[$bookId])) {
+            $cart[$bookId]['quantity']++;
+            session()->put('cart', $cart);
+            $this->loadCartItems();
+            $this->dispatch('cartUpdated');
+        }
+    }
+
+    public function decreaseQuantity($bookId)
+    {
+        $cart = session()->get('cart', []);
+
+        if (isset($cart[$bookId])) {
+            $cart[$bookId]['quantity']--;
+
+            // Remove item if quantity becomes 0
+            if ($cart[$bookId]['quantity'] <= 0) {
+                unset($cart[$bookId]);
+                session()->flash('success', 'Buku berhasil dihapus dari keranjang!');
+            }
+
+            session()->put('cart', $cart);
+            $this->loadCartItems();
+            $this->dispatch('cartUpdated');
+        }
     }
 
     public function render()

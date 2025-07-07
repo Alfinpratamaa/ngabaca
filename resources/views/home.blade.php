@@ -22,7 +22,7 @@
         @php
             $featuredBooks = [
                 [
-                    'title' => 'The Enchanted Forest',
+                    'title' => 'The Enchanted Forests',
                     'author' => 'A tale of magic and adventure.',
                     'cover_image' => 'https://storage.googleapis.com/a1aa/image/35b5a0ba-1198-4c09-fa1d-e106c12e5b58.jpg',
                     'background_color' => 'bg-[#6a8a7f]',

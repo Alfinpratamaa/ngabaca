@@ -22,7 +22,7 @@ class AddBookForm extends Component
     public $cover_image;
     public $book_file;
     public $private_file_path;
-
+    public $slug;
     public $categories;
 
     public function mount()
@@ -43,7 +43,33 @@ class AddBookForm extends Component
             'cover_image' => 'nullable|image|max:2048',
             'book_file' => 'nullable|file|max:10240|mimes:pdf,epub,mobi',
             'private_file_path' => 'nullable|url',
+            'slug' => 'nullable|string|max:255|unique:books,slug',
         ];
+    }
+
+    // Method untuk generate slug secara real-time (opsional)
+    public function updatedTitle()
+    {
+        if (!empty($this->title)) {
+            $this->slug = Book::generateUniqueSlug($this->title);
+        }
+    }
+
+    // Method untuk manual generate slug
+    public function generateSlug()
+    {
+        if (!empty($this->title)) {
+            $this->slug = Book::generateUniqueSlug($this->title);
+            $this->dispatch('show-alert', [
+                'type' => 'success',
+                'message' => 'Slug berhasil di-generate: ' . $this->slug
+            ]);
+        } else {
+            $this->dispatch('show-alert', [
+                'type' => 'warning',
+                'message' => 'Harap isi title terlebih dahulu'
+            ]);
+        }
     }
 
     public function save()
@@ -60,31 +86,38 @@ class AddBookForm extends Component
             $book->price = $this->price;
             $book->stock = $this->stock;
 
+            // Generate unique slug jika belum ada
+            if (empty($this->slug)) {
+                $book->slug = Book::generateUniqueSlug($this->title);
+            } else {
+                // Validasi ulang slug yang diinput manual
+                $uniqueSlug = Book::generateUniqueSlug($this->slug);
+                $book->slug = $uniqueSlug;
+            }
+
             // 1. Tangani Upload Cover Image (Opsional)
             if ($this->cover_image) {
-                $book->cover_image_url = $this->cover_image->store('covers', 'public');
+                $filePath = $this->cover_image->store('covers', 'public');
+                $book->cover_image_url = config('app.url') . '/storage/covers/' . basename($filePath);
             }
 
             // 2. Tangani Upload Book File atau URL
             if ($this->book_file && $this->book_file instanceof \Illuminate\Http\UploadedFile) {
-                // Upload file ke storage lokal
+                // Upload file ke storage lokal dan simpan dengan app URL
                 $filePath = $this->book_file->store('books_private', 'local');
-                $book->private_file_path = $filePath;
+                $book->private_file_path = config('app.url') . '/storage/books_private/' . basename($filePath);
             } elseif (!empty($this->private_file_path)) {
                 // Gunakan URL yang diinput
                 $book->private_file_path = $this->private_file_path;
             } else {
-                // Error jika tidak ada file atau URL
-                $this->addError('book_file', 'Please provide either a book file or a secure URL');
-                return;
+                // Jika tidak ada file atau URL, tetap lanjutkan eksekusi
+                $book->private_file_path = null;
             }
 
             $book->save();
 
-            $this->dispatch('show-alert', [
-                'type' => 'success',
-                'message' => 'Buku berhasil ditambahkan!'
-            ]);
+            // Dispatch event untuk SweetAlert
+            $this->dispatch('book-created');
 
             $this->reset([
                 'title',
@@ -96,14 +129,18 @@ class AddBookForm extends Component
                 'stock',
                 'cover_image',
                 'book_file',
-                'private_file_path'
+                'private_file_path',
+                'slug'
+
             ]);
-            $this->redirect(route('admin.book.index'), navigate: true);
+
+            // Use session flash and regular redirect instead of navigate
+            session()->flash('success', 'Book created successfully!');
+
+            // Remove the navigate parameter or use redirectRoute
+            return redirect()->route('admin.book.index');
         } catch (\Exception $e) {
-            $this->dispatch('show-alert', [
-                'type' => 'error',
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ]);
+            $this->dispatch('book-create-error', ['message' => 'Error creating book: ' . $e->getMessage()]);
             Log::error('Error saving book: ' . $e->getMessage() . ' Trace: ' . $e->getTraceAsString());
         }
     }

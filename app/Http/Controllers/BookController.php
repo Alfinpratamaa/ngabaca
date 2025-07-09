@@ -39,9 +39,11 @@ class BookController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $slug)
     {
-        //
+        $book = Book::where('slug', $slug)->firstOrFail();
+
+        return view('book.show', compact('book'));
     }
 
     /**

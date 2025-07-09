@@ -11,34 +11,55 @@ class OrderSeeder extends Seeder
     /**
      * Run the database seeds.
      */
-     public function run(): void
+    public function run(): void
     {
-        $pelangganUser = User::where('role', 'pelanggan')->first();
+        // Ambil semua user dengan role pelanggan
+        $pelangganUsers = User::where('role', 'pelanggan')->get();
 
-        if (!$pelangganUser) {
-            $this->call(UserSeeder::class); // Pastikan UserSeeder dijalankan duluan
-            $pelangganUser = User::where('role', 'pelanggan')->first();
+        if ($pelangganUsers->isEmpty()) {
+            $this->call(UserSeeder::class);
+            $pelangganUsers = User::where('role', 'pelanggan')->get();
         }
 
-        if ($pelangganUser) {
-        if ($pelangganUser) {
-            $statuses = ['pending', 'completed', 'cancelled'];
-            Order::create([
-            'user_id' => $pelangganUser->id,
-            'total_amount' => 250000.00,
-            'status' => $statuses[array_rand($statuses)],
-            'shipping_address' => 'Jl. Contoh No. 123, Kota Fiktif, Negara Imajinasi',
-            ]);
+        if ($pelangganUsers->isNotEmpty()) {
+            $statuses = ['Diproses', 'Terpenuhi', 'Batal'];
 
-            Order::create([
-            'user_id' => $pelangganUser->id,
-            'total_amount' => 150000.00,
-            'status' => $statuses[array_rand($statuses)],
-            'shipping_address' => 'Jl. Lain No. 45, Desa Khayalan, Provinsi Fiksi',
-            ]);
+            // Buat beberapa order dengan variasi user dan data
+            foreach ($pelangganUsers as $user) {
+                // Setiap user mendapat 2-3 order
+                $orderCount = rand(2, 3);
+
+                for ($i = 0; $i < $orderCount; $i++) {
+                    Order::create([
+                        'user_id' => $user->id,
+                        'total_price' => rand(50000, 500000), // Harga random
+                        'status' => 'Diproses',
+                        // Berikan alamat dummy untuk tampilan yang lebih baik
+                        'shipping_address' => $this->getRandomAddress(),
+                    ]);
+                }
+            }
+
+            $this->command->info("Berhasil membuat order untuk " . $pelangganUsers->count() . " pelanggan.");
         } else {
             $this->command->error("User dengan role 'pelanggan' tidak ditemukan. Tidak dapat membuat order.");
         }
     }
-}
+
+    /**
+     * Generate random shipping address for testing
+     */
+    private function getRandomAddress(): string
+    {
+        $addresses = [
+            'Jl. Merdeka No123',
+            'Jl. Sudirman No23',
+            'Jl. Malioboro No123',
+            'Jl. Diponegoro No123',
+            'Jl. Ahmad Yani No123',
+            'Jl. Gatot Subroto No123',
+        ];
+
+        return $addresses[array_rand($addresses)];
+    }
 }

@@ -15,7 +15,7 @@ class Order extends Model
      */
     protected $fillable = [
         'user_id',
-        'total_amount',
+        'total_price',
         'status',
         'shipping_address',
     ];
@@ -33,4 +33,5 @@ class Order extends Model
     {
         return $this->hasOne(Payment::class);
     }
+
 }

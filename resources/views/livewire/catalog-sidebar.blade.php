@@ -85,113 +85,82 @@
         <div class="w-full bg-white rounded-xl p-8">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-xl font-bold text-secondary">Sort By</h2>
+                {{-- Tombol Reset menjadi lebih bersih dengan hanya wire:click --}}
                 @if ($sortBy !== 'featured')
-                    <button wire:click="resetSort" onclick="handleResetSort()"
-                        class="text-xs text-gray-500 hover:text-secondary underline">
+                    <button wire:click="resetSort" class="text-xs text-gray-500 hover:text-secondary underline">
                         Reset
                     </button>
                 @endif
             </div>
 
-            <div class="flex flex-col gap-2" id="sort-container">
-                <label
-                    class="flex items-center gap-3 cursor-pointer p-3 rounded-lg border transition-all
-                    {{ $sortBy === 'featured' ? 'border-primary ring-1 ring-primary bg-yellow-50' : 'border-gray-300 hover:border-gray-400' }}">
-                    <input type="radio" name="sortBy" wire:model.live="sortBy" value="featured" id="sort-featured"
-                        class="form-radio text-yellow-500 focus:ring-primary h-4 w-4 border-gray-300">
+
+            <flux:radio.group wire:model.live="sortBy" class="flex flex-col gap-2">
+
+                <label for="sort-featured" class="flex items-center gap-3 p-3 rounded-lg border border-gray-300 transition-all duration-150 ease-in-out hover:border-primary cursor-pointer {{ $sortBy === 'featured' ? 'border-primary border-2 border-solid' : '' }}">
+                    <flux:radio id="sort-featured" value="featured" class="" :checked="$sortBy === 'featured'" />
                     <span class="font-medium text-sm text-secondary">Featured</span>
                 </label>
 
-                <label
-                    class="flex items-center gap-3 cursor-pointer p-3 rounded-lg border transition-all
-                    {{ $sortBy === 'price_asc' ? 'border-primary ring-1 ring-primary bg-yellow-50' : 'border-gray-300 hover:border-gray-400' }}">
-                    <input type="radio" name="sortBy" wire:model.live="sortBy" value="price_asc" id="sort-price-asc"
-                        class="form-radio text-yellow-500 focus:ring-primary h-4 w-4 border-gray-300">
+                <label for="sort-price-asc" class="flex items-center gap-3 p-3 rounded-lg border border-gray-300 transition-all duration-150 ease-in-out hover:border-primary cursor-pointer {{ $sortBy === 'price_asc' ? 'border-primary border-2 border-solid' : '' }}">
+                    <flux:radio id="sort-price-asc" value="price_asc" :checked="$sortBy === 'price_asc'" />
                     <span class="font-medium text-sm text-secondary">Price: Low to High</span>
                 </label>
 
-                <label
-                    class="flex items-center gap-3 cursor-pointer p-3 rounded-lg border transition-all
-                    {{ $sortBy === 'price_desc' ? 'border-primary ring-1 ring-primary bg-yellow-50' : 'border-gray-300 hover:border-gray-400' }}">
-                    <input type="radio" name="sortBy" wire:model.live="sortBy" value="price_desc"
-                        id="sort-price-desc"
-                        class="form-radio text-yellow-500 focus:ring-primary h-4 w-4 border-gray-300">
+                <label for="sort-price-desc" class="flex items-center gap-3 p-3 rounded-lg border border-gray-300 transition-all duration-150 ease-in-out hover:border-primary cursor-pointer {{ $sortBy === 'price_desc' ? 'border-primary border-2 border-solid' : '' }}">
+                    <flux:radio id="sort-price-desc" value="price_desc" :checked="$sortBy === 'price_desc'" />
                     <span class="font-medium text-sm text-secondary">Price: High to Low</span>
                 </label>
 
-                <label
-                    class="flex items-center gap-3 cursor-pointer p-3 rounded-lg border transition-all
-                    {{ $sortBy === 'newest' ? 'border-primary ring-1 ring-primary bg-yellow-50' : 'border-gray-300 hover:border-gray-400' }}">
-                    <input type="radio" name="sortBy" wire:model.live="sortBy" value="newest" id="sort-newest"
-                        class="form-radio text-yellow-500 focus:ring-primary h-4 w-4 border-gray-300">
+                <label for="sort-newest" class="flex items-center gap-3 p-3 rounded-lg border border-gray-300 transition-all duration-150 ease-in-out hover:border-primary cursor-pointer {{ $sortBy === 'newest' ? 'border-primary border-2 border-solid' : '' }}">
+                    <flux:radio id="sort-newest" value="newest" :checked="$sortBy === 'newest'" />
                     <span class="font-medium text-sm text-secondary">Newest</span>
                 </label>
-            </div>
+
+            </flux:radio.group>
         </div>
     </aside>
-
     <style>
-        /* Pastikan radio button styling konsisten */
-        input[type="radio"]:checked {
-            background-color: #f59e0b !important;
-            border-color: #f59e0b !important;
+        /* Gaya default untuk setiap label opsi sorting */
+        .sort-option-label {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            /* 12px */
+            cursor: pointer;
+            padding: 0.75rem;
+            /* 12px */
+            border-radius: 0.5rem;
+            /* 8px */
+            border: 1px solid #D1D5DB;
+            /* border-gray-300 */
+            transition: all 150ms ease-in-out;
         }
 
-        /* Custom styling untuk radio button yang checked */
-        input[name="sortBy"]:checked+span {
-            font-weight: 600;
+        .sort-option-label:hover {
+            border-color: var(--color-primary);
+            /* hover:border-gray-400 */
         }
+
+        /* * KUNCI UTAMA:
+     * Terapkan gaya "aktif" pada label yang di dalamnya memiliki
+     * input radio yang sedang ":checked".
+     */
     </style>
 </section>
-
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        let isUpdating = false;
+    // Pastikan skrip hanya berjalan setelah DOM siap
+    document.addEventListener('livewire:navigated', () => {
 
-        // Simple function to sync radio buttons with Livewire state
-        function syncRadioButtons() {
-            if (isUpdating) return;
-            
-            isUpdating = true;
-            const sortByValue = @this.get('sortBy') || 'featured';
-            
-            // Only update if current checked radio doesn't match sortBy value
-            const currentChecked = document.querySelector('input[name="sortBy"]:checked');
-            const shouldBeChecked = document.querySelector(`input[name="sortBy"][value="${sortByValue}"]`);
-            
-            if (!currentChecked || currentChecked.value !== sortByValue) {
-                // Clear all first
-                document.querySelectorAll('input[name="sortBy"]').forEach(radio => {
-                    radio.checked = false;
-                });
-                
-                // Set the correct one
-                if (shouldBeChecked) {
-                    shouldBeChecked.checked = true;
-                }
+        // Dengarkan sinyal 'sort-was-reset' yang dikirim dari server
+        window.addEventListener('sort-was-reset', event => {
+            // Temukan radio button 'featured' berdasarkan ID-nya
+            const featuredRadio = document.getElementById('sort-featured');
+
+            // Jika ditemukan, paksa statusnya menjadi 'checked'
+            if (featuredRadio) {
+                featuredRadio.checked = true;
             }
-            
-            setTimeout(() => {
-                isUpdating = false;
-            }, 100);
-        }
-
-        // Initial sync
-        setTimeout(syncRadioButtons, 100);
-
-        // Listen for Livewire updates
-        Livewire.hook('morph.updated', () => {
-            setTimeout(syncRadioButtons, 50);
         });
 
-        // Listen for navigation
-        window.addEventListener('livewire:navigated', () => {
-            setTimeout(syncRadioButtons, 100);
-        });
     });
-
-    // Simple reset function
-    window.handleResetSort = function() {
-        @this.set('sortBy', 'featured');
-    }
 </script>

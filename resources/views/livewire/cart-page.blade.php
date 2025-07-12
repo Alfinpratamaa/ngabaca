@@ -46,23 +46,23 @@
                     @foreach ($cartItems as $id => $item)
                         <div class="flex items-center border-b pb-4 last:border-b-0 last:pb-0">
                             <!-- Book Image -->
-                            <img src="{{ $item['image'] }}" alt="{{ $item['name'] }}"
+                            <img src="{{ $item['cover_image_url'] }}" alt="{{ $item['title'] }}"
                                 class="w-24 h-24 object-cover rounded-lg mr-4 flex-shrink-0"
                                 onerror="this.onerror=null;this.src='https://placehold.co/400x600/e2c9a0/6B3F13?text=No+Image';">
                             
                             <!-- Book Details -->
                             <div class="flex-grow">
-                                <h3 class="text-lg font-bold text-secondary">{{ $item['name'] }}</h3>
+                                <h3 class="text-lg font-bold text-secondary">{{ $item['title'] }}</h3>
                                 <p class="text-gray-600">Harga: {{ $this->formatPrice($item['price']) }}</p>
                                 
                                 <!-- Quantity Controls -->
                                 <div class="flex items-center mt-2">
-                                    <button wire:click="updateQuantity({{ $id }}, 'decrease')"
+                                    <button wire:click="decreaseQuantity({{ $id }})"
                                         class="bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400">
                                         -
                                     </button>
                                     <span class="mx-3 text-lg font-semibold">{{ $item['quantity'] }}</span>
-                                    <button wire:click="updateQuantity({{ $id }}, 'increase')"
+                                    <button wire:click="increaseQuantity({{ $id }})"
                                         class="bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400">
                                         +
                                     </button>

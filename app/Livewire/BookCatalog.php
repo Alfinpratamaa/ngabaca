@@ -5,17 +5,30 @@ namespace App\Livewire;
 use App\Models\Book;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\Url;
 
 class BookCatalog extends Component
 {
     use WithPagination;
 
+    #[Url(as: 'category')]
     public $selectedCategory = '';
+
+    #[Url(as: 'min_price')]
     public $minPrice = 0;
+
+    #[Url(as: 'max_price')]
     public $maxPrice = 999999999;
+
+    #[Url(as: 'rating')]
     public $selectedRating = '';
+
+    #[Url(as: 'search')]
     public $search = '';
+
+    #[Url(as: 'sort')]
     public $sortBy = 'featured';
+
     public $cartItems = [];
 
     protected $listeners = [
@@ -29,8 +42,26 @@ class BookCatalog extends Component
 
     public function mount()
     {
+        // Sync dengan query parameters
+        $this->selectedCategory = request('category', '');
+        $this->minPrice = request('min_price', 0);
+        $this->maxPrice = request('max_price', 999999999);
+        $this->selectedRating = request('rating', '');
+        $this->search = request('search', '');
+        $this->sortBy = request('sort', 'featured');
+
         $this->resetPage();
         $this->loadCartItems();
+
+        // Dispatch ke sidebar untuk sync
+        $this->dispatch('syncFromParams', [
+            'category' => $this->selectedCategory,
+            'minPrice' => $this->minPrice,
+            'maxPrice' => $this->maxPrice,
+            'rating' => $this->selectedRating,
+            'search' => $this->search,
+            'sort' => $this->sortBy,
+        ]);
     }
 
     public function loadCartItems()
@@ -73,17 +104,47 @@ class BookCatalog extends Component
         $this->resetPage();
     }
 
-    // Perbaikan: Method ini akan otomatis dipanggil saat property search berubah
     public function updatedSearch()
     {
-        $this->resetPage(); // Reset pagination ke halaman pertama
+        $this->resetPage();
     }
 
-    // Method untuk clear search
+    public function updatedSortBy()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSelectedCategory()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedMinPrice()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedMaxPrice()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSelectedRating()
+    {
+        $this->resetPage();
+    }
+
     public function clearSearch()
     {
         $this->search = '';
         $this->resetPage();
+        $this->dispatch('searchCleared');
+
+        $currentParams = request()->query();
+        unset($currentParams['search']);
+
+        // Redirect ke URL tanpa search parameter
+        return redirect()->route('catalog', $currentParams);
     }
 
     public function addToCart($bookId)
@@ -172,7 +233,7 @@ class BookCatalog extends Component
 
         // Apply search filter
         if ($this->search) {
-            $searchTerm = strtolower($this->search); // Convert search term to lowercase
+            $searchTerm = strtolower($this->search);
             $query->where(function ($q) use ($searchTerm) {
                 $q->whereRaw('LOWER(title) LIKE ?', ['%' . $searchTerm . '%'])
                     ->orWhereRaw('LOWER(author) LIKE ?', ['%' . $searchTerm . '%'])
@@ -194,18 +255,33 @@ class BookCatalog extends Component
         }
 
         // Apply sort
-        if ($this->sortBy === 'price_asc') {
-            $query->orderBy('price', 'asc');
-        } elseif ($this->sortBy === 'price_desc') {
-            $query->orderBy('price', 'desc');
-        } elseif ($this->sortBy === 'newest') {
-            $query->orderBy('published_year', 'desc');
-        } else {
-            // featured or default
-            $query->orderBy('created_at', 'desc');
+        switch ($this->sortBy) {
+            case 'price_asc':
+                $query->orderBy('price', 'asc');
+                break;
+            case 'price_desc':
+                $query->orderBy('price', 'desc');
+                break;
+            case 'newest':
+                $query->orderBy('published_year', 'desc')
+                    ->orderBy('created_at', 'desc');
+                break;
+            case 'bestseller':
+                // Asumsi ada kolom sold_count atau bisa join dengan order items
+                $query->orderByDesc('sold_count');
+                break;
+            case 'rating_high':
+                $query->orderBy('rating', 'desc');
+                break;
+            case 'alphabetical':
+                $query->orderBy('title', 'asc');
+                break;
+            default: // featured
+                $query->orderBy('is_featured', 'desc')
+                    ->orderBy('created_at', 'desc');
+                break;
         }
 
-        // Get books with pagination
         $books = $query->paginate(20);
 
         return view('livewire.book-catalog', [

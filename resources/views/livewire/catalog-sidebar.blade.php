@@ -87,7 +87,8 @@
                 <h2 class="text-xl font-bold text-secondary">Sort By</h2>
                 {{-- Tombol Reset menjadi lebih bersih dengan hanya wire:click --}}
                 @if ($sortBy !== 'featured')
-                    <button wire:click="resetSort" class="text-xs cursor-pointer text-gray-500 hover:text-secondary underline">
+                    <button wire:click="resetSort"
+                        class="text-xs cursor-pointer text-gray-500 hover:text-secondary underline">
                         Reset
                     </button>
                 @endif
@@ -96,24 +97,40 @@
 
             <flux:radio.group wire:model.live="sortBy" class="flex flex-col gap-2">
 
-                <label for="sort-featured" class="flex items-center gap-3 p-3 rounded-lg border border-gray-300 transition-all duration-150 ease-in-out hover:border-primary cursor-pointer {{ $sortBy === 'featured' ? 'border-primary border-2 border-solid' : '' }}">
+                <label for="sort-featured"
+                    class="flex items-center gap-3 p-3 rounded-lg border border-gray-300 transition-all duration-150 ease-in-out hover:border-primary cursor-pointer {{ $sortBy === 'featured' ? 'border-primary border-2 border-solid' : '' }}">
                     <flux:radio id="sort-featured" value="featured" class="" :checked="$sortBy === 'featured'" />
                     <span class="font-medium text-sm text-secondary">Featured</span>
                 </label>
 
-                <label for="sort-price-asc" class="flex items-center gap-3 p-3 rounded-lg border border-gray-300 transition-all duration-150 ease-in-out hover:border-primary cursor-pointer {{ $sortBy === 'price_asc' ? 'border-primary border-2 border-solid' : '' }}">
+                <label for="alphabetical"
+                    class="flex items-center gap-3 p-3 rounded-lg border border-gray-300 transition-all duration-150 ease-in-out hover:border-primary cursor-pointer {{ $sortBy === 'alphabetical' ? 'border-primary border-2 border-solid' : '' }}">
+                    <flux:radio id="alphabetical" value="alphabetical" :checked="$sortBy === 'alphabetical'" />
+                    <span class="font-medium text-sm text-secondary">A-Z</span>
+                </label>
+
+                <label for="sort-price-asc"
+                    class="flex items-center gap-3 p-3 rounded-lg border border-gray-300 transition-all duration-150 ease-in-out hover:border-primary cursor-pointer {{ $sortBy === 'price_asc' ? 'border-primary border-2 border-solid' : '' }}">
                     <flux:radio id="sort-price-asc" value="price_asc" :checked="$sortBy === 'price_asc'" />
                     <span class="font-medium text-sm text-secondary">Price: Low to High</span>
                 </label>
 
-                <label for="sort-price-desc" class="flex items-center gap-3 p-3 rounded-lg border border-gray-300 transition-all duration-150 ease-in-out hover:border-primary cursor-pointer {{ $sortBy === 'price_desc' ? 'border-primary border-2 border-solid' : '' }}">
+                <label for="sort-price-desc"
+                    class="flex items-center gap-3 p-3 rounded-lg border border-gray-300 transition-all duration-150 ease-in-out hover:border-primary cursor-pointer {{ $sortBy === 'price_desc' ? 'border-primary border-2 border-solid' : '' }}">
                     <flux:radio id="sort-price-desc" value="price_desc" :checked="$sortBy === 'price_desc'" />
                     <span class="font-medium text-sm text-secondary">Price: High to Low</span>
                 </label>
 
-                <label for="sort-newest" class="flex items-center gap-3 p-3 rounded-lg border border-gray-300 transition-all duration-150 ease-in-out hover:border-primary cursor-pointer {{ $sortBy === 'newest' ? 'border-primary border-2 border-solid' : '' }}">
+                <label for="sort-newest"
+                    class="flex items-center gap-3 p-3 rounded-lg border border-gray-300 transition-all duration-150 ease-in-out hover:border-primary cursor-pointer {{ $sortBy === 'newest' ? 'border-primary border-2 border-solid' : '' }}">
                     <flux:radio id="sort-newest" value="newest" :checked="$sortBy === 'newest'" />
                     <span class="font-medium text-sm text-secondary">Newest</span>
+                </label>
+
+                <label for="bestsellers"
+                    class="flex items-center gap-3 p-3 rounded-lg border border-gray-300 transition-all duration-150 ease-in-out hover:border-primary cursor-pointer {{ $sortBy === 'bestsellers' ? 'border-primary border-2 border-solid' : '' }}">
+                    <flux:radio id="bestsellers" value="bestsellers" :checked="$sortBy === 'bestsellers'" />
+                    <span class="font-medium text-sm text-secondary">Bestsellers</span>
                 </label>
 
             </flux:radio.group>

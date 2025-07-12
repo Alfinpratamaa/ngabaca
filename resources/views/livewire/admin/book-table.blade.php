@@ -43,12 +43,12 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex space-x-2">
                                 <!-- Edit Button -->
-                                <flux:button wire:navigate :href="route('admin.book.edit', $book)" variant="primary" 
+                                <flux:button wire:navigate :href="route('admin.book.edit', $book)" variant="primary"
                                     class="bg-blue-500 hover:bg-blue-600 text-white font-semibold"
                                     size="sm" icon="pencil" />
-                                
+
                                 <!-- Delete Button -->
-                                <button type="button" 
+                                <button type="button"
                                     onclick="confirmDelete({{ $book->id }})"
                                     class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

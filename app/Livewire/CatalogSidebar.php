@@ -107,6 +107,8 @@ class CatalogSidebar extends Component
         // Emit event untuk JavaScript
         $this->dispatch('sortBy-updated');
         $this->applyFilters();
+
+        $this->dispatch('sort-was-reset');
     }
 
     public function updated($property)

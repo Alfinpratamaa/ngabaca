@@ -73,8 +73,16 @@ class BookCatalog extends Component
         $this->resetPage();
     }
 
+    // Perbaikan: Method ini akan otomatis dipanggil saat property search berubah
     public function updatedSearch()
     {
+        $this->resetPage(); // Reset pagination ke halaman pertama
+    }
+
+    // Method untuk clear search
+    public function clearSearch()
+    {
+        $this->search = '';
         $this->resetPage();
     }
 
@@ -127,8 +135,6 @@ class BookCatalog extends Component
         }
     }
 
-
-
     public function increaseQuantity($bookId)
     {
         $cart = session()->get('cart', []);
@@ -166,10 +172,11 @@ class BookCatalog extends Component
 
         // Apply search filter
         if ($this->search) {
-            $query->where(function ($q) {
-                $q->where('title', 'like', '%' . $this->search . '%')
-                    ->orWhere('author', 'like', '%' . $this->search . '%')
-                    ->orWhere('description', 'like', '%' . $this->search . '%');
+            $searchTerm = strtolower($this->search); // Convert search term to lowercase
+            $query->where(function ($q) use ($searchTerm) {
+                $q->whereRaw('LOWER(title) LIKE ?', ['%' . $searchTerm . '%'])
+                    ->orWhereRaw('LOWER(author) LIKE ?', ['%' . $searchTerm . '%'])
+                    ->orWhereRaw('LOWER(description) LIKE ?', ['%' . $searchTerm . '%']);
             });
         }
 

@@ -17,7 +17,8 @@
                     Kontak Kami
                 </a>
                 <a href="{{ route('about') }}" wire:navigate
-                    class="text-secondary hover:text-secondary/60 font-medium whitespace-nowrap">Tentang Kami</a>
+                    class="text-secondary hover:text-secondary/60 font-medium whitespace-nowrap">Tentang Kami
+                </a>
             </div>
 
             <!-- Right side icons -->
@@ -78,14 +79,7 @@
                     <div class="flex items-center space-x-1 sm:space-x-2">
                         <a href="{{ route('login') }}">
                             <flux:button variant="outline" size="sm" class="text-xs sm:text-sm px-2 sm:px-3">
-                                <span class="hidden xs:inline">Login</span>
-                                <span class="xs:hidden">In</span>
-                            </flux:button>
-                        </a>
-                        <a href="{{ route('register') }}">
-                            <flux:button variant="primary" size="sm" class="text-xs sm:text-sm px-2 sm:px-3">
-                                <span class="hidden xs:inline">Register</span>
-                                <span class="xs:hidden">Up</span>
+                               Login
                             </flux:button>
                         </a>
                     </div>

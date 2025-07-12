@@ -87,7 +87,7 @@
                 <h2 class="text-xl font-bold text-secondary">Sort By</h2>
                 {{-- Tombol Reset menjadi lebih bersih dengan hanya wire:click --}}
                 @if ($sortBy !== 'featured')
-                    <button wire:click="resetSort" class="text-xs text-gray-500 hover:text-secondary underline">
+                    <button wire:click="resetSort" class="text-xs cursor-pointer text-gray-500 hover:text-secondary underline">
                         Reset
                     </button>
                 @endif

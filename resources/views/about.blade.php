@@ -1,18 +1,7 @@
-<x-layouts.main>
-    <style>
-        /* Menerapkan warna background ke seluruh halaman */
-        body {
-            background-color: #fff8f0;
-        }
-    </style>
+<x-layouts.main>=
 
     {{-- Latar belakang sekarang diatur pada body, jadi div ini tidak lagi memerlukan warna bg --}}
     <div class="px-6 py-12 mx-auto max-w-7xl">
-        {{-- Semua kelas warna teks diubah menjadi text-black --}}
-        <nav class="mb-6 text-sm text-black">
-            <a href="{{ url('/') }}" class="hover:underline">Home</a> /
-            <span class="text-black">About</span>
-        </nav>
 
         <div class="grid items-center grid-cols-1 gap-10 mb-16 md:grid-cols-2">
             <div>

@@ -12,10 +12,10 @@
         </div>
 
         <!-- Books Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div class="w-fit mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 md:grid-cols-2 justify-items-center justify-center gap-y-20 gap-x-14 mt-10 mb-5">
             @forelse($books as $book)
                 <!-- Book Card: Image rounded inside the card -->
-                <div class="bg-white h-[29rem]  cursor-pointer rounded-xl shadow-md overflow-hidden flex flex-col" wire:key="book-{{ $book->id }}">
+                <div class="bg-white h-[28rem] w-sm max-w-[14rem] cursor-pointer rounded-xl shadow-md overflow-hidden flex flex-col" wire:key="book-{{ $book->id }}">
                     <!-- Image Container with padding -->
                     <div class="px-4 pb-4 pt-3">
                         <a href="{{ route('book.show', $book->slug) }}" wire:navigate>
@@ -26,11 +26,11 @@
                     </div>
 
                     <!-- Content Container -->
-                    <div class="px-4 pb-4 flex flex-col flex-1">
+                    <div class="px-4 flex flex-col flex-1">
                         <a href="{{ route('book.show', $book->slug) }}" wire:navigate>
-                            <h3 class="font-bold text-lg text-secondary mb-1">{{ $book->title }}</h3>
+                            <h3 class="font-bold text-md text-secondary mb-1 line-clamp-1">{{ $book->title }}</h3>
                             <p class="text-gray-600 text-sm mb-2">{{ $book->author }}</p>
-                            <span class="text-secondary font-semibold text-xl mb-3">Rp.
+                            <span class="text-secondary font-bold text-lg my-2">Rp.
                                 {{ number_format($book->price, 0, ',', '.') }}</span>
                         </a>
 

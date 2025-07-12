@@ -1,4 +1,4 @@
-<div>
+<div class="">
     @if(isset($cartItems[$book->id]))
         <div class="flex items-center justify-center space-x-3" wire:key="cart-controls-{{ $book->id }}">
             <button

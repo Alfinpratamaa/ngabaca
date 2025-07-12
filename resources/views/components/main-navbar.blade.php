@@ -1,5 +1,5 @@
 {{-- resources/views/components/main-navbar.blade.php --}}
-<nav class="bg-surface border-b">
+<nav class="bg-surface border-b" x-data="{ mobileMenuOpen: false }">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
             <!-- Logo -->
@@ -31,7 +31,6 @@
                     <flux:icon.magnifying-glass
                         class="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 </div>
-
 
                 @auth
                     <!-- Wishlist -->
@@ -86,14 +85,15 @@
                 @endauth
 
                 <!-- Mobile menu button -->
-                <flux:button variant="ghost" size="sm" class="lg:hidden p-2 ml-1">
-                    <flux:icon.bars-3 class="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
+                <flux:button variant="ghost" size="sm" class="lg:hidden p-2 ml-1" @click="mobileMenuOpen = !mobileMenuOpen">
+                    <flux:icon.bars-3 class="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" x-show="!mobileMenuOpen" />
+                    <flux:icon.x-mark class="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" x-show="mobileMenuOpen" />
                 </flux:button>
             </div>
         </div>
 
-        <!-- Mobile Navigation Menu (initially hidden, toggle with mobile menu button) -->
-        <div class="lg:hidden border-t border-gray-200 mt-2 pt-2 pb-3 space-y-1" x-data="{ open: false }" x-show="open">
+        <!-- Mobile Navigation Menu -->
+        <div class="lg:hidden border-t border-gray-200 mt-2 pt-2 pb-3 space-y-1" x-show="mobileMenuOpen" x-transition>
             <a href="{{ route('catalog') }}" wire:navigate class="block px-3 py-2 text-base font-medium text-secondary hover:text-secondary/60 hover:bg-gray-50 rounded-md">Katalog</a>
             <a href="#" class="block px-3 py-2 text-base font-medium text-secondary hover:text-secondary/60 hover:bg-gray-50 rounded-md">Bestsellers</a>
             <a href="#" class="block px-3 py-2 text-base font-medium text-secondary hover:text-secondary/60 hover:bg-gray-50 rounded-md">Buku Baru</a>
@@ -103,7 +103,7 @@
 
         <!-- Mobile Search -->
         @unless(request()->routeIs('catalog'))
-        <div class="sm:hidden pb-3 pt-2 border-t border-gray-200">
+        <div class="sm:hidden pb-3 pt-2 border-t border-gray-200" x-show="mobileMenuOpen" x-transition>
             <div class="relative">
             <flux:input placeholder="Search books..." class="w-full pl-10 pr-4 text-sm" />
             <flux:icon.magnifying-glass

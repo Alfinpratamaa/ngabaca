@@ -11,21 +11,38 @@ class CatalogSidebar extends Component
     public $minPrice = 0;
     public $maxPrice = 999999999;
     public $selectedRating = '';
-    public $sortBy = 'featured'; // Nilai default untuk sorting
+    public $sortBy = 'featured';
 
     public $minPriceFormatted;
     public $maxPriceFormatted;
 
+    protected $listeners = [
+        'syncFromParams' => 'syncFromParams'
+    ];
+
     public function mount()
     {
-        // Pastikan sortBy selalu terisi dengan nilai default
-        $this->sortBy = 'featured';
+        // Sync dengan query parameters
+        $this->selectedCategory = request('category', '');
+        $this->minPrice = request('min_price', 0);
+        $this->maxPrice = request('max_price', 999999999);
+        $this->selectedRating = request('rating', '');
+        $this->sortBy = request('sort', 'featured');
 
         $this->minPriceFormatted = $this->formatPrice($this->minPrice);
         $this->maxPriceFormatted = $this->formatPrice($this->maxPrice);
+    }
 
-        // Emit filters pertama kali saat komponen dimuat
-        $this->applyFilters();
+    public function syncFromParams($data)
+    {
+        $this->selectedCategory = $data['category'];
+        $this->minPrice = $data['minPrice'];
+        $this->maxPrice = $data['maxPrice'];
+        $this->selectedRating = $data['rating'];
+        $this->sortBy = $data['sort'];
+
+        $this->minPriceFormatted = $this->formatPrice($this->minPrice);
+        $this->maxPriceFormatted = $this->formatPrice($this->maxPrice);
     }
 
     private function formatPrice($value)
@@ -41,7 +58,6 @@ class CatalogSidebar extends Component
 
     public function applyFilters()
     {
-        // Event ini yang akan didengarkan oleh komponen daftar produk
         $this->dispatch('filtersApplied', [
             'category' => $this->selectedCategory,
             'price' => [
@@ -49,27 +65,22 @@ class CatalogSidebar extends Component
                 'max' => $this->maxPrice,
             ],
             'rating' => $this->selectedRating,
-            'sort' => $this->sortBy, // Nilai sorting dikirimkan di sini
+            'sort' => $this->sortBy,
         ]);
     }
 
     public function resetFilters()
     {
-        // Reset semua filter ke nilai default
         $this->selectedCategory = '';
         $this->minPrice = 0;
         $this->maxPrice = 999999999;
         $this->selectedRating = '';
         $this->sortBy = 'featured';
 
-        // Format ulang harga
         $this->minPriceFormatted = $this->formatPrice($this->minPrice);
         $this->maxPriceFormatted = $this->formatPrice($this->maxPrice);
 
-        // Emit event untuk JavaScript
         $this->dispatch('filtersReset');
-
-        // Terapkan filter setelah reset
         $this->applyFilters();
     }
 
@@ -84,30 +95,11 @@ class CatalogSidebar extends Component
         $this->applyFilters();
     }
 
-    // Method khusus untuk mengatur sort dengan opsi reset
-    public function setSortBy($value)
-    {
-        // Jika value yang sama diklik lagi, reset ke default
-        if ($this->sortBy === $value && $value !== 'featured') {
-            $this->sortBy = 'featured';
-        } else {
-            $this->sortBy = $value;
-        }
-
-        // Emit event untuk JavaScript
-        $this->dispatch('sortBy-updated');
-        $this->applyFilters();
-    }
-
-    // Method untuk reset sorting
     public function resetSort()
     {
         $this->sortBy = 'featured';
-
-        // Emit event untuk JavaScript
         $this->dispatch('sortBy-updated');
         $this->applyFilters();
-
         $this->dispatch('sort-was-reset');
     }
 
@@ -133,12 +125,10 @@ class CatalogSidebar extends Component
             }
         }
 
-        // Handle sortBy update
         if ($property === 'sortBy') {
             $this->dispatch('sortBy-updated');
         }
 
-        // Auto-apply filters ketika properti berubah
         if (in_array($property, ['selectedCategory', 'selectedRating', 'sortBy', 'minPrice', 'maxPrice'])) {
             $this->applyFilters();
         }

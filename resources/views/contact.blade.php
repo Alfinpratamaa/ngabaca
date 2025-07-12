@@ -19,7 +19,7 @@
 
                     {{-- Kolom Kiri: Formulir Kontak --}}
                     <div class="lg:pr-8">
-                        <form action="#" method="POST" class="space-y-6">
+                        <form action="#" method="" class="space-y-6">
                             @csrf {{-- Token CSRF Laravel --}}
 
                             {{-- Baris Nama Depan & Nama Belakang --}}
@@ -43,7 +43,7 @@
                             {{-- Input Nomor Telepon --}}
                             <div>
                                 <label for="phone-number" class="block text-sm font-medium text-gray-700">Phone number</label>
-                                <div class="mt-1 relative rounded-md shadow-sm">
+                                <div class="mt-1 relative rounded-md shadow-sm bg-white">
                                     <div class="absolute inset-y-0 left-0 flex items-center">
                                         <select id="country" name="country" class="h-full py-0 pl-3 pr-7 border-transparent bg-transparent text-gray-500 focus:outline-none focus:ring-[#92400E] focus:border-[#92400E]">
                                             <option>ID</option>
@@ -94,7 +94,7 @@
 
                             {{-- Tombol Kirim --}}
                             <div>
-                                <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700">
+                                <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-secondary bg-primary hover:bg-primary/75 cursor-pointer ">
                                     Send message
                                 </button>
                             </div>

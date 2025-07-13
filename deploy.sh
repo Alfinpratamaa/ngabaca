@@ -68,13 +68,18 @@ if [ -z "$LARAVEL_ENV_ENCRYPTION_KEY" ]; then
     exit 1
 fi
 
-if [ -f .env.enc ]; then
+if [ -f .env.encrypted ]; then
     echo "Decrypting .env.enc to .env..."
     if ! command -v openssl &> /dev/null; then
         echo "Error: openssl not found. Please install openssl on EC2 to decrypt .env.enc"
         exit 1
     fi
-    openssl enc -aes-256-cbc -d -in .env.enc -out .env -k "$LARAVEL_ENV_ENCRYPTION_KEY"
+    chmod +x script.sh
+    ./script.sh --production "$LARAVEL_ENV_ENCRYPTION_KEY"
+    if [ $? -ne 0 ]; then
+        echo "Error: Decryption failed. Please check your encryption key and .env.encrypted file."
+        exit 1
+    fi
     echo ".env decrypted successfully."
 else
     echo "Warning: .env.enc not found. Skipping decryption."

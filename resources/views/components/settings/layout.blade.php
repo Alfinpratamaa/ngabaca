@@ -8,12 +8,14 @@
     <div class="flex items-start gap-8 max-md:flex-col">
         <div class="w-full pb-4 md:w-[220px] md:flex-shrink-0">
             <flux:navlist>
-                <flux:navlist.item :href="route('settings.profile')" wire:navigate>
+                <flux:navlist.item class="text-secondary" :href="route('settings.profile')" wire:navigate>
                     {{ __('Profile') }}
                 </flux:navlist.item>
-                <flux:navlist.item :href="route('settings.password')" wire:navigate>
-                    {{ __('Password') }}
-                </flux:navlist.item>
+                @if (auth()->user()->password)
+                    <flux:navlist.item :href="route('settings.password')" wire:navigate>
+                        {{ __('Password') }}
+                    </flux:navlist.item>
+                @endif
             </flux:navlist>
         </div>
 

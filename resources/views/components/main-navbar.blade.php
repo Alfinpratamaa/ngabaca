@@ -48,8 +48,7 @@
                     @livewire('cart-counter')
 
                     <flux:dropdown position="bottom" align="end">
-                        <flux:profile icon-variant="micro" circle
-                            avatar="{{ auth()->user()->avatar ? asset('storage/' . auth()->user()->avatar) : asset('assets/images/avatar.jpg') }}"
+                        <flux:profile icon-variant="micro" circle avatar="{{ auth()->user()->avatar_url }}"
                             class="h-8 w-8 sm:h-9 sm:w-9" />
                         <flux:navmenu>
                             <flux:navmenu.item icon="user" wire:navigate href="{{ route('settings.profile') }}">Profile

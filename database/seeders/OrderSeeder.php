@@ -22,7 +22,7 @@ class OrderSeeder extends Seeder
         }
 
         if ($pelangganUsers->isNotEmpty()) {
-            $statuses = ['pending', 'diproses', 'selesai', 'batal'];
+            $statuses = ['diproses', 'terpenuhi', 'batal'];
 
             // Buat beberapa order dengan variasi user dan data
             foreach ($pelangganUsers as $user) {

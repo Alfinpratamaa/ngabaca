@@ -20,6 +20,12 @@ class Order extends Model
         'shipping_address',
     ];
 
+    // Add status constants for consistency
+    const STATUS_PENDING = 'pending';
+    const STATUS_DIPROSES = 'diproses';
+    const STATUS_SELESAI = 'terpenuhi';
+    const STATUS_BATAL = 'batal';
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -34,4 +40,15 @@ class Order extends Model
         return $this->hasOne(Payment::class);
     }
 
+    // Helper method to get formatted status
+    public function getFormattedStatusAttribute()
+    {
+        return match($this->status) {
+            'pending' => 'Pending',
+            'diproses' => 'Diproses',
+            'terpenuhi' => 'Terpenuhi',
+            'batal' => 'Batal',
+            default => ucfirst($this->status)
+        };
+    }
 }

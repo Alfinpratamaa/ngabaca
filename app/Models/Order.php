@@ -21,7 +21,6 @@ class Order extends Model
     ];
 
     // Add status constants for consistency
-    const STATUS_PENDING = 'pending';
     const STATUS_DIPROSES = 'diproses';
     const STATUS_SELESAI = 'terpenuhi';
     const STATUS_BATAL = 'batal';

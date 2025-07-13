@@ -1,19 +1,20 @@
 {{-- components/layouts/app/sidebar.blade.php --}}
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
     @include('partials.head')
     {{-- @fluxAppearance --}}
-    
-    
+
+
 </head>
 
 <body class="min-h-screen bg-white text-zinc-800">
     <flux:sidebar sticky stashable class="border-e border-zinc-200 bg-white text-zinc-800">
         <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
-        <a href="{{ route('admin.dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
+        <a href="{{ route('admin.dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse"
+            wire:navigate>
             <h1 class="font-bold text-xl text-zinc-800">Ngabaca Admin</h1>
         </a>
 

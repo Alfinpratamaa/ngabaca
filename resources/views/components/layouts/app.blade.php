@@ -19,7 +19,7 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div class="col-span-1 md:col-span-2">
                     <div class="flex items-center mb-4">
-                        <flux:icon.book-open class="h-8 w-8 text-blue-600 mr-2" />
+                        <img src="{{ asset('logo.png') }}" alt="Ngabaca Logo" class="h-8 w-auto mr-2" />
                         <span class="text-xl font-bold text-gray-900">Ngabaca</span>
                     </div>
                     <p class="text-gray-600 mb-4">

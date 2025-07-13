@@ -93,9 +93,25 @@ select:focus[data-flux-control] {
 [data-flux-navlist] [data-flux-control] {
     @apply text-zinc-800;
 }
+
+[data-flux-navlist-item] {
+    @apply text-secondary;
+    @apply hover:bg-gray-100;
+    @apply focus:bg-gray-100;
+}
+
 [data-flux-sidebar] {
     @apply bg-white;
     @apply border-r border-gray-200;
+}
+
+[data-flux-heading] {
+    @apply text-secondary;
+    @apply font-semibold;
+}
+
+[data-flux-subheading] {
+    @apply text-gray-500;
 }
 
 /* \[:where(&)\]:size-4 {

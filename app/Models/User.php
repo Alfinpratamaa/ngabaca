@@ -21,6 +21,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'google_id',
         'password',
         'avatar'
     ];
@@ -56,7 +57,7 @@ class User extends Authenticatable
         return Str::of($this->name)
             ->explode(' ')
             ->take(2)
-            ->map(fn ($word) => Str::substr($word, 0, 1))
+            ->map(fn($word) => Str::substr($word, 0, 1))
             ->implode('');
     }
 
@@ -74,13 +75,18 @@ class User extends Authenticatable
     {
         return $this->hasMany(Payment::class, 'verified_by');
     }
-     public function getAvatarUrlAttribute()
+    public function getAvatarUrlAttribute(): string
     {
         if ($this->avatar) {
+            if (Str::startsWith($this->avatar, 'http')) {
+                // Jika avatar adalah URL (dari Google), kembalikan langsung.
+                return $this->avatar;
+            }
+            // Jika avatar adalah file lokal, buat URL storage.
             return asset('storage/' . $this->avatar);
         }
-        
-        // Default avatar jika tidak ada
-        return asset('assets/images/default-avatar.png');
+
+        // Jika tidak ada avatar, kembalikan gambar default.
+        return asset('assets/images/avatar.jpg');
     }
 }

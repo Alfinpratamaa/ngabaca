@@ -1,15 +1,16 @@
 <?php
 
-use App\Http\Controllers\AdminUserController;
-use App\Http\Controllers\BookController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\PaymentController;
-use App\Livewire\CartPage;
 use App\Livewire\Home;
 use App\Models\Payment;
+use Livewire\Volt\Volt;
+use App\Livewire\CartPage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Livewire\Volt\Volt;
+use App\Http\Controllers\BookController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\GoogleController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\AdminUserController;
 
 Route::get('/', function () {
     return view('home');
@@ -32,6 +33,11 @@ Route::get('/cart', function () {
 })->name('cart');
 
 Route::get('book/{slug}', [BookController::class, 'show'])->name('book.show');
+
+Route::controller(GoogleController::class)->group(function () {
+    Route::get('auth/google', 'redirectToGoogle')->name('auth.google');
+    Route::get('auth/google/callback', 'handleGoogleCallback');
+});
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');

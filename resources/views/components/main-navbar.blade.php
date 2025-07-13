@@ -3,7 +3,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
             <a href="{{ route('home') }}" wire:navigate class="flex items-center flex-shrink-0">
-                <flux:icon.book-open class="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 mr-1 sm:mr-2" />
+                <img src="{{ asset('logo.png') }}" alt="Logo" class="h-8 w-auto mr-2" />
                 <span class="text-lg sm:text-xl font-bold text-secondary">Ngabaca</span>
             </a>
 
@@ -48,8 +48,7 @@
                     @livewire('cart-counter')
 
                     <flux:dropdown position="bottom" align="end">
-                        <flux:profile icon-variant="micro" circle
-                            avatar="{{ auth()->user()->avatar ? asset('storage/' . auth()->user()->avatar) : asset('assets/images/avatar.jpg') }}"
+                        <flux:profile icon-variant="micro" circle avatar="{{ auth()->user()->avatar_url }}"
                             class="h-8 w-8 sm:h-9 sm:w-9" />
                         <flux:navmenu>
                             <flux:navmenu.item icon="user" wire:navigate href="{{ route('settings.profile') }}">Profile

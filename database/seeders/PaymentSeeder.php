@@ -19,14 +19,16 @@ class PaymentSeeder extends Seeder
         $adminUser = User::where('role', 'admin')->first();
 
         if (!$orderWithNoPayment || !$adminUser) {
-            $this->command->warn("Tidak cukup Order tanpa Payment atau User admin untuk membuat Payment. Jalankan OrderSeeder dan UserSeeder terlebih dahulu.");
+            $this->command->warn(
+                'Tidak cukup Order tanpa Payment atau User admin untuk membuat Payment. Jalankan OrderSeeder dan UserSeeder terlebih dahulu.'
+            );
             return;
         }
 
         Payment::create([
             'order_id' => $orderWithNoPayment->id,
             'transaction_id' => 'TRX-' . uniqid(),
-            'amount' => $orderWithNoPayment->total_amount,
+            'total_price' => $orderWithNoPayment->total_price,
             'currency' => 'IDR',
             'payment_method' => 'bank_transfer',
             'proof_url' => 'https://example.com/proof/transfer_abc.jpg',
@@ -39,11 +41,11 @@ class PaymentSeeder extends Seeder
 
         $orderWithNoPayment2 = Order::has('payment', '=', 0)->skip(1)->first();
 
-        if ($orderWithNoPayment2) {
-             Payment::create([
+        if ($orderWithNoPayment2 && $orderWithNoPayment2->total_price) {
+            Payment::create([
                 'order_id' => $orderWithNoPayment2->id,
                 'transaction_id' => 'TRX-' . uniqid(),
-                'amount' => $orderWithNoPayment2->total_amount,
+                'total_price' => $orderWithNoPayment2->total_price,
                 'currency' => 'IDR',
                 'payment_method' => 'e_wallet',
                 'proof_url' => null,
@@ -53,6 +55,8 @@ class PaymentSeeder extends Seeder
                 'verified_at' => now(),
                 'verified_by' => $adminUser->id,
             ]);
+        } else {
+            $this->command->warn('Second order not found or has null total_price. Skipping second payment creation.');
         }
     }
 }

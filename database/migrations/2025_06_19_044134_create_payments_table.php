@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->unique()->constrained('orders')->onDelete('cascade');
             $table->string('transaction_id')->unique()->nullable();
-            $table->decimal('amount', 10, 2);
+            $table->decimal('total_price', 10, 2);
             $table->string('currency', 3)->default('IDR');
             $table->string('payment_method', 50)->nullable();
             $table->string('proof_url')->nullable();

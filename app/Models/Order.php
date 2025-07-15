@@ -15,10 +15,15 @@ class Order extends Model
      */
     protected $fillable = [
         'user_id',
-        'total_amount',
+        'total_price',
         'status',
         'shipping_address',
     ];
+
+    // Add status constants for consistency
+    const STATUS_DIPROSES = 'diproses';
+    const STATUS_SELESAI = 'terpenuhi';
+    const STATUS_BATAL = 'batal';
 
     public function user()
     {
@@ -32,5 +37,17 @@ class Order extends Model
      public function payment()
     {
         return $this->hasOne(Payment::class);
+    }
+
+    // Helper method to get formatted status
+    public function getFormattedStatusAttribute()
+    {
+        return match($this->status) {
+            'pending' => 'Pending',
+            'diproses' => 'Diproses',
+            'terpenuhi' => 'Terpenuhi',
+            'batal' => 'Batal',
+            default => ucfirst($this->status)
+        };
     }
 }

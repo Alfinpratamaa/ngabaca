@@ -8,7 +8,13 @@ use Illuminate\Validation\Rules;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new #[Layout('components.layouts.main')] class extends Component {
+new #[
+    Layout('components.layouts.main', [
+        'title' => 'Register',
+        'description' => 'Buat akun baru untuk mulai menjelajah koleksi buku kami.',
+    ]),
+]
+class extends Component {
     public string $name = '';
     public string $email = '';
     public string $password = '';

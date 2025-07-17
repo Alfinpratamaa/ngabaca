@@ -76,6 +76,10 @@ jobs:
                   script: |
                       export LARAVEL_ENV_ENCRYPTION_KEY='${{ secrets.LARAVEL_ENV_ENCRYPTION_KEY }}'
                       export GITHUB_REPOSITORY='${{ github.repository }}'
+                      export DB_HOST='${{ secrets.DB_HOST }}'
+                      export DB_USERNAME='${{ secrets.DB_USERNAME }}'
+                      export DB_PASSWORD='${{ secrets.DB_PASSWORD }}'
+
                       chmod +x ~/deploy.sh
                       ~/deploy.sh
 

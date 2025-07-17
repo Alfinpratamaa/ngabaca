@@ -18,7 +18,7 @@
                             class="w-full h-auto rounded-lg shadow-md">
                     </div>
                     <div class="md:w-2/3 p-6">
-                        <h1 class="text-3xl font-bold text-primary mb-4">{{ $book->title }}</h1> {{-- Judul Buku --}}
+                        <h1 class="text-3xl font-bold text-primary mb-2">{{ $book->title }}</h1> {{-- Judul Buku --}}
 
                         <div class="mb-1"> {{-- nama penulis --}}
                             <span class="text-sm text-secondary font-medium">Penulis:</span>
@@ -57,7 +57,7 @@
                         </div>
 
                         <div class="mb-1"> {{-- deskripsi buku --}}
-                            <p class="text-secondary mt-2 leading-relaxed">{{ $book->description }}</p>
+                            <p class="text-sm text-secondary mt-2 leading-relaxed">{{ $book->description }}</p>
                         </div>
 
                         <div class="mb-1">
@@ -71,13 +71,40 @@
                         </div>
 
                         <div class="flex gap-3">
+
+                            <div class="relative flex items-center max-w-[8rem]">
+                                <!-- Tombol minus -->
+                                <button onclick="decrement()"
+                                    class="hover:bg-primary hover:text-white transition-colors border border-primary rounded-s-lg p-3 h-11">
+                                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 2">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h16"/>
+                                    </svg>
+                                </button>
+
+                                <!-- Input jumlah -->
+                                <input type="text" id="quantity" name="quantity" value="1"
+                                    class="h-11 text-center text-sm block w-full py-2.5 border-y border-primary text-gray-900" placeholder="999" required oninput="sanitizeInput(this)">
+
+                                <!-- Tombol plus -->
+                                <button onclick="increment()"
+                                    class="bg-primary border border-primary hover:bg-primary/90 transition-colors rounded-e-lg p-3 h-11">
+                                    <svg class="w-3 h-3 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 18">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 1v16M1 9h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Tombol Tambah ke Keranjang dan Favorit -->
                             <button
                                 class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors">
-                                Baca Sekarang
+                                Beli Sekarang
                             </button>
+
                             <button
                                 class="border border-primary text-primary px-6 py-2 rounded-lg hover:bg-primary hover:text-white transition-colors">
-                                Tambah ke Favorit
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                                </svg>
                             </button>
                         </div>
                     </div>
@@ -85,4 +112,27 @@
             </div>
         </div>
     </div>
+
+    \<script>
+        function increment() {
+        let qty = document.getElementById('quantity');
+        let current = parseInt(qty.value) || 0; // kalau kosong, mulai dari 0
+        qty.value = current + 1;
+    }
+
+    function decrement() {
+        let qty = document.getElementById('quantity');
+        let current = parseInt(qty.value) || 0;
+        if (current > 1) {
+            qty.value = current - 1;
+        } else {
+            qty.value = ''; // kembali kosong jika di bawah 1
+        }
+    }
+
+    function sanitizeInput(input) {
+        // Hanya izinkan angka
+        input.value = input.value.replace(/[^0-9]/g, '');
+        }
+    </script>
 </x-layouts.main>

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e  
+
 
 echo "Starting installation process..."
 

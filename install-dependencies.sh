@@ -6,7 +6,7 @@ echo "Starting installation process..."
 
 # Update system packages
 echo "Updating system packages..."
-sudo apt update && sudo apt upgrade -y
+sudo apt update 
 
 # Add PHP 8.4 repository
 echo "Adding PHP 8.4 repository..."
@@ -22,19 +22,6 @@ sudo apt install -y \
     php8.4-cli \
     php8.4-common \
     php8.4-pgsql \
-    php8.4-xml \
-    php8.4-xmlrpc \
-    php8.4-curl \
-    php8.4-gd \
-    php8.4-imagick \
-    php8.4-dev \
-    php8.4-imap \
-    php8.4-mbstring \
-    php8.4-opcache \
-    php8.4-soap \
-    php8.4-zip \
-    php8.4-intl \
-    php8.4-bcmath
 
 # Install PostgreSQL CLI
 echo "Installing PostgreSQL CLI..."

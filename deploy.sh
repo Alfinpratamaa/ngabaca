@@ -77,12 +77,20 @@ if [ -f .env.encrypted ]; then
 
     chmod +x env.sh
 
-    ./env.sh --production \
+    if [ -z "$DB_HOST" & & -z "$DB_USERNAME" && -z "$DB_PASSWORD" ]; then
+        echo "No database credentials provided. Using defaults from .env.encrypted."
+    else
+        ./env.sh --production \
         "$LARAVEL_ENV_ENCRYPTION_KEY" \
         "$DB_HOST" \
         "$DB_USERNAME" \
         "$DB_PASSWORD"
-
+        if [ $? -ne 0 ]; then
+            echo "Error: Failed to set environment variables. Please check your inputs."
+            exit 1
+        fi
+    fi
+    
     if [ $? -ne 0 ]; then
         echo "Error: Decryption failed. Please check your encryption key and .env.encrypted file."
         exit 1

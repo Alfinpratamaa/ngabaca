@@ -5,9 +5,9 @@ ENCRYPTED_FILE=".env.encrypted"
 ENV_MODE=""
 KEY=""
 ACTION=""
-DB_HOST="${DB_HOST:-localhost}"
-DB_USERNAME="${DB_USERNAME:-postgres}"
-DB_PASSWORD="${DB_PASSWORD:-postgres}"
+DB_HOST=""
+DB_USERNAME=""
+DB_PASSWORD=""
 
 # Fungsi bantuan
 function show_help() {

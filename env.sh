@@ -9,7 +9,6 @@ DB_HOST=""
 DB_USERNAME=""
 DB_PASSWORD=""
 
-# Fungsi bantuan
 function show_help() {
     echo "Usage:"
     echo "  Encrypt: ./env.sh encrypt your_secret_key"
@@ -19,7 +18,6 @@ function show_help() {
     exit 1
 }
 
-# Enkripsi
 function encrypt_env() {
     if [ ! -f "$ENV_FILE" ]; then
         echo "❌ File $ENV_FILE tidak ditemukan."
@@ -30,7 +28,6 @@ function encrypt_env() {
     echo "✅ Enkripsi selesai. Hasil disimpan di $ENCRYPTED_FILE"
 }
 
-# Dekripsi dan pengaturan env
 function decrypt_and_set_env() {
     if [ ! -f "$ENCRYPTED_FILE" ]; then
         echo "❌ File $ENCRYPTED_FILE tidak ditemukan."
@@ -43,7 +40,7 @@ function decrypt_and_set_env() {
     case $ENV_MODE in
         local)
             sed -i 's|^APP_ENV=.*|APP_ENV=local|' "$ENV_FILE"
-            sed -i 's|http[s]\?://[^"]*|http://localhost:8000|g' "$ENV_FILE"
+            sed -i 's|^APP_URL=.*|APP_URL=http://localhost:8000|' "$ENV_FILE"
             sed -i 's|^DB_HOST=.*|DB_HOST=127.0.0.1|' "$ENV_FILE"
             sed -i 's|^DB_USERNAME=.*|DB_USERNAME=postgres|' "$ENV_FILE"
             sed -i 's|^DB_PASSWORD=.*|DB_PASSWORD=postgres|' "$ENV_FILE"
@@ -51,14 +48,21 @@ function decrypt_and_set_env() {
         staging|production)
             sed -i "s|^APP_ENV=.*|APP_ENV=$ENV_MODE|" "$ENV_FILE"
             if [ "$ENV_MODE" = "staging" ]; then
-                sed -i 's|http[s]\?://[^"]*|https://staging.ngabaca.me|g' "$ENV_FILE"
+                sed -i 's|^APP_URL=.*|APP_URL=https://staging.ngabaca.me|' "$ENV_FILE"
             else
-                sed -i 's|http[s]\?://[^"]*|https://ngabaca.me|g' "$ENV_FILE"
+                sed -i 's|^APP_URL=.*|APP_URL=https://ngabaca.me|' "$ENV_FILE"
             fi
 
             sed -i "s|^DB_HOST=.*|DB_HOST=$DB_HOST|" "$ENV_FILE"
             sed -i "s|^DB_USERNAME=.*|DB_USERNAME=$DB_USERNAME|" "$ENV_FILE"
             sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=$DB_PASSWORD|" "$ENV_FILE"
+
+            APP_URL=$(grep '^APP_URL=' "$ENV_FILE" | cut -d '=' -f2 | tr -d '"')
+            if [ -z "$APP_URL" ]; then
+                echo "❌ APP_URL tidak ditemukan, GOOGLE_REDIRECT_URI tidak bisa di-set"
+            else
+                sed -i "s|^GOOGLE_REDIRECT_URI=.*|GOOGLE_REDIRECT_URI=${APP_URL}/auth/google/callback|" "$ENV_FILE"
+            fi
             ;;
         *)
             echo "❌ Invalid environment: $ENV_MODE"

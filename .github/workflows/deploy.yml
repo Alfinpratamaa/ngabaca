@@ -99,20 +99,42 @@ jobs:
                   username: ${{ secrets.EC2_USER }}
                   key: ${{ secrets.SSH_PRIVATE_KEY }}
                   script: |
-                      sed -i 's|server_name localhost;|server_name ${{ env.APP_DOMAIN }};|g' ~/laravel-app-deployment/nginx_config/nginx.conf
+                      set -e
 
-                      sudo rm -f /etc/nginx/sites-enabled/default || true
-                      sudo rm -f /etc/nginx/sites-enabled/ngabaca.conf || true
+                      # Buat direktori nginx_config jika belum ada
+                      mkdir -p ~/laravel-app-deployment/nginx_config
 
-                      sudo ln -sf ~/laravel-app-deployment/nginx_config/nginx.conf /etc/nginx/sites-available/ngabaca.conf
-                      sudo ln -sf /etc/nginx/sites-available/ngabaca.conf /etc/nginx/sites-enabled/ngabaca.conf
+                      # Hapus link lama jika ada
+                      sudo rm -f /etc/nginx/sites-available/ngabaca.conf
+                      sudo rm -f /etc/nginx/sites-enabled/ngabaca.conf
 
-                      echo "Testing nginx config..."
+                      # Buat symlink baru ke nginx.conf yang baru diupload
+                      sudo ln -s ~/laravel-app-deployment/nginx_config/nginx.conf /etc/nginx/sites-available/ngabaca.conf
+                      sudo ln -s /etc/nginx/sites-available/ngabaca.conf /etc/nginx/sites-enabled/ngabaca.conf
+
+                      # Uji konfigurasi dan restart
+                      echo "Testing Nginx config"
                       sudo nginx -t
 
-                      echo "Restarting nginx and PHP-FPM..."
+                      echo "Restarting Nginx and PHP-FPM"
                       sudo systemctl restart nginx
-                      sudo systemctl restart php8.4-fpm
+                      sudo systemctl restart php8.4-fpm # Ganti versi PHP jika perlu
+
+                      echo "✅ Nginx and PHP-FPM restarted successfully."
+
+            - name: Install https
+              uses: appleboy/ssh-action@v0.1.10
+              with:
+                  host: ${{ secrets.EC2_HOST }}
+                  username: ${{ secrets.EC2_USER }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  script: |
+                      set -e
+                      export CONTACT_EMAIL='${{ secrets.CONTACT_EMAIL }}'
+                      export APP_DOMAIN='${{ env.APP_DOMAIN }}'
+                      echo "Installing HTTPS for domain: $APP_DOMAIN"
+                      chmod +x ~/install-https.sh
+                      ~/install-https.sh
 
             # --- Verifikasi deploy ---
             - name: Verify Deployment

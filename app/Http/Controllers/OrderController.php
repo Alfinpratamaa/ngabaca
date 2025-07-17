@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use \App\Models\Order; 
+use \App\Models\Order;
 class OrderController extends Controller
 {
     /**
@@ -11,8 +11,7 @@ class OrderController extends Controller
      */
     public function index()
     {
-        $orders = Order::with(['user', 'book'])->latest()->paginate(10);
-        return view('admin.order.index', compact('orders'));
+        return view('admin.order.index');
     }
 
     /**
@@ -28,7 +27,7 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
-        
+
     }
 
     /**

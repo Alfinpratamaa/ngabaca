@@ -2,6 +2,12 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{{ $title ?? 'Ngabaca' }}</title>
+    <meta name="description"
+        content="{{ $description ?? 'Explore our vast collection of books, from timeless classics to the latest releases. Find your next adventure today.' }}">
     @include('partials.head')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
@@ -19,7 +25,7 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div class="col-span-1 md:col-span-2">
                     <div class="flex items-center mb-4">
-                        <flux:icon.book-open class="h-8 w-8 text-blue-600 mr-2" />
+                        <img src="{{ asset('logo.png') }}" alt="Ngabaca Logo" class="h-8 w-auto mr-2" />
                         <span class="text-xl font-bold text-gray-900">Ngabaca</span>
                     </div>
                     <p class="text-gray-600 mb-4">

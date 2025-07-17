@@ -22,7 +22,7 @@ class OrderSeeder extends Seeder
         }
 
         if ($pelangganUsers->isNotEmpty()) {
-            $statuses = ['Diproses', 'Terpenuhi', 'Batal'];
+            $statuses = ['diproses', 'terpenuhi', 'batal'];
 
             // Buat beberapa order dengan variasi user dan data
             foreach ($pelangganUsers as $user) {
@@ -33,7 +33,7 @@ class OrderSeeder extends Seeder
                     Order::create([
                         'user_id' => $user->id,
                         'total_price' => rand(50000, 500000), // Harga random
-                        'status' => 'Diproses',
+                        'status' => $statuses[array_rand($statuses)],
                         // Berikan alamat dummy untuk tampilan yang lebih baik
                         'shipping_address' => $this->getRandomAddress(),
                     ]);

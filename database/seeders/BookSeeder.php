@@ -29,9 +29,8 @@ class BookSeeder extends Seeder
             'price' => 125000.00,
             'stock' => 50,
             'cover_image_url' => 'https://picsum.photos/seed/book1/200/300',
-            'preview_file_url' => 'https://example.com/preview_space.pdf',
-            'secure_file_url' => 'https://example.com/secure_space.pdf',
-            'category_name' => $categories->random()->name, 
+            'private_file_path' => 'books/space_adventure.pdf',
+            'category_name' => $categories->random()->name,
             ],
             [
             'title' => 'Misteri Rumah Tua',
@@ -40,8 +39,7 @@ class BookSeeder extends Seeder
             'price' => 98500.00,
             'stock' => 30,
             'cover_image_url' => 'https://picsum.photos/seed/book2/200/300',
-            'preview_file_url' => 'https://example.com/preview_mystery.pdf',
-            'secure_file_url' => 'https://example.com/secure_mystery.pdf',
+            'private_file_path' => 'books/mystery_house.pdf',
             'category_name' => $categories->random()->name,
             ],
             [
@@ -51,8 +49,7 @@ class BookSeeder extends Seeder
             'price' => 75000.00,
             'stock' => 20,
             'cover_image_url' => 'https://picsum.photos/seed/book3/200/300',
-            'preview_file_url' => 'https://example.com/preview_cookbook.pdf',
-            'secure_file_url' => 'https://example.com/secure_cookbook.pdf',
+            'private_file_path' => 'books/secret_recipes.pdf',
             'category_name' => $categories->random()->name,
             ],
             [
@@ -62,8 +59,7 @@ class BookSeeder extends Seeder
             'price' => 110000.00,
             'stock' => 40,
             'cover_image_url' => 'https://picsum.photos/seed/book4/200/300',
-            'preview_file_url' => 'https://example.com/preview_selfhelp.pdf',
-            'secure_file_url' => 'https://example.com/secure_selfhelp.pdf',
+            'private_file_path' => 'books/rise_from_failure.pdf',
             'category_name' => $categories->random()->name,
             ],
         ];
@@ -117,8 +113,7 @@ class BookSeeder extends Seeder
             'price' => rand(50000, 200000),
             'stock' => rand(10, 100),
             'cover_image_url' => 'https://picsum.photos/seed/book' . $i . '/200/300',
-            'preview_file_url' => 'https://example.com/preview_book' . $i . '.pdf',
-            'secure_file_url' => 'https://example.com/secure_book' . $i . '.pdf',
+            'private_file_path' => 'books/book_' . $i . '.pdf',
             'category_name' => $categories->random()->name,
             ];
         }
@@ -134,9 +129,8 @@ class BookSeeder extends Seeder
                     'price' => $bookData['price'],
                     'stock' => $bookData['stock'],
                     'cover_image_url' => $bookData['cover_image_url'],
-                    'preview_file_url' => $bookData['preview_file_url'],
-                    'secure_file_url' => $bookData['secure_file_url'],
-                    'category_id' => $category->id, 
+                    'private_file_path' => $bookData['private_file_path'],
+                    'category_id' => $category->id,
                 ]);
             } else {
                 $this->command->warn("Kategori '{$bookData['category_name']}' tidak ditemukan untuk buku '{$bookData['title']}'.");

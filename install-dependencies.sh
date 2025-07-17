@@ -122,7 +122,7 @@ if ! $PHP_INSTALLED || ! $PHP_FPM_INSTALLED; then
         php8.4-cli \
         php8.4-common \
         php8.4-pgsql \
-        php8.4-xml 
+        php8.4-xml \
 else
     # Check and install missing PHP extensions even if PHP is already installed
     echo "Checking PHP extensions..."

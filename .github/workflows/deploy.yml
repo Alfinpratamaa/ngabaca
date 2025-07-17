@@ -16,7 +16,7 @@ jobs:
             - name: Checkout Repository
               uses: actions/checkout@v4
 
-            # --- Persiapan SSH untuk EC2 ---
+            # --- Setup SSH untuk EC2 ---
             - name: Set up SSH
               uses: webfactory/ssh-agent@v0.8.0
               with:
@@ -27,7 +27,7 @@ jobs:
                   mkdir -p ~/.ssh
                   ssh-keyscan ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-            # --- Upload deploy & install script to EC2 ---
+            # --- Upload script dan file ke EC2 ---
             - name: Upload install-dependencies.sh
               uses: appleboy/scp-action@v0.1.4
               with:
@@ -46,16 +46,25 @@ jobs:
                   source: 'deploy.sh'
                   target: '~/'
 
-            - name: Upload Nginx config
+            - name: Upload env.sh
+              uses: appleboy/scp-action@v0.1.4
+              with:
+                  host: ${{ secrets.EC2_HOST }}
+                  username: ${{ secrets.EC2_USER }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  source: 'env.sh'
+                  target: '~/'
+
+            - name: Upload nginx.conf
               uses: appleboy/scp-action@v0.1.4
               with:
                   host: ${{ secrets.EC2_HOST }}
                   username: ${{ secrets.EC2_USER }}
                   key: ${{ secrets.SSH_PRIVATE_KEY }}
                   source: 'nginx/nginx.conf'
-                  target: '~/nginx_temp/'
+                  target: '~/laravel-app-deployment/nginx_config/'
 
-            # --- Jalankan script install di EC2 ---
+            # --- Jalankan script install dependencies di EC2 ---
             - name: Run install-dependencies.sh on EC2
               uses: appleboy/ssh-action@v0.1.10
               with:
@@ -66,7 +75,7 @@ jobs:
                       chmod +x ~/install-dependencies.sh
                       ~/install-dependencies.sh
 
-            # --- Eksekusi deploy.sh di EC2 ---
+            # --- Jalankan deploy.sh di EC2 ---
             - name: Run deploy.sh on EC2
               uses: appleboy/ssh-action@v0.1.10
               with:
@@ -79,11 +88,10 @@ jobs:
                       export DB_HOST='${{ secrets.DB_HOST }}'
                       export DB_USERNAME='${{ secrets.DB_USERNAME }}'
                       export DB_PASSWORD='${{ secrets.DB_PASSWORD }}'
-
                       chmod +x ~/deploy.sh
                       ~/deploy.sh
 
-            # --- Konfigurasi Nginx ---
+            # --- Setup Nginx di EC2 ---
             - name: Configure and Restart Nginx/PHP-FPM on EC2
               uses: appleboy/ssh-action@v0.1.10
               with:
@@ -91,24 +99,22 @@ jobs:
                   username: ${{ secrets.EC2_USER }}
                   key: ${{ secrets.SSH_PRIVATE_KEY }}
                   script: |
-                      mkdir -p ~/laravel-app-deployment/nginx_config
-
-                      cat ./nginx/nginx.conf | sed 's|server_name localhost;|server_name ${{ env.APP_DOMAIN }};|g' | ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} 'cat > ~/laravel-app-deployment/nginx_config/ngabaca.conf'
+                      sed -i 's|server_name localhost;|server_name ${{ env.APP_DOMAIN }};|g' ~/laravel-app-deployment/nginx_config/nginx.conf
 
                       sudo rm -f /etc/nginx/sites-enabled/default || true
                       sudo rm -f /etc/nginx/sites-enabled/ngabaca.conf || true
 
-                      sudo ln -s ~/laravel-app-deployment/nginx_config/ngabaca.conf /etc/nginx/sites-available/ngabaca.conf
-                      sudo ln -s /etc/nginx/sites-available/ngabaca.conf /etc/nginx/sites-enabled/ngabaca.conf
+                      sudo ln -sf ~/laravel-app-deployment/nginx_config/nginx.conf /etc/nginx/sites-available/ngabaca.conf
+                      sudo ln -sf /etc/nginx/sites-available/ngabaca.conf /etc/nginx/sites-enabled/ngabaca.conf
 
+                      echo "Testing nginx config..."
                       sudo nginx -t
 
+                      echo "Restarting nginx and PHP-FPM..."
                       sudo systemctl restart nginx
-                      sudo systemctl restart php8.4-fpm # <-- Pastikan versi PHP ini benar di EC2
-                      "
-                      echo "Nginx and PHP-FPM configured and restarted on EC2."
+                      sudo systemctl restart php8.4-fpm
 
-            # --- Verifikasi Deploy ---
+            # --- Verifikasi deploy ---
             - name: Verify Deployment
               run: |
                   echo "Verifying application..."
@@ -117,4 +123,3 @@ jobs:
                   curl -k https://${{ env.APP_DOMAIN }} || true
                   echo ""
                   echo "Application verified!"
-                  echo "Deployment completed successfully!"

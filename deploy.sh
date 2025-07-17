@@ -77,7 +77,7 @@ if [ -f .env.encrypted ]; then
 
     chmod +x env.sh
 
-    if [ -z "$DB_HOST" & & -z "$DB_USERNAME" && -z "$DB_PASSWORD" ]; then
+    if [ -z "$DB_HOST" ] && [ -z "$DB_USERNAME" ] && [ -z "$DB_PASSWORD" ]; then
         echo "No database credentials provided. Using defaults from .env.encrypted."
     else
         ./env.sh --production \

@@ -87,20 +87,22 @@ jobs:
                   username: ${{ secrets.EC2_USER }}
                   key: ${{ secrets.SSH_PRIVATE_KEY }}
                   script: |
-                      sudo mkdir -p /etc/nginx/sites-available
-                      sudo mkdir -p /etc/nginx/sites-enabled
-                      DOMAIN=${{ env.APP_DOMAIN }}
+                      mkdir -p ~/laravel-app-deployment/nginx_config
 
-                      sudo sed "s|server_name localhost;|server_name $DOMAIN;|" ~/nginx_temp/nginx.conf > ~/nginx_temp/ngabaca.conf
+                      cat ./nginx/nginx.conf | sed 's|server_name localhost;|server_name ${{ env.APP_DOMAIN }};|g' | ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} 'cat > ~/laravel-app-deployment/nginx_config/ngabaca.conf'
 
-                      sudo mv ~/nginx_temp/ngabaca.conf /etc/nginx/sites-available/ngabaca.conf
+                      sudo rm -f /etc/nginx/sites-enabled/default || true
+                      sudo rm -f /etc/nginx/sites-enabled/ngabaca.conf || true
 
-                      sudo rm -f /etc/nginx/sites-enabled/default
-                      sudo ln -sf /etc/nginx/sites-available/ngabaca.conf /etc/nginx/sites-enabled/ngabaca.conf
+                      sudo ln -s ~/laravel-app-deployment/nginx_config/ngabaca.conf /etc/nginx/sites-available/ngabaca.conf
+                      sudo ln -s /etc/nginx/sites-available/ngabaca.conf /etc/nginx/sites-enabled/ngabaca.conf
 
                       sudo nginx -t
+
                       sudo systemctl restart nginx
-                      sudo systemctl restart php8.4-fpm
+                      sudo systemctl restart php8.4-fpm # <-- Pastikan versi PHP ini benar di EC2
+                      "
+                      echo "Nginx and PHP-FPM configured and restarted on EC2."
 
             # --- Verifikasi Deploy ---
             - name: Verify Deployment

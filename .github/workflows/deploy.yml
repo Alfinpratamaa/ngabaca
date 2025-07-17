@@ -28,10 +28,19 @@ jobs:
                   ssh-keyscan ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
                   chmod 600 ~/.ssh/known_hosts
 
+            - name: Install Dependencies
+              run: |
+                  echo "Installing dependencies..."
+                  apt update
+                  chmod +x ./install-dependencies.sh
+                  ./install-dependencies.sh
+
             # --- Bagian Deployment ke EC2 ---
             - name: Execute Deployment Script on EC2
               run: |
                   echo "Starting deployment via deploy.sh on EC2.."
+
+
 
                   chmod +x ./deploy.sh
 

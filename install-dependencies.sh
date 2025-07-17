@@ -121,7 +121,37 @@ if ! $PHP_INSTALLED || ! $PHP_FPM_INSTALLED; then
         php8.4-fpm \
         php8.4-cli \
         php8.4-common \
-        php8.4-pgsql
+        php8.4-pgsql \
+        php8.4-xml 
+else
+    # Check and install missing PHP extensions even if PHP is already installed
+    echo "Checking PHP extensions..."
+    
+    EXTENSIONS=(
+        "php8.4-fpm"
+        "php8.4-cli" 
+        "php8.4-common"
+        "php8.4-pgsql"
+        "php8.4-xml"
+    )
+    
+    MISSING_EXTENSIONS=()
+    
+    for ext in "${EXTENSIONS[@]}"; do
+        if ! package_installed "$ext"; then
+            echo "✗ $ext not installed"
+            MISSING_EXTENSIONS+=("$ext")
+        else
+            echo "✓ $ext is installed"
+        fi
+    done
+    
+    if [ ${#MISSING_EXTENSIONS[@]} -gt 0 ]; then
+        echo "Installing missing PHP extensions..."
+        sudo apt install -y "${MISSING_EXTENSIONS[@]}"
+    else
+        echo "All PHP extensions are already installed"
+    fi
 fi
 
 # Install PostgreSQL CLI if not installed

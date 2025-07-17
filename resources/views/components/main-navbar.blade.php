@@ -37,15 +37,15 @@
                 </div>
 
 
-                @auth
-                    <a href="/whislist" class="p-1 rounded-md bg-muted block">
-                        <flux:button variant="ghost" size="sm" class="cursor-pointer">
-                            <flux:icon.heart class="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
-                        </flux:button>
-                    </a>
+                <a href="/whislist" class="p-1 rounded-md bg-muted block">
+                    <flux:button variant="ghost" size="sm" class="cursor-pointer">
+                        <flux:icon.heart class="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                    </flux:button>
+                </a>
 
-                    {{-- Ini seharusnya tetap berfungsi normal karena tidak ada x-data di nav lagi --}}
-                    @livewire('cart-counter')
+                {{-- Ini seharusnya tetap berfungsi normal karena tidak ada x-data di nav lagi --}}
+                @livewire('cart-counter')
+                @auth
 
                     <flux:dropdown position="bottom" align="end">
                         <flux:profile icon-variant="micro" circle avatar="{{ auth()->user()->avatar_url }}"

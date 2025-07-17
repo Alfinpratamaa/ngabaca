@@ -49,7 +49,7 @@
                 <!-- Content Container -->
                 <div class="px-4 pb-4 flex flex-col flex-1">
                     <a href="{{ route('book.show', $book->slug) }}" wire:navigate class="flex-1">
-                        <h3 class="font-bold text-md text-secondary mb-1 line-clamp-2">{{ $book->title }}</h3>
+                        <h3 class="font-bold text-md text-secondary mb-1 line-clamp-1">{{ $book->title }}</h3>
                         <p class="text-gray-600 text-sm mb-2 line-clamp-1">{{ $book->author }}</p>
                         <span class="text-secondary font-bold text-lg mb-3 block">Rp.
                             {{ number_format($book->price, 0, ',', '.') }}</span>

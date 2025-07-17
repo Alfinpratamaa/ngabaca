@@ -31,7 +31,6 @@ jobs:
             - name: Install Dependencies
               run: |
                   echo "Installing dependencies..."
-                  apt update
                   chmod +x ./install-dependencies.sh
                   ./install-dependencies.sh
 

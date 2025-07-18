@@ -12,16 +12,13 @@ class CategoryController extends Controller
     public function index()
     {
         $categories = \App\Models\Category::all();
-        return view('categories.index', compact('categories'));
+        return view('admin.category.index', compact('categories'));
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
-        return view('categories.create');
-    }
+
 
     /**
      * Store a newly created resource in storage.
@@ -30,12 +27,13 @@ class CategoryController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|unique:categories,slug',
             'description' => 'nullable|string'
         ]);
 
         \App\Models\Category::create($request->all());
 
-        return redirect()->route('categories.index')->with('success', 'Category created successfully.');
+        return redirect()->route('admin.category.index')->with('success', 'Category created successfully.');
     }
 
     /**
@@ -44,12 +42,12 @@ class CategoryController extends Controller
     public function show($id)
     {
         $category = \App\Models\Category::findOrFail($id);
-        return view('categories.show', compact('category'));
+        return view('admin.category.show', compact('category'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
+    // /**
+    //  * Show the form for editing the specified resource.
+    //  */
     public function edit($id)
     {
         $category = \App\Models\Category::findOrFail($id);
@@ -63,13 +61,14 @@ class CategoryController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|unique:categories,slug,' . $id,
             'description' => 'nullable|string'
         ]);
 
         $category = \App\Models\Category::findOrFail($id);
         $category->update($request->all());
 
-        return redirect()->route('categories.index')->with('success', 'Category updated successfully.');
+        return redirect()->route('admin.category.index')->with('success', 'Category updated successfully.');
     }
 
     /**
@@ -80,6 +79,6 @@ class CategoryController extends Controller
         $category = \App\Models\Category::findOrFail($id);
         $category->delete();
 
-        return redirect()->route('categories.index')->with('success', 'Category deleted successfully.');
+        return redirect()->route('admin.category.index')->with('success', 'Category deleted successfully.');
     }
 }

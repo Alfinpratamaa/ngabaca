@@ -11,6 +11,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\GoogleController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\CategoryController;
 
 Route::get('/', function () {
     return view('home');
@@ -58,6 +59,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('admin/user', AdminUserController::class)->names('admin.user');
     Route::resource('admin/order', OrderController::class)->names('admin.order');
     Route::resource('admin/payment', PaymentController::class)->names('admin.payment');
+    Route::resource('admin/category', CategoryController::class)->names('admin.category');
 });
 
 require __DIR__ . '/auth.php';

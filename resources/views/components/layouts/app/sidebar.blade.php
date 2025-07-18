@@ -23,6 +23,9 @@
                 <flux:navlist.item icon="home" :href="route('admin.dashboard')"
                     :current="request()->routeIs('admin.dashboard')" class="text-zinc-800 hover:text-zinc-900">
                     Dashboard</flux:navlist.item>
+                <flux:navlist.item icon="tag" :href="route('admin.category.index')"
+                    :current="request()->routeIs('admin.category.*')" class="text-zinc-800 hover:text-zinc-900">
+                    Category</flux:navlist.item>
                 <flux:navlist.item icon="book-open" :href="route('admin.book.index')"
                     :current="request()->routeIs('admin.book.*')" class="text-zinc-800 hover:text-zinc-900">
                     Book</flux:navlist.item>

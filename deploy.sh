@@ -74,17 +74,32 @@ if [ -f .env.encrypted ]; then
         echo "Error: openssl not found. Please install openssl on EC2 to decrypt .env.enc"
         exit 1
     fi
-    chmod +x script.sh
-    ./script.sh --production "$LARAVEL_ENV_ENCRYPTION_KEY"
+
+    chmod +x env.sh
+
+    if [ -z "$DB_HOST" ] && [ -z "$DB_USERNAME" ] && [ -z "$DB_PASSWORD" ]; then
+        echo "No database credentials provided. Using defaults from .env.encrypted."
+    else
+        ./env.sh --production \
+        "$LARAVEL_ENV_ENCRYPTION_KEY" \
+        "$DB_HOST" \
+        "$DB_USERNAME" \
+        "$DB_PASSWORD"
+        if [ $? -ne 0 ]; then
+            echo "Error: Failed to set environment variables. Please check your inputs."
+            exit 1
+        fi
+    fi
+    
     if [ $? -ne 0 ]; then
         echo "Error: Decryption failed. Please check your encryption key and .env.encrypted file."
         exit 1
     fi
-    echo ".env decrypted successfully."
+    echo ".env decrypted and DB settings configured successfully."
 else
-    echo "Warning: .env.enc not found. Skipping decryption."
+    echo "Warning: .env.encrypted not found. Skipping decryption."
 fi
-# --- Akhir Dekripsi .env ---
+
 
 # --- Instal Composer dependencies ---
 echo "Installing Composer dependencies..."

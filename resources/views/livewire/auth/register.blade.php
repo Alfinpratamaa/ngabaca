@@ -69,7 +69,7 @@ class extends Component {
                 @endif
 
                 <!-- Registration Form -->
-                <form wire:submit="register">
+                <form wire:submit.prevent="register">
                     <div class="flex flex-col gap-2 py-3">
                         <flux:input wire:model="name" label="Nama Lengkap"
                             class="bg-gray-200 rounded-md text-slate-900 [&_label]:text-slate-700" type="text"
@@ -95,6 +95,16 @@ class extends Component {
                         </flux:button>
                     </div>
                 </form>
+                @error('name')
+                    <span class="text-sm text-red-600">{{ $message }}</span>
+                @enderror
+                @error('email')
+                    <span class="text-sm text-red-600">{{ $message }}</span>
+                @enderror
+                @error('password')
+                    <span class="text-sm text-red-600">{{ $message }}</span>
+                @enderror
+
 
                 <!-- Login Link -->
                 <div class="py-3 text-center">

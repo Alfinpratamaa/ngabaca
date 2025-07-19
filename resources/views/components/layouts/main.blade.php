@@ -9,6 +9,7 @@
     <meta name="description"
         content="{{ $description ?? 'Explore our vast collection of books, from timeless classics to the latest releases. Find your next adventure today.' }}">
     @include('partials.head')
+    @livewireStyles
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
@@ -68,6 +69,7 @@
     </footer>
 
     @fluxScripts
+    @livewireScripts
 </body>
 
 </html>

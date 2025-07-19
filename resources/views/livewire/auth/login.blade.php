@@ -39,11 +39,25 @@ class extends Component {
 
         $this->ensureIsNotRateLimited();
 
+        $user = \App\Models\User::where('email', $this->email)->first();
+
+        if (!$user) {
+            throw ValidationException::withMessages([
+                'email' => 'Email tidak ditemukan. Silakan daftar terlebih dahulu.',
+            ]);
+        }
+
+        if (!empty($user->google_id)) {
+            throw ValidationException::withMessages([
+                'email' => 'Email ini hanya bisa login dengan Google. Silakan gunakan Google login atau ubah password.',
+            ]);
+        }
+
         if (!Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => __('auth.failed'),
+                'password' => 'Password salah. Silakan coba lagi.',
             ]);
         }
 
@@ -96,41 +110,63 @@ class extends Component {
     <div class="layout-container flex h-full grow flex-col">
         <div class="flex flex-1 justify-center">
             <div class="layout-content-container flex flex-col w-full max-w-md px-4">
+                <form wire:submit.prevent="login" class="flex flex-col p-6">
+                    <!-- Header -->
+                    <h2 class="text-[#0C161B] tracking-light text-[24px] font-bold leading-tight text-center pb-3 pt-5"
+                        style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                        {{ $title }}
+                    </h2>
 
-                <!-- Header -->
-                <h2 class="text-[#0C161B] tracking-light text-[24px] font-bold leading-tight text-center pb-3 pt-5"
-                    style="font-family: 'Plus Jakarta Sans', sans-serif;">
-                    {{ $title }}
-                </h2>
-
-                <!-- Description (jika ada) --
+                    <!-- Description (jika ada) --
                     <!-- Email Input -->
-                <div class="flex flex-col gap-2 py-3">
-                    <flux:input wire:model="email" label="Email Address"
-                        class="bg-gray-200 rounded-md text-slate-900 [&_label]:text-slate-700" type="email" required
-                        autofocus autocomplete="email" placeholder="email@example.com" />
-                    <flux:input wire:model="password" :label="__('Password')" type="password" placeholder="Password"
-                        required viewable autocomplete="current-password"
-                        class="bg-gray-200 rounded-md [&_label]:text-slate-700" />
-                </div>
+                    <div class="flex flex-col gap-2 py-3">
+                        <flux:input wire:model="email" label="Email Address"
+                            class="bg-gray-200 rounded-md text-slate-900 [&_label]:text-slate-700" type="email"
+                            required autofocus autocomplete="email" placeholder="email@example.com" />
+                        <flux:input wire:model="password" :label="__('Password')" type="password" placeholder="Password"
+                            required viewable autocomplete="current-password"
+                            class="bg-gray-200 rounded-md [&_label]:text-slate-700" />
+                    </div>
 
-                <!-- Remember Me (Optional) -->
-                <div class="flex items-center py-2">
-                    <label class="flex items-center">
-                        <input wire:model="remember" type="checkbox"
-                            class="rounded border-gray-300 text-[#2a9fed] shadow-sm focus:ring-[#2a9fed]">
-                        <span class="ml-2 text-sm text-[#4c7b9a]">{{ __('Ingat Saya') }}</span>
-                    </label>
-                </div>
+                    <!-- Remember Me (Optional) -->
+                    <div class="flex items-center py-2">
+                        <label class="flex items-center">
+                            <input wire:model="remember" type="checkbox"
+                                class="rounded border-gray-300 text-[#2a9fed] shadow-sm focus:ring-[#2a9fed]">
+                            <span class="ml-2 text-sm text-[#4c7b9a]">{{ __('Ingat Saya') }}</span>
+                        </label>
+                    </div>
 
-                <!-- Login Button -->
-                <div class="flex items-center justify-center">
-                    <flux:button variant="primary" type="submit"
-                        class="w-full cursor-pointer bg-primary hover:bg-primary/75 text-white font-semibold rounded-md px-4 py-2 transition-colors duration-200">
-                        {{ __('Log in') }}
-                    </flux:button>
-                </div>
+                    <!-- Login Button -->
+                    <div class="flex items-center justify-center">
+                        <flux:button variant="primary" type="submit"
+                            class="w-full cursor-pointer bg-primary hover:bg-primary/75 text-white font-semibold rounded-md px-4 py-2 transition-colors duration-200">
+                            {{ __('Log in') }}
+                        </flux:button>
+                    </div>
                 </form>
+
+                @error('email')
+                    <script>
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Login Gagal',
+                            text: @js($message),
+                        });
+                    </script>
+                @enderror
+
+                @error('password')
+                    <script>
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Login Gagal',
+                            text: @js($message),
+                        });
+                    </script>
+                @enderror
+
+
 
                 <!-- Forgot Password Link (Optional) -->
                 @if (Route::has('password.request'))
@@ -187,3 +223,18 @@ class extends Component {
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener('livewire:load', function() {
+        // Inisialisasi SweetAlert2
+        window.Swal = Swal;
+
+        // Tangani event error dari Livewire
+        Livewire.on('error', (message) => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Terjadi Kesalahan',
+                text: message,
+            });
+        });
+    });
+</script>

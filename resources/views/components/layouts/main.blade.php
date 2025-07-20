@@ -11,6 +11,11 @@
     @include('partials.head')
     @livewireStyles
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+
+
 </head>
 
 <body class="bg-surface">
@@ -70,6 +75,7 @@
 
     @fluxScripts
     @livewireScripts
+    @stack('scripts')
 </body>
 
 </html>

@@ -59,7 +59,7 @@ class GoogleController extends Controller
 
                 Auth::login($newUser);
 
-                return redirect()->intended('/');
+                return redirect()->route('verification')->with('success', 'Berhasil masuk dengan akun Google. Silakan verifikasi nomor telepon Anda.');
             }
         } catch (\Throwable $th) {
             if (env('APP_ENV') === 'local') {

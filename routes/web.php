@@ -12,6 +12,8 @@ use App\Http\Controllers\GoogleController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\MidtransController;
+use App\Livewire\CheckoutPage;
 
 Route::get('/', function () {
     return view('home');
@@ -42,15 +44,26 @@ Route::controller(GoogleController::class)->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
-
+    Route::get('/checkout', function () {
+        return view('checkout');
+    })->name('checkout');
     Volt::route('settings/profile', 'settings.profile')->name('settings.profile');
     Volt::route('settings/password', 'settings.password')->name('settings.password');
+    Route::get('/verification', function () {
+        $user = Auth::user();
+        if ($user->is_phone_verified === true || $user->role === 'admin') {
+            return redirect()->route('home');
+        }
+        return view('verification');
+    })->name('verification');
 });
 
 Route::middleware(['auth', 'role:pelanggan'])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
+
+    Route::post('/midtrans/notification', [MidtransController::class, 'notificationHandler'])->name('midtrans.notification');
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {

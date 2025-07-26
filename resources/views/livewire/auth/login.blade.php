@@ -66,12 +66,18 @@ class extends Component {
 
         $this->dispatch('$refresh');
 
+        if (session('after_login_redirect_to') === 'checkout') {
+            session()->pull('after_login_redirect_to');
+            $this->redirect(route('checkout'))->with('success', 'Berhasil masuk. Silakan lanjutkan checkout Anda.');
+            return;
+        }
+
         // Redirect dengan delay kecil
         $user = Auth::user();
         if ($user->role === 'admin') {
             $this->redirect(route('admin.dashboard'));
         } else {
-            $this->redirect(route('home'));
+            $this->redirect(session()->pull('url.intended', route('home')));
         }
     }
 

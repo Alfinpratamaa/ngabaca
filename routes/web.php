@@ -45,13 +45,17 @@ Route::controller(GoogleController::class)->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
     Route::get('/checkout', function () {
+        $user = Auth::user();
+        if (empty($user->email_verified_at) && $user->role !== 'admin') {
+            return redirect()->route('verification');
+        }
         return view('checkout');
     })->name('checkout');
     Volt::route('settings/profile', 'settings.profile')->name('settings.profile');
     Volt::route('settings/password', 'settings.password')->name('settings.password');
     Route::get('/verification', function () {
         $user = Auth::user();
-        if ($user->is_phone_verified === true || $user->role === 'admin') {
+        if (empty($user->email_verified_at) || $user->role === 'admin') {
             return redirect()->route('home');
         }
         return view('verification');

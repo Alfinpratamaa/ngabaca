@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
 class CartPage extends Component
@@ -99,6 +100,18 @@ class CartPage extends Component
             ->toArray();
 
         session()->flash('checkout_cart', $itemsToCheckout);
+        if (Auth::check()) {
+            // Jika sudah login, langsung ke checkout
+            return redirect()->route('checkout');
+        } else {
+            // Jika BELUM login:
+            // 1. Simpan tujuan di session
+            session(['after_login_redirect_to' => 'checkout']);
+
+            // 2. Arahkan ke halaman login
+            session()->flash('info', 'Anda harus login terlebih dahulu untuk melanjutkan ke checkout.');
+            return redirect()->route('login');
+        }
 
         // PERBAIKAN 2: Gunakan nama route yang benar, yaitu 'checkout.page'.
         return redirect()->route('checkout');

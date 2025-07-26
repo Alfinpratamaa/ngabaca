@@ -49,7 +49,7 @@
                 {{-- Render 6 input box untuk OTP --}}
                 @for ($i = 0; $i < 6; $i++)
                     <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1"
-                        class="otp-input w-12 h-14 text-2xl font-semibold text-center text-gray-800 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        class="otp-input w-12 h-14 text-2xl font-semibold text-center text-gray-800 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primring-primary"
                         required>
                 @endfor
             </div>
@@ -60,7 +60,7 @@
 
             <div class="mt-6">
                 <button wire:click="verifyOtp" wire:loading.attr="disabled"
-                    class="flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
+                    class="flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-primary border border-transparent rounded-md shadow-sm hover:bg-primary/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
                     <span wire:loading.remove wire:target="verifyOtp">Verifikasi</span>
                     <span wire:loading wire:target="verifyOtp">Memverifikasi...</span>
                 </button>

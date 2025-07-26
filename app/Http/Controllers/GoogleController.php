@@ -36,7 +36,7 @@ class GoogleController extends Controller
 
             if ($finduser) {
                 Auth::login($finduser);
-                return redirect()->intended('/');
+                return redirect()->intended(route('home'))->with('success', 'Berhasil masuk dengan akun Google.');
             } else {
                 // --- LOGIKA BARU UNTUK MENYIMPAN AVATAR ---
                 $avatarPath = null;
@@ -54,13 +54,20 @@ class GoogleController extends Controller
                 $newUser = User::updateOrCreate(['email' => $user->email], [
                     'name' => $user->name,
                     'google_id' => $user->id,
-                    'avatar' => $avatarPath
+                    'avatar' => $avatarPath,
+                    'email_verified_at' => now(),
                 ]);
 
                 Auth::login($newUser);
-
-                return redirect()->route('verification')->with('success', 'Berhasil masuk dengan akun Google. Silakan verifikasi nomor telepon Anda.');
             }
+            // --- LOGIKA REDIRECT BARU ---
+            // Cek apakah ada tujuan redirect yang kita simpan sebelumnya
+            if (session('after_login_redirect_to') === 'checkout') {
+                // Ambil dan hapus session, lalu redirect ke checkout
+                session()->pull('after_login_redirect_to');
+                return redirect()->route('checkout')->with('success', 'Berhasil masuk. Silakan lanjutkan checkout Anda.');
+            }
+            return redirect()->intended(route('home'))->with('success', 'Berhasil masuk dengan akun Google.');
         } catch (\Throwable $th) {
             if (env('APP_ENV') === 'local') {
                 dd($th->getMessage());

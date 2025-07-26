@@ -21,7 +21,7 @@
         <!-- Empty Cart View -->
         <div class="text-center py-12 bg-white rounded-xl shadow-md">
             <p class="text-gray-600 text-lg mb-4">Keranjang Anda kosong.</p>
-            <a href="{{ route('catalog') }}" wire:navigate
+            <a href="{{ route('catalog') }}"
                 class="bg-primary hover:bg-primary/90 text-white font-bold py-2 px-4 rounded-lg transition-colors">
                 Mulai Belanja
             </a>

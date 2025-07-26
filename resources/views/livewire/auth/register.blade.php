@@ -174,26 +174,27 @@ class extends Component {
         </div>
     </div>
 </div>
+<script>
+    // Inisialisasi intl-tel-input
+    const phoneInput = document.querySelector("#phone_number");
+    const iti = window.intlTelInput(phoneInput, {
+        initialCountry: "auto",
+        geoIpLookup: callback => {
+            fetch('https://ipinfo.io/json?token=4ea32d397b63f6')
+                .then(response => response.json())
+                .then(data => callback(data.country))
+                .catch(() => callback('id')); // default ke 'id' jika gagal
+        },
+        utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+    });
 
-@push('scripts')
-    <script>
-        // Inisialisasi intl-tel-input
-        const phoneInput = document.querySelector("#phone_number");
-        const iti = window.intlTelInput(phoneInput, {
-            initialCountry: "auto",
-            geoIpLookup: callback => {
-                fetch('https://ipinfo.io/json?token=4ea32d397b63f6')
-                    .then(response => response.json())
-                    .then(data => callback(data.country))
-                    .catch(() => callback('id')); // default ke 'id' jika gagal
-            },
-            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
-        });
+    // Kirim data ke Livewire saat input berubah
+    phoneInput.addEventListener('change', function() {
+        // @this mengacu pada komponen Livewire saat ini
+        @this.set('phone_number', iti.getNumber());
+    });
 
-        // Kirim data ke Livewire saat input berubah
-        phoneInput.addEventListener('change', function() {
-            // @this mengacu pada komponen Livewire saat ini
-            @this.set('phone_number', iti.getNumber());
-        });
-    </script>
-@endpush
+    if (performance.navigation.type !== 1) {
+        location.reload();
+    }
+</script>

@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kode Verifikasi</title>
     <style>
         body {
@@ -42,6 +42,29 @@
             padding: 15px;
             border-radius: 5px;
             margin: 20px 0;
+            user-select: all;
+            -webkit-user-select: all;
+            -moz-user-select: all;
+            -ms-user-select: all;
+            cursor: text;
+        }
+
+        .copy-button {
+            background-color: #f5c754;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        .copy-button:hover {
+            background-color: #eebd40;
         }
 
         .footer {
@@ -57,18 +80,80 @@
 <body>
     <div class="container">
         <div class="header">
+            <img src="https://ngabaca.me/logo.png" alt="Ngabaca Logo" style="max-width: 150px; height: auto" />
             <h2>Verifikasi Alamat Email Anda</h2>
         </div>
         <div class="content">
             <p>Halo,</p>
-            <p>Gunakan kode di bawah ini untuk memverifikasi alamat email Anda. Kode ini akan kedaluwarsa dalam
-                10 menit.</p>
-            <div class="otp-code">{{ $otp }}</div>
+            <p>
+                Gunakan kode di bawah ini untuk memverifikasi alamat email Anda. Kode ini akan kedaluwarsa dalam 10
+                menit.
+            </p>
+            <div class="otp-code" id="otpCode" title="Klik untuk memilih kode">{{ $otp }}</div>
+            <div style="text-align: center; margin-top: 10px">
+                <button onclick="copyOTP()" class="copy-button">📋 Salin Kode</button>
+            </div>
+            <script>
+                function copyOTP() {
+                    const otpElement = document.getElementById('otpCode');
+                    const otpText = otpElement.textContent.trim();
+
+                    // Modern clipboard API
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard
+                            .writeText(otpText)
+                            .then(function() {
+                                alert('Kode OTP berhasil disalin!');
+                            })
+                            .catch(function(err) {
+                                console.error('Gagal menyalin: ', err);
+                                fallbackCopy(otpText);
+                            });
+                    } else {
+                        // Fallback untuk browser lama atau non-HTTPS
+                        fallbackCopy(otpText);
+                    }
+                }
+
+                function fallbackCopy(text) {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = text;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-999999px';
+                    textArea.style.top = '-999999px';
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+
+                    try {
+                        document.execCommand('copy');
+                        alert('Kode OTP berhasil disalin!');
+                    } catch (err) {
+                        console.error('Gagal menyalin: ', err);
+                        alert('Gagal menyalin kode. Silakan salin secara manual.');
+                    }
+
+                    document.body.removeChild(textArea);
+                }
+
+                // Auto-select OTP ketika diklik
+                document.getElementById('otpCode').addEventListener('click', function() {
+                    const range = document.createRange();
+                    range.selectNodeContents(this);
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                });
+            </script>
             <p>Jika Anda tidak meminta kode ini, Anda bisa mengabaikan email ini.</p>
-            <p>Terima kasih,<br>Tim {{ config('app.name') }}</p>
+            <p>
+                <strong>Tips:</strong> Anda juga bisa mengklik langsung pada kode di atas untuk memilihnya, lalu
+                tekan Ctrl+C (Windows) atau Cmd+C (Mac) untuk menyalin.
+            </p>
+            <p>Terima kasih,<br />Tim Ngabaca</p>
         </div>
         <div class="footer">
-            <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} Ngabaca. All rights reserved.</p>
         </div>
     </div>
 </body>

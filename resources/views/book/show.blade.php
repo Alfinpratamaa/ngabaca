@@ -18,12 +18,13 @@
                             class="w-full h-auto rounded-lg shadow-md">
                     </div>
                     <div class="md:w-2/3 p-6">
-                        <h1 class="text-3xl font-bold text-secondary mb-2">{{ $book->title }}</h1> {{-- Judul Buku --}}
 
                         <div class="mb-1"> {{-- nama penulis --}}
-                            <span class="text-sm text-secondary font-medium">Penulis:</span>
+                            <span class="text-sm text-secondary font-medium"></span>
                             <span class="text-sm text-secondary">{{ $book->author }}</span>
                         </div>
+
+                        <h1 class="text-3xl font-bold text-secondary mb-2">{{ $book->title }}</h1> {{-- Judul Buku --}}
 
                         <div class="flex items-center mb-1"> {{-- Rating Buku, menggunakan shadow custom (x_y_blurRad_Warna) --}}
                             {{--
@@ -53,20 +54,25 @@
                         </div>
 
                         <div class="mb-1"> {{-- harga buku --}}
-                            <p class="text-lg text-secondary">Rp. {{ number_format($book->price, 0, ',', '.') }}</p>
+                            <p class="text-2xl font-bold text-secondary">Rp. {{ number_format($book->price, 0, ',', '.') }}</p>
                         </div>
 
                         <div class="mb-1"> {{-- deskripsi buku --}}
-                            <p class="text-sm text-secondary mt-2 leading-relaxed">{{ $book->description }}</p>
+
+                            <p class="text-base text-secondary font-bold mb-1">Deskripsi</p>
+
+                            <span class="text-sm text-secondary mt-2 leading-relaxed">{{ $book->description }}</span>
                         </div>
 
                         <div class="mb-1">
-                            <span class="text-sm text-secondary font-medium">Category:</span> {{-- kategori buku --}}
+                            <p class="text-base text-secondary font-bold mb-1">Category</p> {{-- kategori buku --}}
                             <span class="text-sm text-secondary">{{ $book->category->name ?? 'Tidak ada kategori' }}</span>
                         </div>
 
                         <div class="mb-6 shadow-[0_4px_2px_-1px_rgba(0,0,0,0.1)]">
-                            <span class="text-sm text-secondary font-medium">Tahun Terbit:</span> {{-- tahun terbit buku --}}
+                            <p class="text-base text-secondary font-bold mb-1">Detail Buku</p>
+
+                            <p class="text-sm text-secondary font-medium">Tahun Terbit</p> {{-- tahun terbit buku --}}
                             <span class="text-sm text-secondary">{{ $book->published_year }}</span>
                         </div>
 
@@ -81,11 +87,11 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
                                 </svg>
                             </button>
-
                         </div>
                     </div>
                 </div>
             </div>
+            @livewire('other-book', ['book' => $book])
         </div>
     </div>
 </x-layouts.main>

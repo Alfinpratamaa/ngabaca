@@ -12,7 +12,7 @@
         </div>
 
         <div x-data="{
-            otp: @entangle('otp'),
+            otp: @entangle('otp').live,
             handleInput(index, event) {
                 let value = event.target.value;
                 if (value.match(/^[0-9]$/)) {
@@ -42,7 +42,7 @@
         }" class="space-y-6">
             <div class="flex justify-center gap-2" @paste="handlePaste($event)">
                 @foreach ($otp as $index => $digit)
-                    <input type="text" x-ref="otp-input-{{ $index }}" wire:model.defer="otp.{{ $index }}"
+                    <input type="text" x-ref="otp-input-{{ $index }}" wire:model="otp.{{ $index }}"
                         @input="handleInput({{ $index }}, $event)"
                         @keydown.backspace="handleBackspace({{ $index }}, $event)" maxlength="1"
                         class="w-12 h-14 text-2xl font-semibold text-center text-gray-800 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"

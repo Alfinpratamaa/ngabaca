@@ -8,8 +8,8 @@
     <title>{{ $title ?? 'Ngabaca' }}</title>
     <meta name="description"
         content="{{ $description ?? 'Explore our vast collection of books, from timeless classics to the latest releases. Find your next adventure today.' }}">
-    @include('partials.head')
     @livewireStyles
+    @include('partials.head')
 
 
 </head>
@@ -68,10 +68,10 @@
             </div>
         </div>
     </footer>
-
-    @fluxScripts
+    @livewireScriptConfig
     @livewireScripts
     @stack('scripts')
+    @fluxScripts
 </body>
 
 </html>

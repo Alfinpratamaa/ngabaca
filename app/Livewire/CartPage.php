@@ -99,7 +99,8 @@ class CartPage extends Component
             ->only($this->selectedItems)
             ->toArray();
 
-        session()->flash('checkout_cart', $itemsToCheckout);
+        session()->put('checkout_cart', $itemsToCheckout);
+
         if (Auth::check()) {
             // Jika sudah login, langsung ke checkout
             return redirect()->route('checkout');

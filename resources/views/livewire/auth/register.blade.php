@@ -66,11 +66,11 @@ class extends Component {
                     </div>
                 @endif
 
-                {{-- wire:submit.prevent akan berfungsi setelah @livewireScripts ditambahkan --}}
+                {{-- wire:submit akan berfungsi setelah @livewireScripts ditambahkan --}}
                 <form wire:submit="register">
                     <div class="flex flex-col gap-4 py-3">
                         <div>
-                            <flux:input wire:model="name" label="Nama Lengkap"
+                            <flux:input wire:model.live="name" label="Nama Lengkap"
                                 class="bg-gray-200 rounded-md text-slate-900 [&_label]:text-slate-700" type="text"
                                 required autofocus autocomplete="name" placeholder="Masukkan nama lengkap" />
                             @error('name')
@@ -79,7 +79,7 @@ class extends Component {
                         </div>
 
                         <div>
-                            <flux:input wire:model="email" label="Email Address"
+                            <flux:input wire:model.live="email" label="Email Address"
                                 class="bg-gray-200 rounded-md text-slate-900 [&_label]:text-slate-700" type="email"
                                 required autocomplete="email" placeholder="email@example.com" />
                             @error('email')
@@ -100,7 +100,7 @@ class extends Component {
                         @enderror
 
                         <div>
-                            <flux:input wire:model="password" label="Password" type="password" placeholder="Password"
+                            <flux:input wire:model.live="password" label="Password" type="password" placeholder="Password"
                                 required viewable autocomplete="new-password"
                                 class="bg-gray-200 rounded-md [&_label]:text-slate-700" />
                             @error('password')
@@ -109,7 +109,7 @@ class extends Component {
                         </div>
 
                         <div>
-                            <flux:input wire:model="password_confirmation" label="Konfirmasi Password" type="password"
+                            <flux:input wire:model.live="password_confirmation" label="Konfirmasi Password" type="password"
                                 placeholder="Konfirmasi Password" required viewable autocomplete="new-password"
                                 class="bg-gray-200 rounded-md [&_label]:text-slate-700" />
                         </div>

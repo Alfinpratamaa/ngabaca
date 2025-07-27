@@ -3,10 +3,13 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Order;
+use Illuminate\Support\Str;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class User extends Authenticatable
 {
@@ -90,5 +93,14 @@ class User extends Authenticatable
 
         // Jika tidak ada avatar, kembalikan gambar default.
         return asset('assets/images/avatar.jpg');
+    }
+    public function storeAddtionalInfo(array $data): void
+    {
+
+
+        $this->update([
+            'phone_number' => $data['phone_number'],
+            'password' => Hash::make($data['password']),
+        ]);
     }
 }

@@ -13,15 +13,27 @@ use Illuminate\Database\QueryException;
 
 class CheckoutPage extends Component
 {
+    public $fullName;
+    public $email;
+    public $phoneNumber;
+
+    public $city = 'Bangalore';
+    public $state = 'Karnataka';
+    public $zipCode = '560021';
+    public $address = '123 Main St Apartment 4B';
+    public $notes;
+
+    public $shippingMethod = 'free'; // Nilai default: 'free' atau 'express'
+    public $subtotal = 2199.00;
+    public $taxes = 5.00;
+    public $shippingCost = 0.00;
+    public $total;
+
     public $cartItems = [];
     public $totalPrice = 0;
     public $shipping_address = '';
     public $phone = '';
 
-    protected $rules = [
-        'shipping_address' => 'required|string|min:10',
-        'phone' => 'required|numeric|digits_between:9,14',
-    ];
 
     public function mount()
     {
@@ -34,6 +46,13 @@ class CheckoutPage extends Component
             return redirect()->route('cart');
         }
 
+        if (Auth::check()) {
+            $user = Auth::user();
+            $this->fullName = $user->name;         // Asumsi model User memiliki atribut 'name'
+            $this->email = $user->email;          // Asumsi model User memiliki atribut 'email'
+            $this->phoneNumber = $user->phone_number; // Asumsi model User memiliki atribut 'phone_number'
+        }
+
         $this->totalPrice = collect($this->cartItems)->sum(function ($item) {
             return ($item['price'] ?? 0) * ($item['quantity'] ?? 1);
         });
@@ -42,6 +61,11 @@ class CheckoutPage extends Component
     public function placeOrder()
     {
         $this->validate();
+
+        $this->shipping_address = trim("{$this->city}, {$this->state}, {$this->zipCode} , {$this->address}");
+        $this->shipping_address = str_replace("\n", ', ', $this->shipping_address);
+        $this->shipping_address = trim($this->shipping_address, ', ');
+        $this->phone = trim($this->phoneNumber);
 
         $order = null;
         $snapToken = null;
@@ -138,6 +162,7 @@ class CheckoutPage extends Component
         }
 
         if ($snapToken) {
+            session()->forget('checkout_cart');
             $this->dispatch('snap-redirect', token: $snapToken);
         } else {
             session()->flash('error', 'Gagal memproses pembayaran. Silakan coba lagi.');

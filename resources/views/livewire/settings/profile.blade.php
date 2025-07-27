@@ -136,7 +136,7 @@ new class extends Component {
             <!-- Name Input -->
             <div>
                 <label for="name" class="block text-sm font-medium text-gray-700">Nama</label>
-                <input wire:model="name" id="name" type="text" required autofocus autocomplete="name"
+                <input wire:model.live="name" id="name" type="text" required autofocus autocomplete="name"
                     class="mt-1 block w-full p-2 text-black border border-slate-800 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                 @error('name')
                     <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
@@ -146,7 +146,7 @@ new class extends Component {
             <!-- Email Input -->
             <div>
                 <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                <input wire:model="email" id="email" type="email" readonly disabled
+                <input wire:model.live="email" id="email" type="email" readonly disabled
                     class="mt-1 block w-full p-2 text-gray-500 bg-muted border border-slate-300 rounded-md shadow-sm cursor-not-allowed sm:text-sm">
                 <p class="mt-1 text-xs text-gray-500">Email tidak dapat diubah untuk keamanan akun</p>
 

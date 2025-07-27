@@ -4,16 +4,17 @@ use App\Livewire\Home;
 use App\Models\Payment;
 use Livewire\Volt\Volt;
 use App\Livewire\CartPage;
+use App\Livewire\CheckoutPage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\GoogleController;
 use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\MidtransController;
-use App\Livewire\CheckoutPage;
+use App\Http\Controllers\AdminUserController;
 
 Route::get('/', function () {
     return view('home');
@@ -42,24 +43,36 @@ Route::controller(GoogleController::class)->group(function () {
     Route::get('auth/google/callback', 'handleGoogleCallback');
 });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'complete.profile'])->group(function () {
     Route::redirect('settings', 'settings/profile');
-    Route::get('/checkout', function () {
-        $user = Auth::user();
-        if (empty($user->email_verified_at) && $user->role !== 'admin') {
-            return redirect()->route('verification');
-        }
-        return view('checkout');
-    })->name('checkout');
+    Route::middleware(['verified'])->group(function () {
+        Route::get('/checkout', function () {
+            return view('checkout');
+        })->name('checkout');
+    });
     Volt::route('settings/profile', 'settings.profile')->name('settings.profile');
     Volt::route('settings/password', 'settings.password')->name('settings.password');
+});
+Route::middleware(['auth'])->group(function () {
+
     Route::get('/verification', function () {
-        $user = Auth::user();
-        if (empty($user->email_verified_at) || $user->role === 'admin') {
-            return redirect()->route('home');
+        if (Auth::user()->hasVerifiedEmail()) {
+            return redirect()->intended(route('home'))->with('info', 'Email Anda sudah diverifikasi.');
         }
         return view('verification');
-    })->name('verification');
+    })->name('verification')->middleware('throttle:6,1');
+
+    Route::post('additional-info/store', function (Request $request) {
+
+        $user = Auth::user();
+        $user->storeAddtionalInfo($request->only('phone_number', 'password'));
+
+        return redirect()->route('home')->with('success', 'Informasi tambahan berhasil disimpan.');
+    })->name('additional-info.store');
+
+    Route::get('additional-info', function () {
+        return view('additional-info');
+    })->name('additional-info');
 });
 
 Route::middleware(['auth', 'role:pelanggan'])->group(function () {

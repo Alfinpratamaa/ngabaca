@@ -43,7 +43,7 @@
         <div id="otp-form">
 
             {{-- Hidden input untuk menampung nilai akhir OTP (string 6 digit) untuk Livewire --}}
-            <input type="hidden" wire:model.defer="otp">
+            <input type="hidden" wire:model="otp">
 
             <div class="flex justify-center gap-2">
                 {{-- Render 6 input box untuk OTP --}}

@@ -1,4 +1,4 @@
-<a href="{{ route('cart') }}" class="p-1 rounded-md bg-muted relative">
+<a href="{{ route('cart') }}" wire:navigate class="p-1 rounded-md bg-muted relative">
     <flux:button variant="ghost" size="sm" class=" cursor-pointer">
         <flux:icon.shopping-bag class="h-5 w-5 text-gray-600" />
     </flux:button>

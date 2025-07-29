@@ -69,7 +69,6 @@
         </div>
     </footer>
     @livewireScriptConfig
-    @livewireScripts
     @stack('scripts')
     @fluxScripts
 </body>

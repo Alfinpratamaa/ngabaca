@@ -15,6 +15,8 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\MidtransController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\MidtransWebhookController;
+use Illuminate\Support\Facades\Log;
 
 Route::get('/', function () {
     return view('home');
@@ -36,6 +38,11 @@ Route::get('/cart', function () {
     return view('cart');
 })->name('cart');
 
+Route::post('/midtrans/notification', [MidtransWebhookController::class, 'handle'])->name('midtrans.notification');
+
+// Route untuk redirect setelah pembayaran
+Route::get('/payment/finish', [PaymentController::class, 'finish'])->name('payment.finish');
+
 Route::get('book/{slug}', [BookController::class, 'show'])->name('book.show');
 
 Route::controller(GoogleController::class)->group(function () {
@@ -47,8 +54,10 @@ Route::middleware(['auth', 'complete.profile'])->group(function () {
     Route::redirect('settings', 'settings/profile');
     Route::middleware(['verified'])->group(function () {
         Route::get('/checkout', function () {
+            Log::info('masuk halaman checkout');
             return view('checkout');
         })->name('checkout');
+        Route::get('/payment/finish', [PaymentController::class, 'finish'])->name('payment.finish');
     });
     Volt::route('settings/profile', 'settings.profile')->name('settings.profile');
     Volt::route('settings/password', 'settings.password')->name('settings.password');
@@ -79,8 +88,6 @@ Route::middleware(['auth', 'role:pelanggan'])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
-
-    Route::post('/midtrans/notification', [MidtransController::class, 'notificationHandler'])->name('midtrans.notification');
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {

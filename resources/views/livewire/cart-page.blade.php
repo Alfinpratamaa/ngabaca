@@ -12,7 +12,7 @@
     @if (session()->has('error'))
         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)"
             class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-            <strong class="font-bold">WOI</strong>
+            <strong class="font-bold">ERROR</strong>
             <span class="block sm:inline">{{ session('error') }}</span>
         </div>
     @endif
@@ -21,7 +21,7 @@
         <!-- Empty Cart View -->
         <div class="text-center py-12 bg-white rounded-xl shadow-md">
             <p class="text-gray-600 text-lg mb-4">Keranjang Anda kosong.</p>
-            <a href="{{ route('catalog') }}"
+            <a href="{{ route('catalog') }}" wire:navigate
                 class="bg-primary hover:bg-primary/90 text-white font-bold py-2 px-4 rounded-lg transition-colors">
                 Mulai Belanja
             </a>

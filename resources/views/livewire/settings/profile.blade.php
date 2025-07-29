@@ -75,9 +75,6 @@ new class extends Component {
 
         $user->save();
 
-        // [FIX PENTING] Ambil instance user yang baru dari database untuk memastikan data sinkron
-        $user = $user->fresh();
-
         // Perbarui state komponen dari model yang baru disimpan
         $this->name = $user->name;
         $this->email = $user->email;
@@ -136,7 +133,7 @@ new class extends Component {
             <!-- Name Input -->
             <div>
                 <label for="name" class="block text-sm font-medium text-gray-700">Nama</label>
-                <input wire:model.live="name" id="name" type="text" required autofocus autocomplete="name"
+                <input wire:model="name" id="name" type="text" required autofocus autocomplete="name"
                     class="mt-1 block w-full p-2 text-black border border-slate-800 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                 @error('name')
                     <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
@@ -197,10 +194,6 @@ new class extends Component {
     </x-settings.layout>
 </section>
 <script>
-    if (performance.navigation.type !== 1) {
-        location.reload();
-    }
-
     document.addEventListener('livewire:init', () => {
         Livewire.on('profile-updated', (event) => {
             // Handle profile updated event

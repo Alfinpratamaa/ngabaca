@@ -15,7 +15,7 @@ class Payment extends Model
      * @var list<string>
      */
 
-     protected $fillable = [
+    protected $fillable = [
         'order_id',
         'transaction_id',
         'total_price',
@@ -36,12 +36,12 @@ class Payment extends Model
         'payment_gateway_response' => 'array',
     ];
 
-      public function order()
+    public function order()
     {
         return $this->belongsTo(Order::class);
     }
 
-     public function verifier()
+    public function verifier()
     {
         return $this->belongsTo(User::class, 'verified_by');
     }

@@ -4,7 +4,7 @@
         <div class="flex flex-col lg:flex-row w-full gap-4 sm:gap-6 lg:gap-8 py-4 sm:py-6 lg:py-10">
             <!-- Sidebar untuk desktop -->
             <div class="hidden lg:block lg:w-80 flex-shrink-0">
-                <livewire:catalog-sidebar />
+                @livewire('catalog-sidebar')
             </div>
 
             <!-- Sidebar untuk mobile/tablet (collapsible) -->
@@ -21,14 +21,14 @@
                         </svg>
                     </button>
                     <div id="mobile-sidebar" class="hidden mt-4">
-                        <livewire:catalog-sidebar />
+                        @livewire('catalog-sidebar')
                     </div>
                 </div>
             </div>
 
             <!-- Grid katalog -->
             <div class="flex-1 w-full min-w-0">
-                <livewire:book-catalog />
+                @livewire('book-catalog')
             </div>
         </div>
     </div>

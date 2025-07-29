@@ -103,7 +103,7 @@ class CartPage extends Component
 
         if (Auth::check()) {
             // Jika sudah login, langsung ke checkout
-            return redirect()->route('checkout');
+            return $this->redirect('/checkout', navigate: true);
         } else {
             // Jika BELUM login:
             // 1. Simpan tujuan di session

@@ -9,7 +9,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <flux:field class="w-full">
                     <flux:label>{{ __('Title') }}</flux:label>
-                    <flux:input wire:model="title" type="text" class="w-full" required placeholder="Title of book"
+                    <flux:input wire:model.live="title" type="text" class="w-full" required placeholder="Title of book"
                         value="{{ $title }}" />
                     @error('title')
                         <span class="text-red-500 text-sm">{{ $message }}</span>
@@ -18,7 +18,7 @@
 
                 <flux:field class="w-full">
                     <flux:label>{{ __('Author') }}</flux:label>
-                    <flux:input wire:model="author" type="text" class="w-full" required placeholder="Author of book"
+                    <flux:input wire:model.live="author" type="text" class="w-full" required placeholder="Author of book"
                         value="{{ $author }}" />
                     @error('author')
                         <span class="text-red-500 text-sm">{{ $message }}</span>
@@ -27,7 +27,7 @@
 
                 <flux:field class="w-full">
                     <flux:label>{{ __('Published Year') }}</flux:label>
-                    <flux:input wire:model="published_year" type="number" class="w-full" required
+                    <flux:input wire:model.live="published_year" type="number" class="w-full" required
                         placeholder="Year published" value="{{ $published_year }}" />
                     @error('published_year')
                         <span class="text-red-500 text-sm">{{ $message }}</span>
@@ -36,7 +36,7 @@
 
                 <flux:field class="w-full">
                     <flux:label>{{ __('Category') }}</flux:label>
-                    <flux:select wire:model="category_id" class="w-full" required>
+                    <flux:select wire:model.live="category_id" class="w-full" required>
                         <option value="" disabled>Select category</option>
                         @foreach ($categories as $category)
                             <option value="{{ $category->id }}" wire:key="{{ $category->id }}"
@@ -54,7 +54,7 @@
             <flux:field class="w-full mt-4">
                 <flux:label>{{ __('Description') }} <span class="text-gray-500 text-sm">({{ __('Optional') }})</span>
                 </flux:label>
-                <flux:textarea wire:model="description" class="w-full" rows="4" placeholder="Book description">
+                <flux:textarea wire:model.live="description" class="w-full" rows="4" placeholder="Book description">
                     {{ $description }}</flux:textarea>
                 @error('description')
                     <span class="text-red-500 text-sm">{{ $message }}</span>
@@ -68,7 +68,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <flux:field class="w-full">
                     <flux:label>{{ __('Price') }}</flux:label>
-                    <flux:input wire:model="price" type="number" step="0.01" class="w-full" required
+                    <flux:input wire:model.live="price" type="number" step="0.01" class="w-full" required
                         placeholder="0.00" value="{{ $price }}" />
                     @error('price')
                         <span class="text-red-500 text-sm">{{ $message }}</span>
@@ -77,7 +77,7 @@
 
                 <flux:field class="w-full">
                     <flux:label>{{ __('Stock') }}</flux:label>
-                    <flux:input wire:model="stock" type="number" class="w-full" placeholder="Stock quantity"
+                    <flux:input wire:model.live="stock" type="number" class="w-full" placeholder="Stock quantity"
                         value="{{ $stock }}" />
                     @error('stock')
                         <span class="text-red-500 text-sm">{{ $message }}</span>
@@ -120,7 +120,7 @@
                         <!-- Custom Upload Area with Bento Style -->
                         <div class="relative">
                             <!-- Hidden File Input -->
-                            <input type="file" wire:model="cover_image" accept="image/*" id="cover-image-input"
+                            <input type="file" wire:model.live="cover_image" accept="image/*" id="cover-image-input"
                                 class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
 
                             <!-- Custom Upload UI -->
@@ -273,7 +273,7 @@
                     @else
                         <div class="relative {{ $private_file_path ? 'pointer-events-none opacity-50' : '' }}">
                             <!-- Hidden File Input -->
-                            <input type="file" wire:model="book_file" accept=".pdf,.epub,.mobi"
+                            <input type="file" wire:model.live="book_file" accept=".pdf,.epub,.mobi"
                                 id="book-file-input"
                                 class="absolute inset-0 w-full h-full opacity-0 z-10 {{ $private_file_path ? 'cursor-not-allowed' : 'cursor-pointer' }}"
                                 {{ $private_file_path ? 'disabled' : '' }} />
@@ -423,7 +423,7 @@
                             class="text-gray-500 text-sm">({{ __('Alternative to file upload') }})</span></flux:label>
 
                     <div class="relative">
-                        <flux:input type="url" wire:model="private_file_path"
+                        <flux:input type="url" wire:model.live="private_file_path"
                             class="w-full {{ $book_file || $private_file_path ? 'cursor-not-allowed bg-gray-100 text-gray-400' : '' }}"
                             placeholder="https://secure-storage.example.com/book-file"
                             value="{{ $private_file_path }}" />

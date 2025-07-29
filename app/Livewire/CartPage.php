@@ -3,17 +3,18 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
 class CartPage extends Component
 {
     public $cartItems = [];
-    public $subtotal = 0;
-    public $shippingCost = 0; // Anda bisa atur ini secara dinamis nanti
-    public $total = 0;
+    public $selectedItems = [];
 
-    // Listener untuk event 'cartUpdated'
-    // Berguna jika ada komponen lain yang memicu perubahan keranjang
+    public $selectedSubtotal = 0;
+    public $selectedShippingCost = 0;
+    public $selectedTotal = 0;
+
     protected $listeners = ['cartUpdated' => 'loadCart'];
 
     public function mount()
@@ -24,18 +25,27 @@ class CartPage extends Component
     public function loadCart()
     {
         $this->cartItems = session()->get('cart', []);
+        $this->selectedItems = array_intersect($this->selectedItems, array_keys($this->cartItems));
+        $this->calculateTotals();
+    }
+
+    public function updatedSelectedItems()
+    {
         $this->calculateTotals();
     }
 
     public function calculateTotals()
     {
-        $this->subtotal = 0;
-        foreach ($this->cartItems as $item) {
-            $this->subtotal += $item['price'] * $item['quantity'];
+        $this->selectedSubtotal = 0;
+        foreach ($this->selectedItems as $selectedId) {
+            if (isset($this->cartItems[$selectedId])) {
+                $item = $this->cartItems[$selectedId];
+                $this->selectedSubtotal += ($item['price'] ?? 0) * ($item['quantity'] ?? 1);
+            }
         }
-        // Contoh sederhana, Anda bisa menyesuaikan logika shippingCost
-        $this->shippingCost = ($this->subtotal > 0) ? 20000 : 0; // Contoh: biaya kirim Rp 20.000 jika ada item
-        $this->total = $this->subtotal + $this->shippingCost;
+
+        $this->selectedShippingCost = ($this->selectedSubtotal > 0) ? 20000 : 0;
+        $this->selectedTotal = $this->selectedSubtotal + $this->selectedShippingCost;
     }
 
     public function increaseQuantity($bookId)
@@ -44,7 +54,7 @@ class CartPage extends Component
         if (isset($cart[$bookId])) {
             $cart[$bookId]['quantity']++;
             Session::put('cart', $cart);
-            $this->cartItems = $cart;
+            $this->loadCart();
             $this->dispatch('cartUpdated');
         }
     }
@@ -54,44 +64,68 @@ class CartPage extends Component
         $cart = Session::get('cart', []);
         if (isset($cart[$bookId])) {
             if ($cart[$bookId]['quantity'] <= 1) {
-                // Langsung hapus tanpa konfirmasi untuk decrease
                 unset($cart[$bookId]);
-                Session::put('cart', $cart);
-                $this->cartItems = $cart;
-                $this->dispatch('cartUpdated');
-                $this->dispatch('showToast', ['type' => 'success', 'message' => 'Buku berhasil dihapus dari keranjang!']);
+                session()->flash('success', 'Buku berhasil dihapus dari keranjang.');
             } else {
-                // Directly decrease quantity if > 1
                 $cart[$bookId]['quantity']--;
-                Session::put('cart', $cart);
-                $this->cartItems = $cart;
-                $this->dispatch('cartUpdated');
             }
+            Session::put('cart', $cart);
+            $this->loadCart();
+            $this->dispatch('cartUpdated');
         }
     }
 
     public function removeItem($bookId)
     {
-        if (isset($this->cartItems[$bookId])) {
-            unset($this->cartItems[$bookId]); // Hapus item dari array
-            session()->put('cart', $this->cartItems); // Simpan perubahan ke session
-            $this->calculateTotals(); // Hitung ulang total
-
-            // Beri tahu komponen lain (misal CartCounter) bahwa keranjang telah berubah
+        $cart = session()->get('cart', []);
+        if (isset($cart[$bookId])) {
+            unset($cart[$bookId]);
+            session()->put('cart', $cart);
+            $this->loadCart();
             $this->dispatch('cartUpdated');
-
             session()->flash('success', 'Buku berhasil dihapus dari keranjang.');
         }
     }
 
-    // Metode untuk memformat harga agar terlihat rapi di tampilan
+    public function proceedToCheckout()
+    {
+        if (empty($this->selectedItems)) {
+            session()->flash('error', 'Silakan ssss pilih item yang ingin di-checkout terlebih dahulu.');
+            return;
+        }
+
+        // PERBAIKAN 1: Gunakan metode 'only()' untuk memfilter koleksi berdasarkan kunci.
+        $itemsToCheckout = collect($this->cartItems)
+            ->only($this->selectedItems)
+            ->toArray();
+
+        session()->put('checkout_cart', $itemsToCheckout);
+
+        if (Auth::check()) {
+            // Jika sudah login, langsung ke checkout
+            return $this->redirect('/checkout', navigate: true);
+        } else {
+            // Jika BELUM login:
+            // 1. Simpan tujuan di session
+            session(['after_login_redirect_to' => 'checkout']);
+
+            // 2. Arahkan ke halaman login
+            session()->flash('info', 'Anda harus login terlebih dahulu untuk melanjutkan ke checkout.');
+            return redirect()->route('login');
+        }
+
+        // PERBAIKAN 2: Gunakan nama route yang benar, yaitu 'checkout.page'.
+        return redirect()->route('checkout');
+    }
+
     public function formatPrice($value)
     {
-        return 'Rp. ' . number_format($value, 0, ',', '.');
+        return 'Rp ' . number_format($value, 0, ',', '.');
     }
 
     public function render()
     {
+        $this->calculateTotals();
         return view('livewire.cart-page');
     }
 }

@@ -25,6 +25,7 @@ class BookSeeder extends Seeder
             [
             'title' => 'Petualangan di Ruang Angkasa',
             'author' => 'Astro Penjelajah',
+            'published_year' => 2023,
             'description' => 'Kisah epik penjelajahan galaksi dan penemuan peradaban baru.',
             'price' => 125000.00,
             'stock' => 50,
@@ -35,6 +36,7 @@ class BookSeeder extends Seeder
             [
             'title' => 'Misteri Rumah Tua',
             'author' => 'Detektif Anonim',
+            'published_year' => 2020,
             'description' => 'Sebuah thriller psikologis yang akan membuat Anda terus menebak.',
             'price' => 98500.00,
             'stock' => 30,
@@ -45,6 +47,7 @@ class BookSeeder extends Seeder
             [
             'title' => 'Resep Rahasia Nenek',
             'author' => 'Chef Tradisional',
+            'published_year' => 2025,
             'description' => 'Kumpulan resep warisan yang lezat dan mudah dibuat.',
             'price' => 75000.00,
             'stock' => 20,
@@ -55,6 +58,7 @@ class BookSeeder extends Seeder
             [
             'title' => 'Bangkit dari Kegagalan',
             'author' => 'Motivator Sukses',
+            'published_year' => 2023,
             'description' => 'Panduan praktis untuk mengubah kegagalan menjadi batu loncatan kesuksesan.',
             'price' => 110000.00,
             'stock' => 40,
@@ -109,6 +113,7 @@ class BookSeeder extends Seeder
             $books[] = [
             'title' => $bookTitles[($i - 5) % count($bookTitles)] . ' ' . ($i > 54 ? 'Volume ' . ceil(($i - 54) / 10) : ''),
             'author' => $authors[($i - 5) % count($authors)],
+            'published_year' => rand(2000, 2025),
             'description' => $descriptions[($i - 5) % count($descriptions)],
             'price' => rand(50000, 200000),
             'stock' => rand(10, 100),
@@ -125,6 +130,7 @@ class BookSeeder extends Seeder
                 Book::create([
                     'title' => $bookData['title'],
                     'author' => $bookData['author'],
+                    'published_year' => $bookData['published_year'],
                     'description' => $bookData['description'],
                     'price' => $bookData['price'],
                     'stock' => $bookData['stock'],

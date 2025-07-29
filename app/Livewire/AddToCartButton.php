@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\On;
@@ -28,6 +29,7 @@ class AddToCartButton extends Component
 
     public function addToCart($bookId)
     {
+        Log::info('Adding book to cart', ['book_id' => $bookId]);
         $cart = Session::get('cart', []);
 
         if (isset($cart[$bookId])) {
@@ -93,6 +95,8 @@ class AddToCartButton extends Component
             $this->dispatch('showToast', ['type' => 'error', 'message' => 'Buku tidak ditemukan di keranjang!']);
         }
     }
+
+
 
 
 

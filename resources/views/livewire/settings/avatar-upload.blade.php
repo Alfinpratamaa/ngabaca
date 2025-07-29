@@ -27,7 +27,7 @@
                     <span class="text-white text-xs font-bold mt-1">Edit Foto</span>
                 </div>
             </label>
-            <input id="avatar-upload" type="file" wire:model="avatar" accept="image/*" class="hidden"
+            <input id="avatar-upload" type="file" wire:model.live="avatar" accept="image/*" class="hidden"
                 wire:key="avatar-upload-input">
         </div>
 

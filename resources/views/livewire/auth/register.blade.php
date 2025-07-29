@@ -17,6 +17,7 @@ new #[
 class extends Component {
     public string $name = '';
     public string $email = '';
+    public string $phone_number = '';
     public string $password = '';
     public string $password_confirmation = '';
 
@@ -28,6 +29,7 @@ class extends Component {
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+            'phone_number' => ['nullable', 'string', 'max:17'],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
         ]);
 
@@ -37,14 +39,12 @@ class extends Component {
 
         Auth::login($user);
 
-        $this->dispatch('$refresh');
-
         // Redirect dengan delay kecil
         $user = Auth::user();
         if ($user->role === 'admin') {
             $this->redirect(route('admin.dashboard'));
         } else {
-            $this->redirect(route('home'));
+            $this->redirect(route('verification'));
         }
     }
 }; ?>
@@ -55,46 +55,76 @@ class extends Component {
         <div class="flex flex-1 justify-center">
             <div class="layout-content-container flex flex-col w-full max-w-md px-4">
 
-                <!-- Header -->
                 <h2 class="text-[#0C161B] tracking-light text-[24px] font-bold leading-tight text-center pb-3 pt-5"
                     style="font-family: 'Plus Jakarta Sans', sans-serif;">
                     Buat Akun Baru
                 </h2>
 
-                <!-- Session Status -->
                 @if (session('status'))
                     <div class="px-4 py-3 text-center text-sm text-green-600">
                         {{ session('status') }}
                     </div>
                 @endif
 
-                <!-- Registration Form -->
-                <form wire:submit.prevent="register">
-                    <div class="flex flex-col gap-2 py-3">
-                        <flux:input wire:model="name" label="Nama Lengkap"
-                            class="bg-gray-200 rounded-md text-slate-900 [&_label]:text-slate-700" type="text"
-                            required autofocus autocomplete="name" placeholder="Masukkan nama lengkap" />
-                        <flux:input wire:model="email" label="Email Address"
-                            class="bg-gray-200 rounded-md text-slate-900 [&_label]:text-slate-700" type="email"
-                            required autocomplete="email" placeholder="email@example.com" />
-                        <flux:input wire:model="password" :label="__('Password')" type="password" placeholder="Password"
-                            required viewable autocomplete="new-password"
-                            class="bg-gray-200 rounded-md [&_label]:text-slate-700" />
-                        <flux:input wire:model="password_confirmation" label="Konfirmasi Password" type="password"
-                            placeholder="Konfirmasi Password" required viewable autocomplete="new-password"
-                            class="bg-gray-200 rounded-md [&_label]:text-slate-700" />
+                {{-- wire:submit akan berfungsi setelah @livewireScripts ditambahkan --}}
+                <form wire:submit="register">
+                    <div class="flex flex-col gap-4 py-3">
+                        <div>
+                            <flux:input wire:model.live="name" label="Nama Lengkap"
+                                class="bg-gray-200 rounded-md text-slate-900 [&_label]:text-slate-700" type="text"
+                                required autofocus autocomplete="name" placeholder="Masukkan nama lengkap" />
+                            @error('name')
+                                <span class="text-sm text-red-600 mt-1">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <flux:input wire:model.live="email" label="Email Address"
+                                class="bg-gray-200 rounded-md text-slate-900 [&_label]:text-slate-700" type="email"
+                                required autocomplete="email" placeholder="email@example.com" />
+                            @error('email')
+                                <span class="text-sm text-red-600 mt-1">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        {{-- Menggunakan wire:ignore agar intl-tel-input tidak terganggu oleh update DOM Livewire --}}
+                        <div class="flex flex-col" wire:ignore>
+                            <label for="phone_number" class="text-sm font-medium text-gray-700 mb-1">Nomor
+                                Telepon</label>
+                            <input type="tel" id="phone_number"
+                                class="form-control bg-white border border-gray-200 p-2 w-full rounded-md text-slate-900"
+                                placeholder="823xxxxxxx" />
+                        </div>
+                        @error('phone_number')
+                            <span class="text-sm text-red-600 mt-1">{{ $message }}</span>
+                        @enderror
+
+                        <div>
+                            <flux:input wire:model.live="password" label="Password" type="password"
+                                placeholder="Password" required viewable autocomplete="new-password"
+                                class="bg-gray-200 rounded-md [&_label]:text-slate-700" />
+                            @error('password')
+                                <span class="text-sm text-red-600 mt-1">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <flux:input wire:model.live="password_confirmation" label="Konfirmasi Password"
+                                type="password" placeholder="Konfirmasi Password" required viewable
+                                autocomplete="new-password" class="bg-gray-200 rounded-md [&_label]:text-slate-700" />
+                        </div>
                     </div>
 
-                    <!-- Register Button -->
-                    <div class="flex items-center justify-center">
+                    <div class="flex items-center justify-center mt-4">
                         <flux:button variant="primary" type="submit"
                             class="w-full cursor-pointer bg-primary hover:bg-primary/75 text-white font-semibold rounded-md px-4 py-2 transition-colors duration-200"
                             wire:loading.attr="disabled">
-                            <span wire:loading.remove>Daftar</span>
-                            <span wire:loading>Mendaftar...</span>
+                            <span wire:loading.remove wire:target="register">Daftar</span>
+                            <span wire:loading wire:target="register">Mendaftar...</span>
                         </flux:button>
                     </div>
                 </form>
+
                 @error('name')
                     <span class="text-sm text-red-600">{{ $message }}</span>
                 @enderror
@@ -144,3 +174,25 @@ class extends Component {
         </div>
     </div>
 </div>
+@script
+    <script>
+        // Inisialisasi intl-tel-input
+        const phoneInput = document.querySelector("#phone_number");
+        const iti = window.intlTelInput(phoneInput, {
+            initialCountry: "auto",
+            geoIpLookup: callback => {
+                fetch('https://ipinfo.io/json?token=4ea32d397b63f6')
+                    .then(response => response.json())
+                    .then(data => callback(data.country))
+                    .catch(() => callback('id')); // default ke 'id' jika gagal
+            },
+            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+        });
+
+        // Kirim data ke Livewire saat input berubah
+        phoneInput.addEventListener('change', function() {
+            // @this mengacu pada komponen Livewire saat ini
+            @this.set('phone_number', iti.getNumber());
+        });
+    </script>
+@endscript

@@ -17,6 +17,7 @@ class Order extends Model
         'user_id',
         'total_price',
         'status',
+        'notes',
         'shipping_address',
     ];
 
@@ -34,7 +35,7 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
-     public function payment()
+    public function payment()
     {
         return $this->hasOne(Payment::class);
     }
@@ -42,7 +43,7 @@ class Order extends Model
     // Helper method to get formatted status
     public function getFormattedStatusAttribute()
     {
-        return match($this->status) {
+        return match ($this->status) {
             'pending' => 'Pending',
             'diproses' => 'Diproses',
             'terpenuhi' => 'Terpenuhi',

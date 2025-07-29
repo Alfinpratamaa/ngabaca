@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>@yield('title', 'Ngabaca')</title>
@@ -10,6 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
+
 <body class="bg-[#FFF8F1] min-h-screen">
     @include('components.main-navbar')
     <main class="pt-4">
@@ -17,4 +19,5 @@
     </main>
     @livewireScripts
 </body>
-</html> 
+
+</html>

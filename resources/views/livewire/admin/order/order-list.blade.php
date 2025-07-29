@@ -151,7 +151,7 @@
                                 </flux:button>
 
                                 <flux:menu>
-                                    <flux:menu.radio.group wire:model="orderStatuses.{{ $order->id }}">
+                                    <flux:menu.radio.group wire:model.live="orderStatuses.{{ $order->id }}">
                                         <flux:menu.radio value="diproses"
                                             wire:click="updateOrderStatus({{ $order->id }}, 'diproses')">
                                             <div class="flex items-center gap-2">
@@ -217,7 +217,7 @@
     </div>
 </div>
 <script>
-    document.addEventListener('livewire:load', function() {
+    document.addEventListener('livewire:init', function() {
         Livewire.on('status-updated', ({
             orderId,
             newStatus

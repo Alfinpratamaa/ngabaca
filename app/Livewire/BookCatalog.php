@@ -165,7 +165,7 @@ class BookCatalog extends Component
             // Tambahkan buku baru ke keranjang
             $cart[$bookId] = [
                 "id" => $book->id, // Penting untuk menyimpan ID
-                "name" => $book->title,
+                "title" => $book->title,
                 "quantity" => 1,
                 "price" => $book->price,
                 "cover_image_url" => $book->cover_image_url ?? "/public/assets/images/cover-book-nofound.jpg", // Tambahkan gambar untuk tampilan keranjang

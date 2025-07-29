@@ -18,7 +18,7 @@ class OrderItem extends Model
         'order_id',
         'book_id',
         'quantity',
-        'price_per_item',
+        'price',
     ];
 
     public $timestamps = false;

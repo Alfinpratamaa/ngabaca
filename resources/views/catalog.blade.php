@@ -6,16 +6,18 @@
             <div class="hidden lg:block lg:w-80 flex-shrink-0">
                 @livewire('catalog-sidebar')
             </div>
-            
+
             <!-- Sidebar untuk mobile/tablet (collapsible) -->
             <div class="block lg:hidden w-full mb-4">
                 <div class="bg-white rounded-lg shadow-sm border p-4">
-                    <button type="button" 
-                            class="w-full flex items-center justify-between text-left font-medium text-gray-900"
-                            onclick="toggleSidebar()">
+                    <button type="button"
+                        class="w-full flex items-center justify-between text-left font-medium text-gray-900"
+                        onclick="toggleSidebar()">
                         <span>Filter & Kategori</span>
-                        <svg id="sidebar-icon" class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        <svg id="sidebar-icon" class="w-5 h-5 transform transition-transform" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                            </path>
                         </svg>
                     </button>
                     <div id="mobile-sidebar" class="hidden mt-4">
@@ -23,7 +25,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Grid katalog -->
             <div class="flex-1 w-full min-w-0">
                 @livewire('book-catalog')
@@ -36,7 +38,7 @@
         function toggleSidebar() {
             const sidebar = document.getElementById('mobile-sidebar');
             const icon = document.getElementById('sidebar-icon');
-            
+
             if (sidebar.classList.contains('hidden')) {
                 sidebar.classList.remove('hidden');
                 icon.style.transform = 'rotate(180deg)';
@@ -45,11 +47,6 @@
                 icon.style.transform = 'rotate(0deg)';
             }
         }
-
-        // Refresh halaman saat pertama kali dimuat
-        if (performance.navigation.type !== 1) {
-            location.reload();
-        }
     </script>
-    
+
 </x-layouts.main>

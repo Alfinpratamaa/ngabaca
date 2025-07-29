@@ -66,12 +66,18 @@ class extends Component {
 
         $this->dispatch('$refresh');
 
+        if (session('after_login_redirect_to') === 'checkout') {
+            session()->pull('after_login_redirect_to');
+            $this->redirect(route('checkout'))->with('success', 'Berhasil masuk. Silakan lanjutkan checkout Anda.');
+            return;
+        }
+
         // Redirect dengan delay kecil
         $user = Auth::user();
         if ($user->role === 'admin') {
             $this->redirect(route('admin.dashboard'));
         } else {
-            $this->redirect(route('home'));
+            $this->redirect(session()->pull('url.intended', route('home')));
         }
     }
 
@@ -110,7 +116,7 @@ class extends Component {
     <div class="layout-container flex h-full grow flex-col">
         <div class="flex flex-1 justify-center">
             <div class="layout-content-container flex flex-col w-full max-w-md px-4">
-                <form wire:submit.prevent="login" class="flex flex-col p-6">
+                <form wire:submit="login" class="flex flex-col p-6">
                     <!-- Header -->
                     <h2 class="text-[#0C161B] tracking-light text-[24px] font-bold leading-tight text-center pb-3 pt-5"
                         style="font-family: 'Plus Jakarta Sans', sans-serif;">
@@ -120,10 +126,10 @@ class extends Component {
                     <!-- Description (jika ada) --
                     <!-- Email Input -->
                     <div class="flex flex-col gap-2 py-3">
-                        <flux:input wire:model="email" label="Email Address"
+                        <flux:input wire:model.live="email" label="Email Address"
                             class="bg-gray-200 rounded-md text-slate-900 [&_label]:text-slate-700" type="email"
                             required autofocus autocomplete="email" placeholder="email@example.com" />
-                        <flux:input wire:model="password" :label="__('Password')" type="password" placeholder="Password"
+                        <flux:input wire:model.live="password" :label="__('Password')" type="password" placeholder="Password"
                             required viewable autocomplete="current-password"
                             class="bg-gray-200 rounded-md [&_label]:text-slate-700" />
                     </div>
@@ -131,7 +137,7 @@ class extends Component {
                     <!-- Remember Me (Optional) -->
                     <div class="flex items-center py-2">
                         <label class="flex items-center">
-                            <input wire:model="remember" type="checkbox"
+                            <input wire:model.live="remember" type="checkbox"
                                 class="rounded border-gray-300 text-[#2a9fed] shadow-sm focus:ring-[#2a9fed]">
                             <span class="ml-2 text-sm text-[#4c7b9a]">{{ __('Ingat Saya') }}</span>
                         </label>
@@ -224,7 +230,7 @@ class extends Component {
     </div>
 </div>
 <script>
-    document.addEventListener('livewire:load', function() {
+    document.addEventListener('livewire:init', function() {
         // Inisialisasi SweetAlert2
         window.Swal = Swal;
 

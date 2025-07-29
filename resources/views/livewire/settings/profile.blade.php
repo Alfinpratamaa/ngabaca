@@ -75,9 +75,6 @@ new class extends Component {
 
         $user->save();
 
-        // [FIX PENTING] Ambil instance user yang baru dari database untuk memastikan data sinkron
-        $user = $user->fresh();
-
         // Perbarui state komponen dari model yang baru disimpan
         $this->name = $user->name;
         $this->email = $user->email;
@@ -146,7 +143,7 @@ new class extends Component {
             <!-- Email Input -->
             <div>
                 <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                <input wire:model="email" id="email" type="email" readonly disabled
+                <input wire:model.live="email" id="email" type="email" readonly disabled
                     class="mt-1 block w-full p-2 text-gray-500 bg-muted border border-slate-300 rounded-md shadow-sm cursor-not-allowed sm:text-sm">
                 <p class="mt-1 text-xs text-gray-500">Email tidak dapat diubah untuk keamanan akun</p>
 
@@ -197,10 +194,6 @@ new class extends Component {
     </x-settings.layout>
 </section>
 <script>
-    if (performance.navigation.type !== 1) {
-        location.reload();
-    }
-
     document.addEventListener('livewire:init', () => {
         Livewire.on('profile-updated', (event) => {
             // Handle profile updated event

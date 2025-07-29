@@ -56,7 +56,7 @@
                     </a>
 
                     <div class="mt-auto">
-                        <livewire:add-to-cart-button :book="$book" :key="'add-to-cart-' . $book->id" />
+                        <livewire:add-to-cart-button :$book :key="'add-to-cart-' . $book->id" />
                     </div>
                 </div>
             </div>

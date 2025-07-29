@@ -51,19 +51,19 @@ new class extends Component {
             <div>
                 <label class="block text-secondary font-semibold mb-2">{{ __('Current password') }}</label>
                 <input class="p-2 border border-gray-300 text-secondary w-full rounded-md placeholder:text-gray-500"
-                    placeholder="{{ __('Current password') }}" wire:model.defer="current_password" type="password" required
+                    placeholder="{{ __('Current password') }}" wire:model="current_password" type="password" required
                     autocomplete="current-password" />
             </div>
             <div>
                 <label class="block text-secondary font-semibold mb-2">{{ __('New Password') }}</label>
                 <input class="p-2 border border-gray-300 text-secondary w-full rounded-md placeholder:text-gray-500"
-                    placeholder="{{ __('New Password') }}" wire:model.defer="password" type="password" required
+                    placeholder="{{ __('New Password') }}" wire:model="password" type="password" required
                     autocomplete="new-password" />
             </div>
             <div>
                 <label class="block text-secondary font-semibold mb-2">{{ __('Confirm new password') }}</label>
                 <input class="p-2 border border-gray-300 text-secondary w-full rounded-md placeholder:text-gray-500"
-                    placeholder="{{ __('Confirm new password') }}" wire:model.defer="password_confirmation"
+                    placeholder="{{ __('Confirm new password') }}" wire:model="password_confirmation"
                     type="password" required autocomplete="new-password" />
             </div>
 

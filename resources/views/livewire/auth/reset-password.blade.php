@@ -75,14 +75,14 @@ new #[Layout('components.layouts.auth')] class extends Component {
 
     <form wire:submit="resetPassword" class="flex flex-col gap-6">
         <!-- Email Address -->
-        <flux:input wire:model="email" :label="__('Email')" type="email" required autocomplete="email" />
+        <flux:input wire:model.live="email" :label="__('Email')" type="email" required autocomplete="email" />
 
         <!-- Password -->
-        <flux:input wire:model="password" :label="__('Password')" type="password" required autocomplete="new-password"
+        <flux:input wire:model.live="password" :label="__('Password')" type="password" required autocomplete="new-password"
             :placeholder="__('Password')" viewable />
 
         <!-- Confirm Password -->
-        <flux:input wire:model="password_confirmation" :label="__('Confirm password')" type="password" required
+        <flux:input wire:model.live="password_confirmation" :label="__('Confirm password')" type="password" required
             autocomplete="new-password" :placeholder="__('Confirm password')" viewable />
 
         <div class="flex items-center justify-end">

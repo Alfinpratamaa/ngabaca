@@ -36,7 +36,7 @@ class GoogleController extends Controller
 
             if ($finduser) {
                 Auth::login($finduser);
-                return redirect()->intended('/');
+                return redirect()->intended(route('home'))->with('success', 'Berhasil masuk dengan akun Google.');
             } else {
                 // --- LOGIKA BARU UNTUK MENYIMPAN AVATAR ---
                 $avatarPath = null;
@@ -49,17 +49,20 @@ class GoogleController extends Controller
                     Storage::disk('public')->put($avatarName, $avatarContents);
                     $avatarPath = $avatarName;
                 }
-                // --- AKHIR LOGIKA BARU ---
 
-                $newUser = User::updateOrCreate(['email' => $user->email], [
+
+                $newUser = User::create([
                     'name' => $user->name,
+                    'email' => $user->email,
                     'google_id' => $user->id,
-                    'avatar' => $avatarPath
+                    'avatar' => $avatarPath,
+                    'email_verified_at' => now(),
                 ]);
 
                 Auth::login($newUser);
 
-                return redirect()->intended('/');
+                // Redirect setelah login berhasil
+                return redirect()->intended(route('home'))->with('success', 'Berhasil masuk dengan akun Google.');
             }
         } catch (\Throwable $th) {
             if (env('APP_ENV') === 'local') {

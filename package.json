@@ -9,6 +9,7 @@
         "format:blade": "prettier --write \"resources/**/*.blade.php\" --parser=php"
     },
     "dependencies": {
+        "@ryangjchandler/alpine-clipboard": "^2.3.0",
         "@tailwindcss/vite": "^4.0.7",
         "alpinejs": "^3.14.9",
         "autoprefixer": "^10.4.20",

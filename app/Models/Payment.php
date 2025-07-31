@@ -27,6 +27,7 @@ class Payment extends Model
         'payment_gateway_response',
         'verified_at',
         'verified_by',
+        'expires_at', // Added for payment expiration
     ];
 
     protected $casts = [

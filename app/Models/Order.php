@@ -8,22 +8,23 @@ use Illuminate\Database\Eloquent\Model;
 class Order extends Model
 {
     use HasFactory;
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+
     protected $fillable = [
         'user_id',
         'total_price',
+        'taxes',
+        'shipping_cost',
         'status',
         'notes',
         'shipping_address',
+
     ];
 
-    // Add status constants for consistency
+    // Status constants
+    const STATUS_PENDING = 'pending';
     const STATUS_DIPROSES = 'diproses';
-    const STATUS_SELESAI = 'terpenuhi';
+    const STATUS_DIKIRIM = 'dikirim';
+    const STATUS_SELESAI = 'selesai';
     const STATUS_BATAL = 'batal';
 
     public function user()
@@ -35,6 +36,7 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
     public function payment()
     {
         return $this->hasOne(Payment::class);
@@ -44,11 +46,12 @@ class Order extends Model
     public function getFormattedStatusAttribute()
     {
         return match ($this->status) {
-            'pending' => 'Pending',
-            'diproses' => 'Diproses',
-            'terpenuhi' => 'Terpenuhi',
-            'batal' => 'Batal',
-            default => ucfirst($this->status)
+            self::STATUS_PENDING => 'Pending',
+            self::STATUS_DIPROSES => 'Diproses',
+            self::STATUS_DIKIRIM => 'Dikirim',
+            self::STATUS_SELESAI => 'Selesai',
+            self::STATUS_BATAL => 'Batal',
+            default => ucfirst($this->status),
         };
     }
 }

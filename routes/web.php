@@ -59,6 +59,9 @@ Route::middleware(['auth', 'complete.profile'])->group(function () {
         })->name('checkout');
         Route::get('/payment/finish', [PaymentController::class, 'finish'])->name('payment.finish');
     });
+
+    Route::get('/orders', [OrderController::class, 'customerOrders'])->name('orders');
+    Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
     Volt::route('settings/profile', 'settings.profile')->name('settings.profile');
     Volt::route('settings/password', 'settings.password')->name('settings.password');
 });

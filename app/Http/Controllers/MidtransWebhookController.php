@@ -91,6 +91,17 @@ class MidtransWebhookController extends Controller
             // status payment di database TIDAK diubah (tetap 'pending').
             // Admin yang akan mengubahnya nanti menjadi 'verified'.
 
+            // Update status order berdasarkan status pembayaran
+            $orderStatus = Order::STATUS_PENDING;
+
+            if ($transactionStatus === 'settlement') {
+                $orderStatus = Order::STATUS_DIPROSES;
+            }
+
+            Order::where('id', $payment->order_id)->update([
+                'status' => $orderStatus,
+            ]);
+
             // Webhook HANYA bertugas mencatat detail dari Midtrans ke tabel payments.
             $payment->payment_method = $this->formatPaymentMethod($notification);
             $payment->payment_status_gateway = $transactionStatus;

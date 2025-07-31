@@ -54,7 +54,7 @@
                             <flux:navmenu.item icon="user" wire:navigate href="{{ route('settings.profile') }}">Profile
                             </flux:navmenu.item>
                             @if (auth()->user()->role !== 'admin')
-                                <flux:navmenu.item icon="book-open" wire:navigate href="/my-book">My book
+                                <flux:navmenu.item icon="book-open" wire:navigate href="{{ route('orders') }}">Pesanan
                                 </flux:navmenu.item>
                             @endif
                             @if (auth()->user()->role === 'admin')

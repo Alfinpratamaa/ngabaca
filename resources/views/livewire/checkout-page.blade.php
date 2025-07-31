@@ -154,8 +154,15 @@
                         @foreach ($cartItems as $item)
                             <div class="flex items-center justify-between border-b pb-4">
                                 <div class="flex items-center space-x-4">
-                                    <img src="{{ $item['cover_image_url'] }}" alt="{{ $item['title'] }}"
-                                        class="w-16 h-16 object-cover rounded-md">
+                                    <div class="w-20 h-28 bg-muted rounded-lg overflow-hidden shadow-lg">
+                                        @if ($item['cover_image_url'])
+                                            <img src="{{ $item['cover_image_url'] }}" alt="{{ $item['title'] }}"
+                                                class="w-full h-full object-cover">
+                                        @else
+                                            <div class="w-full h-full flex items-center justify-center text-white">
+                                                No Cover</div>
+                                        @endif
+                                    </div>
                                     <div>
                                         <h3 class="text-lg font-semibold text-gray-800">{{ $item['title'] }}</h3>
                                         <p class="text-sm text-gray-600">Jumlah : {{ $item['quantity'] }}</p>
@@ -239,17 +246,17 @@
                         onSuccess: function(result) {
                             console.log('Pembayaran Sukses:', result);
                             window.location.href =
-                                `/payment/finish?order_id=${result.order_id}&status_code=${result.status_code}&transaction_status=settlement`;
+                                '/orders'
                         },
                         onPending: function(result) {
                             console.log('Pembayaran Tertunda:', result);
                             window.location.href =
-                                `/payment/finish?order_id=${result.order_id}&status_code=${result.status_code}&transaction_status=pending`;
+                                '/orders'
                         },
                         onError: function(result) {
                             console.error('Pembayaran Gagal:', result);
                             window.location.href =
-                                `/payment/finish?order_id=${result.order_id}&status_code=${result.status_code}&transaction_status=error`;
+                                '/orders'
                         },
                         // PERBAIKAN: Tambahkan callback onClose
                         onClose: function() {

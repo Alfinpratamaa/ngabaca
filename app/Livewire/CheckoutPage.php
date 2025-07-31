@@ -153,8 +153,11 @@ class CheckoutPage extends Component
 
                 $order = Order::create([
                     'user_id' => Auth::id(),
-                    'total_price' => $this->totalPrice,
-                    'status' => 'diproses',
+                    'total_price' => $this->totalPrice + $this->shippingCost + $this->taxes,
+                    'taxes' => $this->taxes,
+                    'shipping_cost' => $this->shippingCost,
+                    'notes' => $this->notes,
+                    'status' => Order::STATUS_DIPROSES,
                     'shipping_address' => $this->shipping_address,
                 ]);
 
@@ -234,7 +237,7 @@ class CheckoutPage extends Component
                     'callbacks' => [
                         // PERBAIKAN: Gunakan route() dan pastikan URL ini dapat diakses publik.
                         // Untuk testing lokal, gunakan Ngrok atau layanan sejenisnya.
-                        'finish' => route('payment.finish'),
+                        'finish' => route('orders'),
                     ],
                     'expiry' => [
                         'start_time' => date('Y-m-d H:i:s O'),
@@ -274,6 +277,8 @@ class CheckoutPage extends Component
                     'total_price' => $order->total_price,
                     'status' => 'pending',
                     'proof_url' => $pdfUrl, // ✅ Simpan pdf_url jika ada
+                    'expires_at' => now()->setTimezone('Asia/Jakarta')->addHours(24)
+
                 ]);
 
                 Log::info('Checkout successful', ['order_id' => $order->id, 'snap_token' => $snapToken]);
@@ -301,41 +306,30 @@ class CheckoutPage extends Component
     #[On('paymentCanceled')]
     public function paymentCanceled($order_id) // <-- UBAH DI SINI
     {
+        $order = Order::find($order_id);
         if ($order_id) {
-            $order = Order::find($order_id);
+            $paymentStatus = $order->payment->status ?? null;
 
-            // Periksa apakah order ada dan statusnya masih menunggu pembayaran
-            if ($order && $order->status === 'diproses') {
-                // Ubah status order menjadi 'dibatalkan'
-                $order->status = Order::STATUS_BATAL;
+            // Periksa apakah order ada dan status di payment deny,expire, atau cancelled
+            if ($order && $paymentStatus === 'denied' || $paymentStatus === 'expired' || $paymentStatus === 'cancelled') {
+                // Ubah status order menjadi 'pending'
+                $order->status = Order::STATUS_PENDING;
                 $order->save();
 
                 // Beri notifikasi ke pengguna
-                session()->flash('error', 'Pembayaran Anda dibatalkan. Jangan khawatir, Anda bisa mencoba lagi kapan saja.');
-
-                // NOTE: Anda bisa menambahkan logika untuk mengembalikan item ke keranjang jika diperlukan
-
-                // mengembalikan item ke keranjang
-                $cart = session()->get('cart', []);
-                foreach ($order->orderItems as $item) {
-                    if (isset($cart[$item->book_id])) {
-                        $cart[$item->book_id]['quantity'] += $item->quantity;
-                    } else {
-                        $cart[$item->book_id] = [
-                            'id' => $item->book_id,
-                            'title' => $item->book->title,
-                            'price' => $item->price,
-                            'quantity' => $item->quantity,
-                            'cover_image_url' => $item->book->cover_image_url,
-                        ];
-                    }
-                }
-                session()->put('cart', $cart);
+                session()->flash('error', 'Anda menunda pembayaran. silahkan lanjutkan pembayaran atau batalkan pesanan ini.');
+                return $this->redirect(route('orders.show', ['order' => $order_id]), navigate: true);
             }
         }
 
-        // Refresh komponen untuk menampilkan pesan flash
-        return $this->redirect(route('checkout'));
+        // Jika tidak ada order_id atau order tidak ditemukan, tampilkan pesan kesalahan
+        session()->flash('error', 'Tidak dapat menemukan pesanan yang sesuai. Silakan coba lagi.');
+        $order->status = Order::STATUS_PENDING;
+
+        // Refresh komponen ke halaman daftar pesanan
+        $order->save();
+        session()->flash('info', 'Pesanan pending, silahkan lanjutkan pembayaran atau batalkan pesanan ini.');
+        return $this->redirect(route('orders'), navigate: true);
     }
 
     public function render()

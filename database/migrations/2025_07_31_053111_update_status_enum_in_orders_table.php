@@ -11,7 +11,7 @@ return new class extends Migration
         DB::statement("ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_status_check");
 
         // Tambahkan constraint baru dengan value yang diinginkan
-        DB::statement("ALTER TABLE orders ADD CONSTRAINT orders_status_check CHECK (status IN ('pending'clear,'diproses', 'dikirim', 'selesai', 'batal'))");
+        DB::statement("ALTER TABLE orders ADD CONSTRAINT orders_status_check CHECK (status IN ('pending','diproses', 'dikirim', 'selesai', 'batal'))");
 
         // Set default jadi 'diproses'
         DB::statement("ALTER TABLE orders ALTER COLUMN status SET DEFAULT 'diproses'");

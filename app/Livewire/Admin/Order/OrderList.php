@@ -12,34 +12,32 @@ class OrderList extends Component
     protected $updatesQueryString = ['page'];
     use WithPagination;
 
-    // Properti untuk menyimpan status asli dan yang sedang diubah
     public $originalStatuses = [];
     public $currentStatuses = [];
     public $hasChanges = false;
 
-    // Hapus metode mount(), karena inisialisasi akan dilakukan di render()
-
-    // Mapping status dari view ke database (sudah benar)
     private function mapStatusToDatabase($status)
     {
         return match ($status) {
             'Diproses' => 'diproses',
-            'Terpenuhi' => 'terpenuhi',
-            'Batal' => 'batal',
-            default => strtolower($status)
+            'Dikirim'  => 'dikirim',
+            'Selesai'  => 'selesai',
+            'Batal'    => 'batal',
+            default    => strtolower($status),
         };
     }
 
-    // Mapping status dari database ke view (sudah benar)
     private function mapStatusToView($status)
     {
         return match ($status) {
             'diproses' => 'Diproses',
-            'terpenuhi' => 'Terpenuhi',
-            'batal' => 'Batal',
-            default => ucfirst($status)
+            'dikirim'  => 'Dikirim',
+            'selesai'  => 'Selesai',
+            'batal'    => 'Batal',
+            default    => ucfirst($status),
         };
     }
+
 
     public function updateOrderStatus($orderId, $status)
     {

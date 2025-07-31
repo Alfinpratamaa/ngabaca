@@ -119,11 +119,13 @@
                             <flux:dropdown>
                                 <flux:button id="status-button-{{ $order->id }}" icon:trailing="chevron-down"
                                     class="text-xs font-medium rounded-full border transition-all duration-200 
-                                           {{ $order->display_status === 'Diproses'
-                                               ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
-                                               : ($order->display_status === 'Terpenuhi'
-                                                   ? 'bg-green-100 text-green-800 border-green-200'
-                                                   : 'bg-red-100 text-red-800 border-red-200') }}">
+                                    {{ $order->display_status === 'Diproses'
+                                        ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                                        : ($order->display_status === 'Dikirim'
+                                            ? 'bg-blue-100 text-blue-800 border-blue-200'
+                                            : ($order->display_status === 'Selesai'
+                                                ? 'bg-green-100 text-green-800 border-green-200'
+                                                : 'bg-red-100 text-red-800 border-red-200')) }}">
                                     <div class="flex items-center gap-2">
                                         @if ($order->display_status === 'Diproses')
                                             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -132,13 +134,19 @@
                                                     clip-rule="evenodd" />
                                             </svg>
                                             Diproses
-                                        @elseif($order->display_status === 'Terpenuhi')
+                                        @elseif($order->display_status === 'Dikirim')
+                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M3 3h14v14H3V3zm4 4h6v6H7V7z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                            Dikirim
+                                        @elseif($order->display_status === 'Selesai')
                                             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd"
                                                     d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                                                     clip-rule="evenodd" />
                                             </svg>
-                                            Terpenuhi
+                                            Selesai
                                         @else
                                             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd"
@@ -164,8 +172,21 @@
                                                 Diproses
                                             </div>
                                         </flux:menu.radio>
-                                        <flux:menu.radio value="terpenuhi"
-                                            wire:click="updateOrderStatus({{ $order->id }}, 'terpenuhi')">
+
+                                        <flux:menu.radio value="dikirim"
+                                            wire:click="updateOrderStatus({{ $order->id }}, 'dikirim')">
+                                            <div class="flex items-center gap-2">
+                                                <svg class="w-3 h-3 text-blue-600" fill="currentColor"
+                                                    viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M3 3h14v14H3V3zm4 4h6v6H7V7z"
+                                                        clip-rule="evenodd" />
+                                                </svg>
+                                                Dikirim
+                                            </div>
+                                        </flux:menu.radio>
+
+                                        <flux:menu.radio value="selesai"
+                                            wire:click="updateOrderStatus({{ $order->id }}, 'selesai')">
                                             <div class="flex items-center gap-2">
                                                 <svg class="w-3 h-3 text-green-600" fill="currentColor"
                                                     viewBox="0 0 20 20">
@@ -173,9 +194,10 @@
                                                         d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                                                         clip-rule="evenodd" />
                                                 </svg>
-                                                Terpenuhi
+                                                Selesai
                                             </div>
                                         </flux:menu.radio>
+
                                         <flux:menu.radio value="batal"
                                             wire:click="updateOrderStatus({{ $order->id }}, 'batal')">
                                             <div class="flex items-center gap-2">
@@ -188,6 +210,7 @@
                                                 Batal
                                             </div>
                                         </flux:menu.radio>
+
                                     </flux:menu.radio.group>
                                 </flux:menu>
                             </flux:dropdown>

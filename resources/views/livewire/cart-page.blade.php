@@ -35,14 +35,20 @@
                     @foreach ($cartItems as $id => $item)
                         <div class="flex items-center border-b pb-4 last:border-b-0 last:pb-0">
                             <!-- PERUBAHAN: Checkbox untuk memilih item -->
-                            <div class="mr-4">
+                            <div>
                                 <input type="checkbox" wire:model.live="selectedItems" value="{{ $id }}"
                                     class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                             </div>
 
-                            <img src="{{ $item['cover_image_url'] }}" alt="{{ $item['title'] }}"
-                                class="w-24 h-24 object-cover rounded-lg mr-4 flex-shrink-0"
-                                onerror="this.onerror=null;this.src='https://placehold.co/400x600/e2c9a0/6B3F13?text=No+Image';">
+                            <div class="w-20 h-28 bg-muted rounded-lg overflow-hidden shadow-lg mx-4">
+                                @if ($item['cover_image_url'])
+                                    <img src="{{ $item['cover_image_url'] }}" alt="{{ $item['title'] }}"
+                                        class="w-full h-full object-cover">
+                                @else
+                                    <div class="w-full h-full flex items-center justify-center text-white">
+                                        No Cover</div>
+                                @endif
+                            </div>
 
                             <div class="flex-grow">
                                 <h3 class="text-lg font-bold text-secondary">{{ $item['title'] }}</h3>

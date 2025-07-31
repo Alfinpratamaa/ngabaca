@@ -9,6 +9,7 @@ DB_HOST=""
 DB_USERNAME=""
 DB_PASSWORD=""
 DB_PORT="25060"
+DB_NAME="defaultdb"
 
 function show_help() {
     echo "Usage:"
@@ -58,6 +59,7 @@ function decrypt_and_set_env() {
             sed -i "s|^DB_USERNAME=.*|DB_USERNAME=$DB_USERNAME|" "$ENV_FILE"
             sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=$DB_PASSWORD|" "$ENV_FILE"
             sed -i "s|^DB_PORT=.*|DB_PORT=$DB_PORT|" "$ENV_FILE"
+            sed -i "s|^DB_DATABASE=.*|DB_DATABASE=$DB_NAME|" "$ENV_FILE"
 
             APP_URL=$(grep '^APP_URL=' "$ENV_FILE" | cut -d '=' -f2 | tr -d '"')
             if [ -z "$APP_URL" ]; then

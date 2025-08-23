@@ -73,6 +73,8 @@ class PaymentActionButton extends Component
 
         // Refresh data order
         $this->order = $this->order->fresh();
+
+        $this->redirect(route('orders.show', $this->orderId));
     }
 
     public function checkExpired($orderId)

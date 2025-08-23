@@ -17,6 +17,16 @@ class BookController extends Controller
         return view("admin/book/index");
     }
 
+    public function home()
+    {
+        $featuredBooks = Book::inRandomOrder()->take(4)->get()->toArray();
+
+        $newArrivals   = Book::orderBy('created_at', 'desc')->take(4)->get()->toArray();
+        $bestsellers   = Book::orderBy('stock', 'asc')->take(4)->get()->toArray(); // contoh: bestseller = stok tinggal sedikit
+
+        return view('home', compact('featuredBooks', 'newArrivals', 'bestsellers'));
+    }
+
     /**
      * Show the form for creating a new resource.
      */

@@ -18,9 +18,10 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\MidtransWebhookController;
 use Illuminate\Support\Facades\Log;
 
-Route::get('/', function () {
-    return view('home');
-})->name('home');
+Route::get(
+    '/',
+    [BookController::class, 'home']
+)->name('home');
 
 Route::get('about-us', function () {
     return view('about');

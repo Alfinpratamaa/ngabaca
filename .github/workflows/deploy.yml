@@ -122,26 +122,12 @@ jobs:
 
                       echo "✅ Nginx and PHP-FPM restarted successfully."
 
-            - name: Install https
-              uses: appleboy/ssh-action@v0.1.10
-              with:
-                  host: ${{ secrets.EC2_HOST }}
-                  username: ${{ secrets.EC2_USER }}
-                  key: ${{ secrets.SSH_PRIVATE_KEY }}
-                  script: |
-                      set -e
-                      export CONTACT_EMAIL='${{ secrets.CONTACT_EMAIL }}'
-                      export APP_DOMAIN='${{ env.APP_DOMAIN }}'
-                      echo "Installing HTTPS for domain: $APP_DOMAIN"
-                      chmod +x ~/install-https.sh
-                      ~/install-https.sh
-
             # --- Verifikasi deploy ---
             - name: Verify Deployment
               run: |
                   echo "Verifying application..."
-                  echo "Accessing domain: https://${{ env.APP_DOMAIN }}"
+                  echo "Accessing domain: https://ngabaca.me"
                   sleep 20
-                  curl -k https://${{ env.APP_DOMAIN }} || true
+                  curl -k https://ngabaca.me || true
                   echo ""
                   echo "Application verified!"
